@@ -2,9 +2,9 @@ from lexer import LexerToken, TokenType
 import enum
 
 class NodeType(enum.Enum):
-    BinOp = 1
-    Number = 2
-    
+    BinOp = 0
+    Number = 1
+    UnaryOp = 2
 
 class AstNode():
     def __init__(self, type, token):
@@ -28,9 +28,14 @@ class NodeNumber(AstNode):
         self.token = token
         self.value = int(token.value)
 
+class NodeUnaryOp(AstNode):
+    def __init__(self, token, expression):
+        self.type = NodeType.UnaryOp
+        self.token = token
+        self.expression = expression
+
 class Parser():
     def __init__(self, lexer):
-        self.nodes = []
         self.lexer = lexer
         self.token_index = 0
         self.current_token = self.next_token()
@@ -56,9 +61,15 @@ class Parser():
         # handles value or (x ± x)
         token = self.current_token
         
-        if token.type == TokenType.Number:
+        if token.type in (TokenType.Plus, TokenType.Minus):
+            self.eat(token.type)
+            node = NodeUnaryOp(token, self.parse_factor())
+            return node
+            
+        elif token.type == TokenType.Number:
             self.eat(TokenType.Number)
             return NodeNumber(token)
+        
         elif token.type == TokenType.LParen:
             self.eat(TokenType.LParen)
             node = self.parse_expression()
