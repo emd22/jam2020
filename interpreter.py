@@ -1,4 +1,6 @@
 from parser import *
+from parser.parser import Parser
+from parser.node import AstNode, NodeType
 from lexer import TokenType
     
 class Interpreter():

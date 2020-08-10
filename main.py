@@ -1,5 +1,6 @@
 from lexer import Lexer, TokenType, LexerToken
-from parser import Parser, AstNode, NodeType
+from parser.parser import Parser
+from parser.node import AstNode, NodeType
 from interpreter import Interpreter
 
 def print_tokens(lexer):
@@ -33,7 +34,7 @@ def main():
     interpreter = Interpreter(parser)
     # print them bad boys out
     print_ast(interpreter.ast)
-    
+    print("=== Output ===")
     print(interpreter.interpret())
 
 if __name__ == '__main__':

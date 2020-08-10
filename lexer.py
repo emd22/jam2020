@@ -9,10 +9,13 @@ class TokenType(enum.Enum):
     Minus = '-'
     Multiply = '*'
     Divide = '/'
+    Equals = '='
+    Semicolon = ';'
+    Colon = ':'
     
-    Identifier = 9
-    Number = 10
-    String = 11
+    Identifier = 15
+    Number = 16
+    String = 17
 
     def get_type(self, value):
         if value == '':
@@ -74,7 +77,8 @@ class Lexer():
         return False
     
     def lex(self):
-        splitables = "();:+-*/"
+        splitables = "(){};:+-*/="
+        self.skip_whitespace()
         while self.peek_char(0) != '':
             if self.skip_whitespace() and not self.in_string:
                 self.push_token()
