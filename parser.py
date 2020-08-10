@@ -2,8 +2,8 @@ from lexer import LexerToken, TokenType
 import enum
 
 class NodeType(enum.Enum):
-    BinOp = 0
-    Number = 1
+    BinOp = 1
+    Number = 2
     
 
 class AstNode():
@@ -23,23 +23,22 @@ class NodeBinOp(AstNode):
         self.right = right
         
 class NodeNumber(AstNode):
-    def __init__(self, value):
+    def __init__(self, token):
         self.type = NodeType.Number
-        self.value = value
+        self.token = token
+        self.value = int(token.value)
 
 class Parser():
     def __init__(self, lexer):
         self.nodes = []
         self.lexer = lexer
         self.token_index = 0
-        self.current_token = lexer.tokens[0]
+        self.current_token = self.next_token()
     
     def next_token(self):
+        #if self.token_index+1 > len(self.lexer.tokens):
+        #    raise Exception('Token index out of range')
         self.token_index += 1
-        print("next tokie")
-        if self.token_index > len(self.lexer.tokens):
-            return AstNode(None, None)
-            
         self.current_token = self.lexer.tokens[self.token_index]
         return self.current_token
     
@@ -54,7 +53,7 @@ class Parser():
             self.error()
     
     def parse_factor(self):
-        # handles number or (x ± x)
+        # handles value or (x ± x)
         token = self.current_token
         
         if token.type == TokenType.Number:
@@ -63,30 +62,32 @@ class Parser():
         elif token.type == TokenType.LParen:
             self.eat(TokenType.LParen)
             node = self.parse_expression()
+            print("***{0}".format(self.current_token))
             self.eat(TokenType.RParen)
             return node
             
     def parse_term(self):
-        # handles mul and div or (x+y*z)
+        # handles multiply, division, expressions
         node = self.parse_factor()
-        while self.current_token.type is (TokenType.Multiply, TokenType.Divide):
+        while self.current_token.type in (TokenType.Multiply, TokenType.Divide):
             token = self.current_token
             if token.type == TokenType.Multiply:
                 self.eat(TokenType.Multiply)
             elif token.type == TokenType.Divide:
                 self.eat(TokenType.Divide)
-            node = NodeBinOp(node, token, self.parse_factor())
+            node = NodeBinOp(left=node, token=token, right=self.parse_factor())
         return node
     
     def parse_expression(self):
         node = self.parse_term()
         while self.current_token.type in (TokenType.Plus, TokenType.Minus):
             token = self.current_token
-            self.eat(token.type)
-            node = NodeBinOp(node, token, self.parse_term())
+            if token.type == TokenType.Plus:
+                self.eat(TokenType.Plus)
+            elif token.type == TokenType.Minus:
+                self.eat(TokenType.Minus)
+            node = NodeBinOp(left=node, token=token, right=self.parse_term())
         return node
         
     def parse(self):
         return self.parse_expression()
-        
-        

@@ -1,10 +1,8 @@
-from lexer import Lexer, TokenType
+from lexer import Lexer, TokenType, LexerToken
 from parser import Parser, AstNode, NodeType
 
 def print_tokens(lexer):
     for token in lexer.tokens:
-        if TokenType.has_value(TokenType, token):
-            print("Found token")
         print(token)
 
 def print_ast(tnode):
@@ -24,7 +22,6 @@ def main():
     print_tokens(lexer)
     parser = Parser(lexer)
     ast = parser.parse()
-    print(ast)
     print_ast(ast)
 
 
