@@ -1,4 +1,4 @@
-from interpreter.variable import VariableType, Variable
+from interpreter.variable import VariableType, Variable, Function
 
 class Scope():
     def __init__(self):

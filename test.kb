@@ -1,4 +1,9 @@
 {
-    let:int val = (10+2);
-    let val2 = (val*2);
+    let value:int = 10;
+    let func0:func = {
+        var = var*2;
+    };
+    let func1 = func0;
+    func1();
 }
+                            

@@ -25,19 +25,25 @@ class TokenType(Enum):
     def get_type(self, value):
         if value == '':
             return None
-                
+            
         if (value in self._value2member_map_):
             return TokenType(value)
+            
+        # TODO: add octal, hexadecimal and decimal numbers
         if (value.isdigit()):
             return TokenType.Number
-
+        
+        # TODO: add single quote strings
         elif (value[0] == '"' and value[-1] == '"'):
             return TokenType.String
         
+        # check if string is keyword
         if (value in Keywords._value2member_map_):
             return TokenType.Keyword
-            
+        
+        # nothing else, must be identifier
         return TokenType.Identifier
+        
     def has_value(self, value):
         # check if value exists in enum... wtf
         return value in self._value2member_map_
@@ -59,20 +65,22 @@ class Lexer():
         self.index = 0
         
         self.in_string = False
-        
-    def read_char(self):
-        if self.index+1 > len(self.data):
+    
+    # return character and progress through buffer
+    def read_char(self, amt=1):
+        if self.index+amt > len(self.data):
             return ''
         rval = self.data[self.index]
-        self.index += 1
+        self.index += amt
         return rval
     
+    # return character and keep index
     def peek_char(self, offset=1):
         idx = self.index+offset
         if idx >= len(self.data) or idx < 0:
             return ''
         return self.data[idx]
-        
+    
     def push_token(self):
         self.tokens.append(LexerToken(self.token_data))
         self.token_data = ""
@@ -82,7 +90,6 @@ class Lexer():
             while self.peek_char(0).isspace():
                 self.read_char()
             return True
-            #self.push_token()
         return False
     
     def lex(self):
@@ -90,20 +97,34 @@ class Lexer():
         self.skip_whitespace()
         while self.peek_char(0) != '':
             # encountered whitespace and not in string, push token
-            if self.skip_whitespace() and not self.in_string:
+            if self.peek_char(0) == '/' and self.peek_char(1) == '*':
+                # skip '/*' characters
+                self.read_char(2)
+                # read until '*/'
+                while (self.read_char() != '*' and self.peek_char(1) != '/'):
+                    pass
+                # skip '*/' characters
+                self.read_char(2)
+                # skip any whitespace after comment
+                self.skip_whitespace()
+                continue
+            
+            elif self.skip_whitespace() and not self.in_string:
                 self.push_token()
-                
+                continue
+                  
             elif self.peek_char(0) in splitables and not self.in_string:
                 if not self.peek_char(-1).isspace() and self.peek_char(-1) not in splitables:
                     self.push_token()
                 self.token_data = self.read_char()
                 self.push_token()
                 self.skip_whitespace()
-            else:
-                # check if string character, toggle is_string
-                if (self.peek_char(0) == '"'):
-                    self.in_string = not self.in_string
-                self.token_data += self.read_char()
+                continue
+  
+            # check if string character, toggle is_string
+            if (self.peek_char(0) == '"'):
+                self.in_string = not self.in_string
+            self.token_data += self.read_char()
         # still some data left in token_data, push to end
         if self.token_data != '':
             self.push_token()

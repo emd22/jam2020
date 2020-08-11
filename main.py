@@ -21,9 +21,11 @@ def print_ast(node):
         # branch left & right
         print_ast(node.left)
         print_ast(node.right)
+    
     elif node.type == NodeType.Assign:
         print_ast(node.var)
         print_ast(node.value)
+        
     elif node.type == NodeType.Declare:
         print_ast(node.value)
         
@@ -33,8 +35,6 @@ def main():
 
     lexer = Lexer(data)
     lexer.lex()
-    # gimme some greasy tokens
-    print_tokens(lexer)
     
     print("=== Parser ===")
     
@@ -43,6 +43,7 @@ def main():
     interpreter = Interpreter(parser)
     # print them bad boys out
     print_ast(interpreter.ast)
+    
     print("=== Output ===")
     interpreter.interpret()
 

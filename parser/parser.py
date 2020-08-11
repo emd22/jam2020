@@ -17,6 +17,11 @@ class Parser():
         self.token_index += 1
         return self.current_token
     
+    def peek_token(self, offset=0):
+        if self.token_index+offset > len(self.lexer.tokens):
+            return None
+        return self.lexer.tokens[self.token_index+offset]
+    
     def error(self, message):
         raise Exception('Syntax error: {}'.format(message))
     
@@ -32,10 +37,14 @@ class Parser():
         self.eat(TokenType.Identifier)
         return node
     
-    def parse_assignment_statement(self):
-        varname = self.parse_variable()
+    def parse_assignment_statement(self, varname=None):
+        if varname == None:
+            varname = self.parse_variable()
         self.eat(TokenType.Equals)
-        value = self.parse_expression()
+        if self.current_token.type == TokenType.LBrace:
+            value = self.parse_block_statement();
+        else:
+            value = self.parse_expression()
         node = NodeAssign(varname, value)
         return node
     
@@ -45,8 +54,12 @@ class Parser():
             # Start of new block
             node = self.parse_block_statement()
         elif token.type == TokenType.Identifier:
-            # When identifier, parse assignment
-            node = self.parse_assignment_statement()
+            # parse function call
+            if self.peek_token().type == TokenType.LParen:
+                node = self.parse_function_call()
+            # parse assignment
+            else:
+                node = self.parse_assignment_statement()
         elif token.type == TokenType.Keyword:
             # Check if Let keyword
             if Keywords(token.value) == Keywords.Let:
@@ -73,12 +86,9 @@ class Parser():
         
     def parse_block_statement(self):
         self.eat(TokenType.LBrace)
-        statements = self.get_statements()
-        self.eat(TokenType.RBrace)
-        
         block = NodeBlock()
-        block.children = statements
-    
+        block.children = self.get_statements()
+        self.eat(TokenType.RBrace)
         return block
     
     def parse_type(self):
@@ -86,19 +96,34 @@ class Parser():
         self.eat(self.current_token.type)
         return node
         
+    def parse_function_call(self):
+        # VAR (PARAM,...)
+        
+        var = NodeVariable(self.current_token)
+        self.eat(TokenType.Identifier)
+        self.eat(TokenType.LParen)
+        
+        # TODO: parameters
+        
+        self.eat(TokenType.RParen)
+        node = NodeCall(var, None)
+        return node
+    
     def parse_variable_declaration(self):
         # let:TYPE parse_assignment_statement
         
         # eat let keyword
         self.eat(TokenType.Keyword)
+            
+        vname = self.current_token
+        self.eat(TokenType.Identifier)
         # manual type set
         vtype = None
         if self.current_token.type == TokenType.Colon:
             self.eat(TokenType.Colon)
             vtype = self.parse_type()
             
-        vname = self.current_token
-        val_node = self.parse_assignment_statement()
+        val_node = self.parse_assignment_statement(vname)
         
         # TODO: multiple variable declaration(e.g let:int var0,var1)
         vnodes = NodeDeclare(vtype, vname, val_node)
