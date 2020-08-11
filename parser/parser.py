@@ -1,5 +1,6 @@
-from lexer import LexerToken, TokenType
+from lexer import LexerToken, TokenType, Keywords
 from parser.node import *
+
 # peter parser
     
 class Parser():
@@ -9,8 +10,9 @@ class Parser():
         self.current_token = self.next_token()
     
     def next_token(self):
-        #if self.token_index+1 > len(self.lexer.tokens):
-        #    raise Exception('Token index out of range')
+        if self.token_index+1 > len(self.lexer.tokens):
+            return None
+        #raise Exception('Token index out of range')
         self.current_token = self.lexer.tokens[self.token_index]
         self.token_index += 1
         return self.current_token
@@ -31,34 +33,42 @@ class Parser():
         return node
     
     def parse_assignment_statement(self):
-        left = self.parse_variable()
-        token = self.current_token
+        varname = self.parse_variable()
         self.eat(TokenType.Equals)
-        right = self.expression()
-        node = NodeAssign(left, token, right)
+        value = self.parse_expression()
+        node = NodeAssign(varname, value)
         return node
     
     def parse_statement(self):
         token = self.current_token
         if token.type == TokenType.LBrace:
+            # Start of new block
             node = self.parse_block_statement()
         elif token.type == TokenType.Identifier:
+            # When identifier, parse assignment
             node = self.parse_assignment_statement()
+        elif token.type == TokenType.Keyword:
+            # Check if Let keyword
+            if Keywords(token.value) == Keywords.Let:
+                node = self.parse_variable_declaration()
         else:
+            raise Exception('Unknown token {} in statement'.format(token.type))
             node = None
+        if self.current_token.type != TokenType.Semicolon:
+            raise Exception('Missing semicolon')
         return node
     
     def get_statements(self):
         node = self.parse_statement()
         statements = [node]
-        print(self.current_token)
         # find all lines in block
         while self.current_token.type == TokenType.Semicolon:
             self.eat(TokenType.Semicolon)
+            # We hit last statement in block, break
+            if self.current_token.type == TokenType.RBrace:
+                break
             # parse statement and skip to next semicolon
             statements.append(self.parse_statement())
-        if self.current_token.type == TokenType.Identifier:
-            self.error('missing semicolon')
         return statements
         
     def parse_block_statement(self):
@@ -70,6 +80,30 @@ class Parser():
         block.children = statements
     
         return block
+    
+    def parse_type(self):
+        node = NodeVarType(self.current_token)
+        self.eat(self.current_token.type)
+        return node
+        
+    def parse_variable_declaration(self):
+        # let:TYPE parse_assignment_statement
+        
+        # eat let keyword
+        self.eat(TokenType.Keyword)
+        # manual type set
+        vtype = None
+        if self.current_token.type == TokenType.Colon:
+            self.eat(TokenType.Colon)
+            vtype = self.parse_type()
+            
+        vname = self.current_token
+        val_node = self.parse_assignment_statement()
+        
+        # TODO: multiple variable declaration(e.g let:int var0,var1)
+        vnodes = NodeDeclare(vtype, vname, val_node)
+        
+        return vnodes
     
     def parse_factor(self):
         # handles value or (x ± x)
@@ -87,7 +121,6 @@ class Parser():
         elif token.type == TokenType.LParen:
             self.eat(TokenType.LParen)
             node = self.parse_expression()
-            print("***{0}".format(self.current_token))
             self.eat(TokenType.RParen)
             return node
         else:

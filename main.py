@@ -1,7 +1,7 @@
 from lexer import Lexer, TokenType, LexerToken
 from parser.parser import Parser
 from parser.node import AstNode, NodeType
-from interpreter import Interpreter
+from interpreter.interpreter import Interpreter
 
 def print_tokens(lexer):
     for token in lexer.tokens:
@@ -13,10 +13,19 @@ def print_ast(node):
     
     print(node)
     
-    if node.type == NodeType.BinOp:
+    if node.type == NodeType.Block:
+        for child in node.children:
+            print_ast(child)
+            
+    elif node.type == NodeType.BinOp:
         # branch left & right
         print_ast(node.left)
         print_ast(node.right)
+    elif node.type == NodeType.Assign:
+        print_ast(node.var)
+        print_ast(node.value)
+    elif node.type == NodeType.Declare:
+        print_ast(node.value)
         
 
 def main():
@@ -27,7 +36,7 @@ def main():
     # gimme some greasy tokens
     print_tokens(lexer)
     
-    print("=== Parser shiz ===")
+    print("=== Parser ===")
     
     parser = Parser(lexer)
     # init interpreter and parse tokens
@@ -35,7 +44,7 @@ def main():
     # print them bad boys out
     print_ast(interpreter.ast)
     print("=== Output ===")
-    print(interpreter.interpret())
+    interpreter.interpret()
 
 if __name__ == '__main__':
     main()

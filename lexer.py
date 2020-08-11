@@ -1,6 +1,10 @@
-import enum
+from enum import Enum, auto
 
-class TokenType(enum.Enum):
+class Keywords(Enum):
+    Let = 'let'
+    
+
+class TokenType(Enum):
     LParen = '('
     RParen = ')'
     LBrace = '{'
@@ -13,9 +17,10 @@ class TokenType(enum.Enum):
     Semicolon = ';'
     Colon = ':'
     
-    Identifier = 15
-    Number = 16
-    String = 17
+    Identifier = auto()
+    Number = auto()
+    String = auto()
+    Keyword = auto()
 
     def get_type(self, value):
         if value == '':
@@ -28,6 +33,10 @@ class TokenType(enum.Enum):
 
         elif (value[0] == '"' and value[-1] == '"'):
             return TokenType.String
+        
+        if (value in Keywords._value2member_map_):
+            return TokenType.Keyword
+            
         return TokenType.Identifier
     def has_value(self, value):
         # check if value exists in enum... wtf
@@ -80,9 +89,10 @@ class Lexer():
         splitables = "(){};:+-*/="
         self.skip_whitespace()
         while self.peek_char(0) != '':
+            # encountered whitespace and not in string, push token
             if self.skip_whitespace() and not self.in_string:
                 self.push_token()
-                pass
+                
             elif self.peek_char(0) in splitables and not self.in_string:
                 if not self.peek_char(-1).isspace() and self.peek_char(-1) not in splitables:
                     self.push_token()
