@@ -1,3 +1,4 @@
 {
-    let test:int = 1;
+    let test:int;
+    test = 10;
 }

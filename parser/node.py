@@ -2,6 +2,7 @@ from lexer import LexerToken, TokenType
 from enum import Enum, auto
 
 class NodeType(Enum):
+    Empty = auto()
     BinOp = auto()
     Number = auto()
     String = auto()
@@ -15,9 +16,11 @@ class NodeType(Enum):
     IfStatement = auto()
 
 class AstNode():
+    location = (0, 0)
     def __init__(self, type, token):
         self.type = type
         self.token = token
+        self.location = token.location
     def __str__(self):
         try:
             return "AstNode[{0}, {1}]".format(self.type, self.token)
@@ -28,72 +31,73 @@ class AstNode():
         return self.__str__()
         
 class NodeNone(AstNode):
-    pass
+    def __init__(self, token):
+        AstNode.__init__(self, NodeType.Empty, token)
 
 # Binary op node; LEFT [+-*/] RIGHT
 class NodeBinOp(AstNode):
     def __init__(self, left, token, right):
-        self.type = NodeType.BinOp
+        AstNode.__init__(self, NodeType.BinOp, token)
         self.left = left
         self.token = token
         self.right = right
 
 class NodeNumber(AstNode):
     def __init__(self, token):
-        self.type = NodeType.Number
+        AstNode.__init__(self, NodeType.Number, token)
         self.token = token
         self.value = int(token.value)
 
 # Unary node; switches signage for values
 class NodeUnaryOp(AstNode):
     def __init__(self, token, expression):
-        self.type = NodeType.UnaryOp
+        AstNode.__init__(self, NodeType.UnaryOp, token)
         self.token = token
         self.expression = expression
 
 # Block node; parent to multiple nodes
 class NodeBlock(AstNode):
-    def __init__(self):
-        self.type = NodeType.Block
+    def __init__(self, token):
+        AstNode.__init__(self, NodeType.Block, token)
         self.children = []
 
 # Type node; Holds type info for variable
 class NodeVarType(AstNode):
     def __init__(self, token):
-        self.type = NodeType.Type
+        AstNode.__init__(self, NodeType.Type, token)
         self.token = token
 
 # Declare node; declare variable or function
 class NodeDeclare(AstNode):
     def __init__(self, type, name, value):
-        self.type = NodeType.Declare
+        AstNode.__init__(self, NodeType.Declare, name)
         self.type_node = type
         self.name = name
         self.value = value
 
 class NodeCall(AstNode):
     def __init__(self, var, params):
-        self.type = NodeType.Call
+        AstNode.__init__(self, NodeType.Call, var.token)
         self.var = var
         self.params = params
 
 # Assignment node; Var = Value
 class NodeAssign(AstNode):
     def __init__(self, var, value):
-        self.type = NodeType.Assign
+        AstNode.__init__(self, NodeType.Assign, var)
         self.var = var
         self.value = value
 
 # Variable node; request value of variable
 class NodeVariable(AstNode):
     def __init__(self, token):
-        self.type = NodeType.Variable
+        AstNode.__init__(self, NodeType.Variable, token)
         self.token = token
         self.value = token.value
         
 class NodeIfStatement(AstNode):
     def __init__(self, expr, block, else_block):
-        self.type = NodeType.IfStatement
+        AstNode.__init__(self, NodeType.IfStatement, expr.token)
         self.expr = expr
         self.block = block
         self.else_block = else_block

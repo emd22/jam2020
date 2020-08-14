@@ -3,6 +3,8 @@ from parser.node import AstNode, NodeType
 from interpreter.scope import *
 from lexer import TokenType
 
+from error import errors, ErrorType, Error 
+
 class Interpreter():
     def __init__(self, parser):
         self.parser = parser
@@ -13,8 +15,15 @@ class Interpreter():
     def interpret(self):
         return self.visit(self.ast)
         
+    def error(self, node, type, message):
+        errors.push_error(Error(type, node.location, message))
+        errors.print_errors()
+        #quit()
+        
     def visit(self, node):
-        if node.type == NodeType.BinOp:
+        if node.type == NodeType.Empty:
+            pass
+        elif node.type == NodeType.BinOp:
             return self.visit_binop(node)
         elif node.type == NodeType.Number:
             return self.visit_number(node)
@@ -54,15 +63,14 @@ class Interpreter():
         pass 
     
     def visit_declare(self, node):
-        val = self.visit(node.value)
         if node.type_node != None:
             # set type to VariableType(type_node)
             vtype = VariableType(node.type_node.token.value)
         else:
             # no type node attached, default to VariableType.any
             vtype = VariableType.Any
-            
-        self.scopes[0].declare_variable(node.name.value, vtype, val)
+        self.scopes[0].declare_variable(node.name.value, vtype)
+        val = self.visit(node.value)
         return val
     
     def visit_number(self, node):
@@ -89,6 +97,9 @@ class Interpreter():
         var = self.scopes[0].find_variable(var_name)
         if var != None:
             var.value = value
+        else:
+            print('{}'.format(var))
+            self.error(node, ErrorType.DoesNotExist, "Variable '{}' not defined in scope".format(var_name))
         return value
     
     def visit_call(self, node):
@@ -96,7 +107,7 @@ class Interpreter():
         var = self.scopes[0].find_variable(node.var.value)
         if var != None:
             if type(var.value) != Function:
-                raise Exception('calling wrong variable type')
+                self.error(node, ErrorType.TypeError, 'Calling wrong variable type')
             value = self.visit(var.value.node)
         else:
             value = 0
@@ -108,6 +119,7 @@ class Interpreter():
         if var != None:
             value = var.value
         else:
+            self.error(node, ErrorType.DoesNotExist, "Referencing undefined variable '{}'".format(node.value))
             value = 0
         return value
         

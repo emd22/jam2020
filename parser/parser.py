@@ -18,7 +18,7 @@ class Parser():
     def next_token(self):
         if self.token_index+1 > len(self.lexer.tokens):
             return None
-        #raise Exception('Token index out of range')
+            
         self.current_token = self.lexer.tokens[self.token_index]
         self.token_index += 1
         return self.current_token
@@ -52,7 +52,7 @@ class Parser():
         if token.type == token_type:
             return token
         else:
-            self.error('expected {0} but recieved {1}'.format(token_type, token.type))
+            self.error('Expected {0} but recieved {1}'.format(token_type, token.type))
             return None
 
     def eat(self, token_type=None):
@@ -95,10 +95,10 @@ class Parser():
         elif token.type == TokenType.Keyword:
             node = self.parse_keyword()
         else:
-            self.error('unknown token {} in statement'.format(token.type))
+            self.error('Unknown token {} in statement'.format(token.type))
             node = None
         if self.current_token.type != TokenType.Semicolon:
-            self.error('missing semicolon')
+            self.error('Missing semicolon')
         return node
     
     def get_statements(self):
@@ -130,7 +130,7 @@ class Parser():
 
     def parse_block_statement(self):
         self.eat(TokenType.LBrace)
-        block = NodeBlock()
+        block = NodeBlock(self.current_token)
         block.children = self.get_statements()
         self.eat(TokenType.RBrace)
         return block
@@ -167,8 +167,10 @@ class Parser():
             self.eat(TokenType.Colon)
             vtype = self.parse_type()
             
-        val_node = self.parse_assignment_statement(vname)
-        
+        if self.peek_token().type == TokenType.Equals:
+            val_node = self.parse_assignment_statement(vname)
+        else:
+            val_node = NodeNone(vname)
         # TODO: multiple variable declaration(e.g let:int var0,var1)
         vnodes = NodeDeclare(vtype, vname, val_node)
         
