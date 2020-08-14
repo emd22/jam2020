@@ -19,6 +19,7 @@ class TokenType(Enum):
     Semicolon = ';'
     Colon = ':'
     Dot = '.'
+    Comma = ','
     
     Identifier = auto()
     Number = auto()
@@ -103,7 +104,7 @@ class Lexer():
         return False
     
     def lex(self):
-        splitables = "(){};:+-*/="
+        splitables = "(){};:+-*/=.,"
         self.skip_whitespace()
         while self.peek_char(0) != '':
             if self.peek_char(0) == '\n':

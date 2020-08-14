@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from parser.node import NodeType, NodeBlock
+from parser.node import NodeType, NodeFunctionExpression
 
 class VariableType(Enum):
     Auto     = 'auto'
@@ -24,8 +24,10 @@ class Variable():
     def __init__(self, name, vtype, value):
         self.name = name
         self.value = 0
+
+        print(type(value))
         
-        if (type(value) is NodeBlock):
+        if (type(value) is NodeFunctionExpression):
             self.value = Function(name, vtype, value)
         else:
             self.value = value

@@ -73,13 +73,68 @@ class Parser():
         if varname == None:
             varname = self.parse_variable()
         self.eat(TokenType.Equals)
-        if self.current_token.type == TokenType.LBrace:
-            value = self.parse_block_statement();
+
+        if self.current_token.type == TokenType.LParen:
+            value = self.parse_parentheses()
+        elif self.current_token.type == TokenType.LBrace:
+            value = self.parse_block_statement()
         else:
             value = self.parse_expression()
         node = NodeAssign(varname, value)
         return node
     
+    def parse_parentheses(self):
+        # eat paren
+        self.eat(TokenType.LParen)
+
+        skip_token_types = [
+            TokenType.RParen,
+            TokenType.Identifier
+        ]
+
+        argument_list = None
+
+        if not any([(self.peek_token(0, token_type) is not None) for token_type in skip_token_types]):
+            expr = self.parse_expression()
+
+            self.expect_token(TokenType.RParen)
+
+            return expr
+        elif self.peek_token(0, TokenType.RParen):
+            # eat right paren
+            self.eat(TokenType.RParen)
+
+            argument_list = NodeArgumentList([])
+        else:
+            arguments = []
+
+            while True:
+                if expect_token(TokenType.Identifier) is None:
+                    self.error('invalid argument format')
+                    break
+
+                # does not require let keyword
+                argument = self.parse_variable_declaration(False)
+
+                if argument is None:
+                    self.error('invalid argument')
+                    break
+
+                arguments.append(argument)
+
+                if peek_token(0, TokenType.Comma):
+                    # eat comma and continue on with argument list
+                    self.eat(TokenType.Comma)
+                else:
+                    break
+
+            argument_list = NodeArgumentList(arguments)
+        
+        if argument_list is None:
+            self.error('invalid argument list')
+        else:
+            return self.parse_function_expression(argument_list)
+
     def parse_statement(self):
         token = self.current_token
         if token.type == TokenType.LBrace:
@@ -102,16 +157,20 @@ class Parser():
         return node
     
     def get_statements(self):
-        node = self.parse_statement()
-        statements = [node]
+        if self.current_token.type == TokenType.RBrace:
+            return []
+
+        statements = [self.parse_statement()]
+        
         # find all lines in block
-        while self.current_token.type == TokenType.Semicolon:
+        while self.current_token is not None and self.current_token.type == TokenType.Semicolon:
             self.eat(TokenType.Semicolon)
             # We hit last statement in block, break
-            if self.current_token.type == TokenType.RBrace:
+            if self.current_token is None or self.current_token.type == TokenType.RBrace:
                 break
             # parse statement and skip to next semicolon
             statements.append(self.parse_statement())
+
         return statements
 
     def parse_keyword(self):
@@ -133,6 +192,7 @@ class Parser():
         block = NodeBlock()
         block.children = self.get_statements()
         self.eat(TokenType.RBrace)
+
         return block
     
     def parse_type(self):
@@ -152,12 +212,22 @@ class Parser():
         self.eat(TokenType.RParen)
         node = NodeCall(var, None)
         return node
+
+    def parse_function_expression(self, argument_list=None):
+        if argument_list is None:
+            argument_list = self.parse_parentheses()
+        print("current: {}".format(self.current_token))
+
+        block = self.parse_block_statement()
+
+        return NodeFunctionExpression(argument_list, block)
     
-    def parse_variable_declaration(self):
+    def parse_variable_declaration(self, require_keyword=True):
         # let:TYPE parse_assignment_statement
         
-        # eat let keyword
-        self.eat(TokenType.Keyword)
+        if require_keyword:
+            # eat let keyword
+            self.eat(TokenType.Keyword)
             
         vname = self.current_token
         self.eat(TokenType.Identifier)
@@ -234,8 +304,11 @@ class Parser():
         return node
         
     def parse(self):
-        tree = self.parse_block_statement()
+        tree = NodeBlock()
+        tree.children = self.get_statements()
+
         if len(errors.errors) > 0:
             errors.print_errors()
             quit()
+
         return tree

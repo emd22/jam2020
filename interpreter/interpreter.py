@@ -8,7 +8,26 @@ class Interpreter():
         self.parser = parser
         self.ast = parser.parse()
         # declare scopes + global scope
-        self.scopes = [Scope()]
+        self.global_scope = Scope(None)
+        self._top_level_scope = None
+
+    @property
+    def current_scope(self):
+        if self._top_level_scope is not None:
+            return self._top_level_scope
+
+        return self.global_scope
+
+    def open_scope(self):
+        self._top_level_scope = Scope(self.current_scope)
+
+    def close_scope(self):
+        if self.current_scope == self.global_scope:
+            raise Exception('cannot close global scope!')
+
+        self._top_level_scope = self.current_scope.parent
+
+        return self.current_scope
         
     def interpret(self):
         return self.visit(self.ast)
@@ -34,6 +53,10 @@ class Interpreter():
             return self.visit_call(node)
         elif node.type == NodeType.IfStatement:
             return self.visit_if_statement(node)
+        elif node.type == NodeType.ArgumentList:
+            return self.visit_argument_list(node)
+        elif node.type == NodeType.FunctionExpression:
+            return self.visit_function_expression(node)
         else:
             raise Exception('Visitor function for {} not defined'.format(node.type))
             
@@ -51,7 +74,7 @@ class Interpreter():
         return 0
         
     def visit_type(self, node):
-        pass 
+        pass
     
     def visit_declare(self, node):
         val = self.visit(node.value)
@@ -62,7 +85,7 @@ class Interpreter():
             # no type node attached, default to VariableType.any
             vtype = VariableType.Any
             
-        self.scopes[0].declare_variable(node.name.value, vtype, val)
+        self.current_scope.declare_variable(node.name.value, vtype, val)
         return val
     
     def visit_number(self, node):
@@ -76,27 +99,34 @@ class Interpreter():
             return -val
             
     def visit_block(self, node):
+        self.open_scope()
+
         for child in node.children:
             self.visit(child)
+
+        self.close_scope()
         
     def visit_assign(self, node):
         var_name = node.var.value
-        if node.value.type == NodeType.Block:
+        if node.value.type == NodeType.FunctionExpression:
             value = node.value
         else:
             value = self.visit(node.value)
         print("Set {} to {}".format(var_name, value))
-        var = self.scopes[0].find_variable(var_name)
+        var = self.current_scope.find_variable(var_name)
         if var != None:
             var.value = value
         return value
     
     def visit_call(self, node):
         print("Call function '{}'".format(node.var.value))
-        var = self.scopes[0].find_variable(node.var.value)
+        var = self.current_scope.find_variable(node.var.value)
         if var != None:
             if type(var.value) != Function:
                 raise Exception('calling wrong variable type')
+
+            # push arguments to stack
+
             value = self.visit(var.value.node)
         else:
             value = 0
@@ -104,7 +134,7 @@ class Interpreter():
             
     def visit_variable(self, node):
         print("Visit variable {}".format(node.value))
-        var = self.scopes[0].find_variable(node.value)
+        var = self.current_scope.find_variable(node.value)
         if var != None:
             value = var.value
         else:
@@ -120,7 +150,15 @@ class Interpreter():
         elif node.else_block is not None:
             self.visit_block(node.else_block)
         
-    
+    def visit_argument_list(self, node):
+        for argument in node.arguments:
+            self.visit_declare(argument)
+
+    def visit_function_expression(self, node):
+        self.visit(node.argument_list)
+        self.visit(node.block)
+
     def visit_none(self, node):
         pass
         
+    
