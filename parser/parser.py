@@ -194,8 +194,18 @@ class Parser():
         # handles value or (x ± x)
         token = self.current_token
         
+        # handle +, -
         if token.type in (TokenType.Plus, TokenType.Minus):
             self.eat(token.type)
+            node = NodeUnaryOp(token, self.parse_factor())
+            return node
+        
+        # handle '!'
+        elif token.type == TokenType.Not:
+            self.eat(TokenType.Not)
+            # != statement
+            if (self.current_token.type == TokenType.Equals):
+                node = NodeBinOp()
             node = NodeUnaryOp(token, self.parse_factor())
             return node
             
@@ -228,6 +238,7 @@ class Parser():
         node = self.parse_term()
         while self.current_token.type in (TokenType.Plus, TokenType.Minus):
             token = self.current_token
+            
             if token.type == TokenType.Plus:
                 self.eat(TokenType.Plus)
             elif token.type == TokenType.Minus:

@@ -17,15 +17,22 @@ class Function():
         self.return_type = return_type
         self.node = node
     def __repr__(self):
-        return "Function[{}, statements:{}]".format(self.name, len(self.node.children))
+        if self.node != None:
+            return "Function[{}, statements:{}]".format(self.name, len(self.node.children))
+        else:
+            return "Function[{}]".format(self.name)
     __str__ = __repr__
+    
+class BuiltinFunction(Function):
+    def __init__(self, name, return_type, return_val):
+        Function.__init__(self, name, return_type, None)
 
 class Variable():
     def __init__(self, name, vtype, value):
         self.name = name
         self.value = 0
         
-        if (type(value) is NodeBlock):
+        if type(value) is NodeBlock:
             self.value = Function(name, vtype, value)
         else:
             self.value = value

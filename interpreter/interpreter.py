@@ -78,10 +78,13 @@ class Interpreter():
     
     def visit_unaryop(self, node):
         val = self.visit(node.expression)
+        
         if node.token.type == TokenType.Plus:
             return +val
         elif node.token.type == TokenType.Minus:
             return -val
+        elif node.token.type == TokenType.Not:
+            return (1 if val is 0 else 0)
             
     def visit_block(self, node):
         for child in node.children:
