@@ -2,6 +2,8 @@ from enum import Enum, auto
 
 class Keywords(Enum):
     Let = 'let'
+    If = 'if'
+    Else = 'else'
     
 
 class TokenType(Enum):
@@ -16,6 +18,7 @@ class TokenType(Enum):
     Equals = '='
     Semicolon = ';'
     Colon = ':'
+    Dot = '.'
     
     Identifier = auto()
     Number = auto()
@@ -52,6 +55,7 @@ class LexerToken():
     def __init__(self, value):
         self.type = TokenType.get_type(TokenType, value)
         self.value = value
+        self.location = (0, 0)
     def __str__(self):
         return "LexerToken[Type:{0}, Value:'{1}']".format(self.type, self.value)
     def __repr__(self):
@@ -63,6 +67,10 @@ class Lexer():
         self.data = data
         self.token_data = ""
         self.index = 0
+        
+        # Error handling
+        self.row = 0
+        self.col = 0
         
         self.in_string = False
     
@@ -82,7 +90,9 @@ class Lexer():
         return self.data[idx]
     
     def push_token(self):
-        self.tokens.append(LexerToken(self.token_data))
+        token = LexerToken(self.token_data)
+        token.location = (self.col, self.row)
+        self.tokens.append(token)
         self.token_data = ""
     
     def skip_whitespace(self):
@@ -96,6 +106,9 @@ class Lexer():
         splitables = "(){};:+-*/="
         self.skip_whitespace()
         while self.peek_char(0) != '':
+            if self.peek_char(0) == '\n':
+                self.col = 0
+                self.row += 1
             # encountered whitespace and not in string, push token
             if self.peek_char(0) == '/' and self.peek_char(1) == '*':
                 # skip '/*' characters
@@ -124,6 +137,7 @@ class Lexer():
             # check if string character, toggle is_string
             if (self.peek_char(0) == '"'):
                 self.in_string = not self.in_string
+            self.col += 1
             self.token_data += self.read_char()
         # still some data left in token_data, push to end
         if self.token_data != '':

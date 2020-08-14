@@ -12,6 +12,7 @@ class NodeType(Enum):
     Type = auto()
     Declare = auto()
     Call = auto()
+    IfStatement = auto()
 
 class AstNode():
     def __init__(self, type, token):
@@ -89,4 +90,11 @@ class NodeVariable(AstNode):
         self.type = NodeType.Variable
         self.token = token
         self.value = token.value
+        
+class NodeIfStatement(AstNode):
+    def __init__(self, expr, block, else_block):
+        self.type = NodeType.IfStatement
+        self.expr = expr
+        self.block = block
+        self.else_block = else_block
 

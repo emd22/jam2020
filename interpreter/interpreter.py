@@ -32,6 +32,8 @@ class Interpreter():
             return self.visit_declare(node)
         elif node.type == NodeType.Call:
             return self.visit_call(node)
+        elif node.type == NodeType.IfStatement:
+            return self.visit_if_statement(node)
         else:
             raise Exception('Visitor function for {} not defined'.format(node.type))
             
@@ -108,6 +110,16 @@ class Interpreter():
         else:
             value = 0
         return value
+        
+    def visit_if_statement(self, node):
+        expr_result = self.visit(node.expr)
+
+        # todo this should be changed to a general purpose 'is true' check
+        if expr_result != 0:
+            self.visit_block(node.block)
+        elif node.else_block is not None:
+            self.visit_block(node.else_block)
+        
     
     def visit_none(self, node):
         pass

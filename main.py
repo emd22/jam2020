@@ -35,6 +35,7 @@ def main():
 
     lexer = Lexer(data)
     lexer.lex()
+    print_tokens(lexer)
     
     print("=== Parser ===")
     

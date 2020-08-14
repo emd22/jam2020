@@ -1,13 +1,19 @@
 from lexer import LexerToken, TokenType, Keywords
+from error import errors, Error, ErrorType
 from parser.node import *
 
 # peter parser
-    
+
 class Parser():
     def __init__(self, lexer):
         self.lexer = lexer
         self.token_index = 0
         self.current_token = self.next_token()
+        
+        self.keyword_methods = {
+            'let': self.parse_variable_declaration,
+            'if': self.parse_if_statement
+        }
     
     def next_token(self):
         if self.token_index+1 > len(self.lexer.tokens):
@@ -17,19 +23,45 @@ class Parser():
         self.token_index += 1
         return self.current_token
     
-    def peek_token(self, offset=0):
+    def peek_token(self, offset=0, token_type=None):
+        # TODO: fix this garbage fire
+        offset -= 1
         if self.token_index+offset > len(self.lexer.tokens):
             return None
-        return self.lexer.tokens[self.token_index+offset]
+        token = self.lexer.tokens[self.token_index+offset]
+        
+        if token_type is not None and token.type != token_type:
+            return None
+        
+        return token
+    
+    def peek_keyword_token(self, keyword):
+        token = self.peek_token(0, TokenType.Keyword)
+            
+        if token is not None and Keywords(token.value) == keyword:
+            return keyword
+
+        return None
     
     def error(self, message):
-        raise Exception('Syntax error: {}'.format(message))
+        errors.push_error(Error(ErrorType.Syntax, self.current_token.location, message))
     
-    def eat(self, type):
-        if self.current_token.type == type:
-            self.current_token = self.next_token()
+    def expect_token(self, token_type, offset=0):
+        token = self.peek_token(offset)
+
+        if token.type == token_type:
+            return token
         else:
-            self.error('expected {0} but recieved {1}'.format(type, self.current_token.type))
+            self.error('expected {0} but recieved {1}'.format(token_type, token.type))
+            return None
+
+    def eat(self, token_type=None):
+        if token_type is not None:
+            token = self.expect_token(token_type)
+
+        self.current_token = self.next_token()
+
+        return self.current_token
     
     def parse_variable(self):
         # create variable node and eat identifier
@@ -61,14 +93,12 @@ class Parser():
             else:
                 node = self.parse_assignment_statement()
         elif token.type == TokenType.Keyword:
-            # Check if Let keyword
-            if Keywords(token.value) == Keywords.Let:
-                node = self.parse_variable_declaration()
+            node = self.parse_keyword()
         else:
-            raise Exception('Unknown token {} in statement'.format(token.type))
+            self.error('unknown token {} in statement'.format(token.type))
             node = None
         if self.current_token.type != TokenType.Semicolon:
-            raise Exception('Missing semicolon')
+            self.error('missing semicolon')
         return node
     
     def get_statements(self):
@@ -83,7 +113,21 @@ class Parser():
             # parse statement and skip to next semicolon
             statements.append(self.parse_statement())
         return statements
+
+    def parse_keyword(self):
+        keyword = self.expect_token(TokenType.Keyword)
+        #self.eat()
+
+        method = None
         
+        if keyword is not None:
+            method = self.keyword_methods[keyword.value]
+
+        if method is None:
+            self.error('{0} is not a valid keyword'.format(keyword))
+
+        return method()
+
     def parse_block_statement(self):
         self.eat(TokenType.LBrace)
         block = NodeBlock()
@@ -129,6 +173,20 @@ class Parser():
         vnodes = NodeDeclare(vtype, vname, val_node)
         
         return vnodes
+        
+    def parse_if_statement(self): 
+        expr = self.parse_expression()
+        block = self.parse_block_statement()
+        else_block = None
+        
+        if self.peek_keyword_token(Keywords.Else):
+            # eat else
+            self.eat(TokenType.Keyword)
+            else_block = self.parse_block_statement()
+            
+        
+        return NodeIfStatement(expr, block, else_block)
+        
     
     def parse_factor(self):
         # handles value or (x ± x)
@@ -176,4 +234,8 @@ class Parser():
         return node
         
     def parse(self):
-        return self.parse_block_statement()
+        tree = self.parse_block_statement()
+        if len(errors.errors) > 0:
+            errors.print_errors()
+            quit()
+        return tree
