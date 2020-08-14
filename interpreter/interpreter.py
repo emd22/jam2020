@@ -18,7 +18,7 @@ class Interpreter():
     def error(self, node, type, message):
         errors.push_error(Error(type, node.location, message))
         errors.print_errors()
-        #quit()
+        quit()
         
     def visit(self, node):
         if node.type == NodeType.Empty:
@@ -93,13 +93,12 @@ class Interpreter():
             value = node.value
         else:
             value = self.visit(node.value)
-        print("Set {} to {}".format(var_name, value))
         var = self.scopes[0].find_variable(var_name)
         if var != None:
             var.value = value
         else:
-            print('{}'.format(var))
             self.error(node, ErrorType.DoesNotExist, "Variable '{}' not defined in scope".format(var_name))
+        print("Set {} to {}".format(var_name, value))
         return value
     
     def visit_call(self, node):

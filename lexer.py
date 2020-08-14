@@ -69,8 +69,8 @@ class Lexer():
         self.index = 0
         
         # Error handling
-        self.row = 0
-        self.col = 0
+        self.row = 1
+        self.col = 1
         
         self.in_string = False
     
@@ -80,6 +80,10 @@ class Lexer():
             return ''
         rval = self.data[self.index]
         self.index += amt
+        self.col += 1
+        if rval == '\n':
+            self.col = 1
+            self.row += 1
         return rval
     
     # return character and keep index
@@ -106,9 +110,6 @@ class Lexer():
         splitables = "(){};:+-*/="
         self.skip_whitespace()
         while self.peek_char(0) != '':
-            if self.peek_char(0) == '\n':
-                self.col = 0
-                self.row += 1
             # encountered whitespace and not in string, push token
             if self.peek_char(0) == '/' and self.peek_char(1) == '*':
                 # skip '/*' characters
@@ -137,7 +138,6 @@ class Lexer():
             # check if string character, toggle is_string
             if (self.peek_char(0) == '"'):
                 self.in_string = not self.in_string
-            self.col += 1
             self.token_data += self.read_char()
         # still some data left in token_data, push to end
         if self.token_data != '':
