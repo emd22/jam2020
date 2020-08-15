@@ -1,13 +1,23 @@
 from interpreter.variable import VariableType, Variable, Function
 
 class Scope():
-    def __init__(self):
-        self.variables = []
+    def __init__(self, parent=None):
+        self.variables = {}
+        self.parent = parent
+
     def declare_variable(self, name, vtype):
-        self.variables.append(Variable(name, vtype, None))
+        self.variables[name] = Variable(name, vtype, None)
+
     def find_variable(self, varname):
-        # TODO: hashing
-        for var in self.variables:
-            if var.name == varname:
-                return var
-        return None
+        if varname in self.variables:
+            return self.variables[varname]
+
+        if self.parent is None:
+            return None
+
+        return self.parent.find_variable(varname)
+        
+    def __str__(self):
+        return "Scope definitions: {}".format(self.variables)
+        
+    __repr__ = __str__

@@ -2,16 +2,20 @@ from lexer import Lexer, TokenType, LexerToken
 from parser.parser import Parser
 from parser.node import AstNode, NodeType
 from interpreter.interpreter import Interpreter
+from interpreter.scope import Variable, VariableType
+
+def print_func(string):
+    print(string)
 
 def print_tokens(lexer):
     for token in lexer.tokens:
-        print(token)
+        print_func(token)
 
 def print_ast(node):
     if node == None:
         return
     
-    print(node)
+    print_func(node)
     
     if node.type == NodeType.Block:
         for child in node.children:
@@ -28,24 +32,37 @@ def print_ast(node):
         
     elif node.type == NodeType.Declare:
         print_ast(node.value)
+    elif node.type == NodeType.ArgumentList:
+        print_func('(')
+
+        for argument in node.arguments:
+            print_ast(argument)
+            print_func(', ')
+
+        print_func(')')
+    elif node.type == NodeType.FunctionExpression:
+        print_func('<Function>')
+        print_ast(node.argument_list)
+        print_ast(node.block)
         
 
 def main():
-    data = open("test.kb", "r").read()
+    filename = "test.kb"
+    data = open(filename, "r").read()
 
     lexer = Lexer(data)
     lexer.lex()
-    print_tokens(lexer)
+    #print_tokens(lexer)
     
-    print("=== Parser ===")
+    print_func("=== Parser ===")
     
     parser = Parser(lexer)
     # init interpreter and parse tokens
-    interpreter = Interpreter(parser)
+    interpreter = Interpreter(parser, filename)
     # print them bad boys out
     print_ast(interpreter.ast)
     
-    print("=== Output ===")
+    print_func("=== Output ===")
     interpreter.interpret()
 
 if __name__ == '__main__':

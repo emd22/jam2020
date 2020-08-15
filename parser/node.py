@@ -14,6 +14,8 @@ class NodeType(Enum):
     Declare = auto()
     Call = auto()
     IfStatement = auto()
+    ArgumentList = auto()
+    FunctionExpression = auto()
 
 class AstNode():
     location = (0, 0)
@@ -102,3 +104,13 @@ class NodeIfStatement(AstNode):
         self.block = block
         self.else_block = else_block
 
+class NodeArgumentList(AstNode):
+    def __init__(self, arguments):
+        self.type = NodeType.ArgumentList
+        self.arguments = arguments
+
+class NodeFunctionExpression(AstNode):
+    def __init__(self, argument_list, block):
+        self.type = NodeType.FunctionExpression
+        self.argument_list = argument_list
+        self.block = block
