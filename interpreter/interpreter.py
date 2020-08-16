@@ -1,9 +1,11 @@
 from parser.parser import Parser
 from parser.node import AstNode, NodeType
 from interpreter.scope import *
-from lexer import TokenType
+from interpreter.stack import Stack
+from lexer import TokenType, LexerToken
 
 from error import errors, ErrorType, Error 
+
 
 class Interpreter():
     def __init__(self, parser, filename):
@@ -11,6 +13,7 @@ class Interpreter():
         self.ast = parser.parse()
         # declare scopes + global scope
         self.filename = filename
+        self.stack = Stack()
         self.global_scope = Scope(None)
         self._top_level_scope = None
 
@@ -33,7 +36,6 @@ class Interpreter():
         return self.current_scope
         
     def interpret(self):
-        self.global_scope.declare_variable("__line__", VariableType.Int)
         return self.visit(self.ast)
         
     def error(self, node, type, message):
@@ -116,13 +118,15 @@ class Interpreter():
             else:
                 return 0
             
-    def visit_block(self, node):
-        self.open_scope()
+    def visit_block(self, node, create_scope=True):
+        if create_scope:
+            self.open_scope()
 
         for child in node.children:
             self.visit(child)
 
-        self.close_scope()
+        if create_scope:
+            self.close_scope()
         
     def visit_assign(self, node):
         var_name = node.var.value
@@ -143,10 +147,13 @@ class Interpreter():
         print("Call function '{}'".format(node.var.value))
         var = self.current_scope.find_variable(node.var.value)
         if var != None:
-            #if type(var.value) != Function:
+            #if type(var) != Function:
             #    self.error(node, ErrorType.TypeError, 'Calling wrong variable type')
 
             # push arguments to stack
+            for arg in node.argument_list.arguments:
+                self.stack.push(arg)
+
             value = self.visit(var.value)
         else:
             value = 0
@@ -155,8 +162,6 @@ class Interpreter():
     def visit_variable(self, node):
         print("Visit variable {}".format(node.value))
         var = self.current_scope.find_variable(node.value)
-        line = self.global_scope.find_variable("__line__")
-        line.value = node.location[1]
         if var != None:
             value = var.value
         else:
@@ -174,12 +179,25 @@ class Interpreter():
             self.visit_block(node.else_block)
         
     def visit_argument_list(self, node):
-        for argument in node.arguments:
+        # read arguments backwards as values are popped from stack
+        for argument in reversed(node.arguments):
+            # retrieve value
+            value = self.stack.pop()
+            # declare variable
             self.visit_declare(argument)
+            # TODO: clean up
+            # set variable to passed in value
+            self.current_scope.find_variable(argument.name.value).value = self.visit(value)
 
     def visit_function_expression(self, node):
+        # create our scope before block so argument variables are contained
+        self.open_scope()
+        # visit our arguments
         self.visit(node.argument_list)
-        self.visit(node.block)
+        # self.visit would normally be used here, but we need create_scope
+        self.visit_block(node.block, create_scope=False)
+        # done, close scope
+        self.close_scope()
 
     def visit_none(self, node):
         pass

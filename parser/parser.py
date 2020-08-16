@@ -95,12 +95,12 @@ class Parser():
             expr = self.parse_expression()
             self.expect_token(TokenType.RParen)
             return expr
-
+        
         elif self.peek_token(0, TokenType.RParen):
             # eat right paren
             self.eat(TokenType.RParen)
 
-            argument_list = NodeArgumentList([])
+            argument_list = NodeArgumentList([], self.current_token)
         else:
             arguments = []
 
@@ -124,7 +124,7 @@ class Parser():
                 else:
                     break
             self.eat(TokenType.RParen)
-            argument_list = NodeArgumentList(arguments)
+            argument_list = NodeArgumentList(arguments, self.current_token)
         
         if argument_list is None:
             self.error('invalid argument list')
@@ -206,9 +206,24 @@ class Parser():
         self.eat(TokenType.LParen)
         
         # TODO: parameters
+        argnames = []
+        arg = None
+        if self.current_token.type is not TokenType.RParen:
+            # skip until RParen
+            while self.current_token.type != TokenType.RParen:
+                # append argument to ArgumentList node
+                print(self.current_token)
+                argnames.append(self.parse_expression())
+                if self.current_token.type == TokenType.RParen:
+                    break
+                self.eat()
         
+        # eat closing paren
         self.eat(TokenType.RParen)
-        node = NodeCall(var, None)
+    
+        args = NodeArgumentList(argnames, self.current_token)
+        
+        node = NodeCall(var, args)
         return node
 
     def parse_function_expression(self, argument_list=None):

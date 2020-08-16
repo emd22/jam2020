@@ -2,18 +2,18 @@ from lexer import LexerToken, TokenType
 from enum import Enum, auto
 
 class NodeType(Enum):
-    Empty = auto()
-    BinOp = auto()
-    Number = auto()
-    String = auto()
-    UnaryOp = auto()
-    Block = auto()
-    Assign = auto()
+    Empty    = auto()
+    BinOp    = auto()
+    Number   = auto()
+    String   = auto()
+    UnaryOp  = auto()
+    Block    = auto()
+    Assign   = auto()
     Variable = auto()
-    Type = auto()
-    Declare = auto()
-    Call = auto()
-    IfStatement = auto()
+    Type     = auto()
+    Declare  = auto()
+    Call     = auto()
+    IfStatement  = auto()
     ArgumentList = auto()
     FunctionExpression = auto()
 
@@ -50,7 +50,7 @@ class NodeNumber(AstNode):
         self.token = token
         self.value = int(token.value)
 
-# Unary node; switches signage for values
+# Unary node; switches signage for values, '!' operator
 class NodeUnaryOp(AstNode):
     def __init__(self, token, expression):
         AstNode.__init__(self, NodeType.UnaryOp, token)
@@ -78,10 +78,10 @@ class NodeDeclare(AstNode):
         self.value = value
 
 class NodeCall(AstNode):
-    def __init__(self, var, params):
+    def __init__(self, var, argument_list):
         AstNode.__init__(self, NodeType.Call, var.token)
         self.var = var
-        self.params = params
+        self.argument_list = argument_list
 
 # Assignment node; Var = Value
 class NodeAssign(AstNode):
@@ -105,12 +105,13 @@ class NodeIfStatement(AstNode):
         self.else_block = else_block
 
 class NodeArgumentList(AstNode):
-    def __init__(self, arguments):
-        self.type = NodeType.ArgumentList
+    def __init__(self, arguments, token):
+        AstNode.__init__(self, NodeType.ArgumentList, token)
         self.arguments = arguments
 
 class NodeFunctionExpression(AstNode):
     def __init__(self, argument_list, block):
-        self.type = NodeType.FunctionExpression
+        AstNode.__init__(self, NodeType.FunctionExpression, block)
         self.argument_list = argument_list
         self.block = block
+
