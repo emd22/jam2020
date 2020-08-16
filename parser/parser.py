@@ -247,16 +247,46 @@ class Parser():
         if self.current_token.type == TokenType.Colon:
             self.eat(TokenType.Colon)
             vtype = self.parse_type()
-            
-        if self.peek_token().type == TokenType.Equals:
-            val_node = self.parse_assignment_statement(vname)
+
+        if vtype is not None and vtype.is_type_type:
+            self.eat(TokenType.Equals)
+
+            type_expression = self.parse_type_declaration(vname)
+
+            if type_expression is not None:
+                val_node = NodeAssign(vname, type_expression)
         else:
-            val_node = NodeNone(vname)
+            if self.peek_token().type == TokenType.Equals:
+                val_node = self.parse_assignment_statement(vname)
+            else:
+                val_node = NodeNone(vname)
+
         # TODO: multiple variable declaration(e.g let:int var0,var1)
         vnodes = NodeDeclare(vtype, vname, val_node)
         
         return vnodes
-        
+
+    def parse_type_declaration(self, name):
+        members = [] # array of var declarations
+
+        # eat left brace
+        if self.eat(TokenType.LBrace) is None:
+            return None
+
+        token = self.peek_token()
+
+        # find all lines in block
+        while token.type != TokenType.RBrace:
+            # parse variable declaration
+            members.append(self.parse_variable_declaration(False))
+
+            token = self.peek_token()
+
+        if self.eat(TokenType.RBrace) is None:
+            return None
+
+        return NodeTypeExpression(name, members)
+
     def parse_if_statement(self): 
         expr = self.parse_expression()
         block = self.parse_block_statement()

@@ -3,6 +3,7 @@ from parser.node import AstNode, NodeType
 from interpreter.scope import *
 from interpreter.stack import Stack
 from interpreter.variable import BuiltinFunction
+from interpreter.type import Type
 from lexer import TokenType, LexerToken
 
 from error import errors, ErrorType, Error 
@@ -81,6 +82,8 @@ class Interpreter():
             return self.visit_argument_list(node)
         elif node.type == NodeType.FunctionExpression:
             return self.visit_function_expression(node)
+        elif node.type == NodeType.TypeExpression:
+            return self.visit_type_expression(node)
         else:
             raise Exception('Visitor function for {} not defined'.format(node.type))
             
@@ -101,6 +104,8 @@ class Interpreter():
         pass
     
     def visit_declare(self, node):
+        # TODO
+
         if node.type_node != None:
             # set type to VariableType(type_node)
             vtype = VariableType(node.type_node.token.value)
@@ -220,6 +225,20 @@ class Interpreter():
         self.visit_block(node.block, create_scope=False)
         # done, close scope
         self.close_scope()
+
+    def visit_type_expression(self, node):
+        members = {}
+
+        # open scope for members
+        self.open_scope()
+
+        for member_decl in node.members:
+            members[member_decl.name] = self.visit(member_decl)
+
+        # close scope for members
+        self.close_scope()
+
+        return Type(node.name, members)
 
     def visit_none(self, node):
         pass

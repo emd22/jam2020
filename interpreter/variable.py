@@ -1,5 +1,6 @@
 from enum import Enum, auto
 from parser.node import NodeType, NodeFunctionExpression
+from interpreter.type import Type
 
 class VariableType(Enum):
     Auto     = 'auto'
@@ -7,10 +8,17 @@ class VariableType(Enum):
     String   = 'str'
     Any      = 'any'
     Function = 'func'
+    Type     = 'type'
     
     Array = auto()
     Object = auto() # Class, data structure, etc.
-    
+
+INT_TYPE = Type('int', None, {}, True)
+STRING_TYPE = Type('str', None, {}, True)
+ANY_TYPE = Type('any', None, {}, True)
+FUNC_TYPE = Type('func', None, {}, True)
+
+
 class Function():
     def __init__(self, name, return_type, node):
         self.name = name

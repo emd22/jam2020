@@ -16,6 +16,7 @@ class NodeType(Enum):
     IfStatement  = auto()
     ArgumentList = auto()
     FunctionExpression = auto()
+    TypeExpression = auto()
 
 class AstNode():
     location = (0, 0)
@@ -74,6 +75,10 @@ class NodeVarType(AstNode):
         AstNode.__init__(self, NodeType.Type, token)
         self.token = token
 
+    @property
+    def is_type_type(self):
+        return self.token.value == 'type'
+
 # Declare node; declare variable or function
 class NodeDeclare(AstNode):
     def __init__(self, type, name, value):
@@ -120,3 +125,9 @@ class NodeFunctionExpression(AstNode):
         self.argument_list = argument_list
         self.block = block
 
+class NodeTypeExpression(AstNode):
+    def __init__(self, name, members):
+        # members are var decls
+        self.type = NodeType.TypeExpression
+        self.name = name
+        self.members = members
