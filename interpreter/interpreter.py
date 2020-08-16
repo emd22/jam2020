@@ -2,10 +2,15 @@ from parser.parser import Parser
 from parser.node import AstNode, NodeType
 from interpreter.scope import *
 from interpreter.stack import Stack
+from interpreter.variable import BuiltinFunction
 from lexer import TokenType, LexerToken
 
 from error import errors, ErrorType, Error 
 
+def builtin_printn(arguments):   
+    for arg in arguments:
+        print("__intern_print__ says {}".format(arg))
+    return 0
 
 class Interpreter():
     def __init__(self, parser, filename):
@@ -14,6 +19,10 @@ class Interpreter():
         # declare scopes + global scope
         self.filename = filename
         self.stack = Stack()
+        self.builtins = [
+            BuiltinFunction("__intern_print__", None, builtin_printn)
+        ]
+        
         self.global_scope = Scope(None)
         self._top_level_scope = None
 
@@ -50,6 +59,8 @@ class Interpreter():
             return self.visit_binop(node)
         elif node.type == NodeType.Number:
             return self.visit_number(node)
+        elif node.type == NodeType.String:
+            return self.visit_string(node)
         elif node.type == NodeType.UnaryOp:
             return self.visit_unaryop(node)
         elif node.type == NodeType.Block:
@@ -105,6 +116,9 @@ class Interpreter():
     def visit_number(self, node):
         return node.value
     
+    def visit_string(self, node):
+        return node.value
+    
     def visit_unaryop(self, node):
         val = self.visit(node.expression)
         
@@ -140,12 +154,20 @@ class Interpreter():
             var.value = value
         else:
             self.error(node, ErrorType.DoesNotExist, "Variable '{}' not defined in scope".format(var_name))
-        print("Set {} to {}".format(var_name, value))
+        #print("Set {} to {}".format(var_name, value))
         return value
     
     def visit_call(self, node):
-        print("Call function '{}'".format(node.var.value))
+        #print("Call function '{}'".format(node.var.value))
+        
         var = self.current_scope.find_variable(node.var.value)
+        arguments = []
+        for builtin in self.builtins:
+            if builtin.name == node.var.value:
+                for arg in node.argument_list.arguments:
+                    arguments.append(self.visit(arg))
+                return builtin.call(arguments)
+        
         if var != None:
             #if type(var) != Function:
             #    self.error(node, ErrorType.TypeError, 'Calling wrong variable type')
@@ -160,7 +182,7 @@ class Interpreter():
         return value
             
     def visit_variable(self, node):
-        print("Visit variable {}".format(node.value))
+        #print("Visit variable {}".format(node.value))
         var = self.current_scope.find_variable(node.value)
         if var != None:
             value = var.value

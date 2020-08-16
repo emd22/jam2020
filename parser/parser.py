@@ -212,7 +212,6 @@ class Parser():
             # skip until RParen
             while self.current_token.type != TokenType.RParen:
                 # append argument to ArgumentList node
-                print(self.current_token)
                 argnames.append(self.parse_expression())
                 if self.current_token.type == TokenType.RParen:
                     break
@@ -293,6 +292,10 @@ class Parser():
         elif token.type == TokenType.Number:
             self.eat(TokenType.Number)
             return NodeNumber(token)
+        
+        elif token.type == TokenType.String:
+            self.eat(TokenType.String)
+            return NodeString(token)
         
         elif token.type == TokenType.LParen:
             self.eat(TokenType.LParen)

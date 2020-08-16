@@ -7,6 +7,7 @@ class Scope():
 
     def declare_variable(self, name, vtype):
         self.variables[name] = Variable(name, vtype, None)
+        return self.variables[name]
 
     def find_variable(self, varname):
         if varname in self.variables:

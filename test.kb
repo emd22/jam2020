@@ -1,6 +1,6 @@
 let test:func = (x, y) {
-    let v1 = x;
-    let v2 = -y;
+    let v1 = -x+y;
+    __intern_print__("poop", v1);
 };
 
 test(5, 10+4);

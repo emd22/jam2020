@@ -24,9 +24,13 @@ class Function():
     __str__ = __repr__
     
 class BuiltinFunction(Function):
-    def __init__(self, name, return_type, return_val):
+    def __init__(self, name, return_type, callback):
         Function.__init__(self, name, return_type, None)
-
+        self.callback = callback
+        
+    def call(self, node):
+        self.callback(node)
+        
 class Variable():
     def __init__(self, name, vtype, value):
         self.name = name
@@ -38,4 +42,4 @@ class Variable():
             self.value = value
             
         self.type = vtype
-        print("define [name:'{}' type:{}] as '{}'".format(name, vtype, value))
+        #print("define [name:'{}' type:{}] as '{}'".format(name, vtype, value))

@@ -54,13 +54,13 @@ def main():
     lexer.lex()
     #print_tokens(lexer)
     
-    print_func("=== Parser ===")
+    #print_func("=== Parser ===")
     
     parser = Parser(lexer)
     # init interpreter and parse tokens
     interpreter = Interpreter(parser, filename)
     # print them bad boys out
-    print_ast(interpreter.ast)
+    #print_ast(interpreter.ast)
     
     print_func("=== Output ===")
     interpreter.interpret()

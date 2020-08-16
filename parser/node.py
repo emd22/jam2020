@@ -49,6 +49,11 @@ class NodeNumber(AstNode):
         AstNode.__init__(self, NodeType.Number, token)
         self.token = token
         self.value = int(token.value)
+        
+class NodeString(AstNode):
+    def __init__(self, token):
+        AstNode.__init__(self, NodeType.String, token)
+        self.value = str(token.value)[1:-1]
 
 # Unary node; switches signage for values, '!' operator
 class NodeUnaryOp(AstNode):
