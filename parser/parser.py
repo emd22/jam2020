@@ -45,7 +45,12 @@ class Parser():
     
     def error(self, message):
         # TODO: filename instead of none
-        errors.push_error(Error(ErrorType.Syntax, self.current_token.location, message, "none"))
+        location = None
+
+        if self.current_token is not None:
+            location = self.current_token.location
+
+        errors.push_error(Error(ErrorType.Syntax, location, message, "none"))
     
     def expect_token(self, token_type, offset=0):
         token = self.peek_token(offset)
@@ -66,23 +71,35 @@ class Parser():
     
     def parse_variable(self):
         # create variable node and eat identifier
-        node = NodeVariable(self.current_token)
+        variable_node = NodeVariable(self.current_token)
+
         self.eat(TokenType.Identifier)
-        return node
+        
+        return variable_node
     
-    def parse_assignment_statement(self, varname=None):
-        if varname == None:
-            varname = self.parse_variable()
-            
+    def parse_member_expression(self, lhs):
+        if self.eat(TokenType.Dot) is None:
+            return None
+
+        # expect identifier for right hand side
+        rhs_name = self.peek_token(0, TokenType.Identifier)
+
+        if rhs_name is None:
+            self.error('invalid member access: must be in format <expression>.<identifier>')
+            return None
+
+        self.eat(TokenType.Identifier)
+
+        return NodeMemberExpression(lhs, rhs_name)
+
+    def parse_assignment_statement(self, node):
         self.eat(TokenType.Equals)
     
         if self.current_token.type == TokenType.LParen:
             value = self.parse_parentheses()
-        elif self.current_token.type == TokenType.LBrace:
-            value = self.parse_block_statement()
         else:
             value = self.parse_expression()
-        node = NodeAssign(varname, value)
+        node = NodeAssign(node, value)
         return node
     
     def parse_parentheses(self):
@@ -133,17 +150,13 @@ class Parser():
 
     def parse_statement(self):
         token = self.current_token
-        if token.type == TokenType.LBrace:
-            # Start of new block
-            node = self.parse_block_statement()
-            return node
-        elif token.type == TokenType.Identifier:
+        if token.type == TokenType.Identifier:
             # parse function call
             if self.peek_token(1).type == TokenType.LParen:
                 node = self.parse_function_call()
             # parse assignment
             else:
-                node = self.parse_assignment_statement()
+                node = self.parse_expression()
         elif token.type == TokenType.Keyword:
             node = self.parse_keyword()
         else:
@@ -192,7 +205,34 @@ class Parser():
         self.eat(TokenType.RBrace)
 
         return block
-    
+
+    def parse_object_expression(self):
+        members = [] # array of var declarations
+
+        # eat left brace
+        if self.eat(TokenType.LBrace) is None:
+            return None
+
+        token = self.peek_token()
+
+        # find all lines in block
+        while token.type != TokenType.RBrace:
+            # parse variable declaration
+            var_decl = self.parse_variable_declaration(False)
+
+            if var_decl is None:
+                self.error('invalid object member declaration')
+                return None
+
+            members.append(var_decl)
+
+            token = self.peek_token()
+
+        if self.eat(TokenType.RBrace) is None:
+            return None
+
+        return NodeObjectExpression(members)
+
     def parse_type(self):
         node = NodeVarType(self.current_token)
         self.eat(self.current_token.type)
@@ -248,18 +288,10 @@ class Parser():
             self.eat(TokenType.Colon)
             vtype = self.parse_type()
 
-        if vtype is not None and vtype.is_type_type:
-            self.eat(TokenType.Equals)
-
-            type_expression = self.parse_type_declaration(vname)
-
-            if type_expression is not None:
-                val_node = NodeAssign(vname, type_expression)
+        if self.peek_token().type == TokenType.Equals:
+            val_node = self.parse_assignment_statement(NodeVariable(vname))
         else:
-            if self.peek_token().type == TokenType.Equals:
-                val_node = self.parse_assignment_statement(vname)
-            else:
-                val_node = NodeNone(vname)
+            val_node = NodeNone(vname)
 
         # TODO: multiple variable declaration(e.g let:int var0,var1)
         vnodes = NodeDeclare(vtype, vname, val_node)
@@ -303,12 +335,13 @@ class Parser():
     def parse_factor(self):
         # handles value or (x ± x)
         token = self.current_token
+
+        node = None
         
         # handle +, -
         if token.type in (TokenType.Plus, TokenType.Minus):
             self.eat(token.type)
             node = NodeUnaryOp(token, self.parse_factor())
-            return node
         
         # handle '!'
         elif token.type == TokenType.Not:
@@ -317,25 +350,33 @@ class Parser():
             if (self.current_token.type == TokenType.Equals):
                 node = NodeBinOp()
             node = NodeUnaryOp(token, self.parse_factor())
-            return node
             
         elif token.type == TokenType.Number:
             self.eat(TokenType.Number)
-            return NodeNumber(token)
+            node = NodeNumber(token)
         
         elif token.type == TokenType.String:
             self.eat(TokenType.String)
-            return NodeString(token)
+            node = NodeString(token)
         
         elif token.type == TokenType.LParen:
             self.eat(TokenType.LParen)
             node = self.parse_expression()
             self.eat(TokenType.RParen)
-            return node
+        elif token.type == TokenType.LBrace:
+            node = self.parse_object_expression()
         else:
             node = self.parse_variable()
-            return node
-            
+
+
+        while node is not None and self.current_token.type in (TokenType.Dot, TokenType.Equals):
+            if self.peek_token(0, TokenType.Dot):
+                node = self.parse_member_expression(node)
+            elif self.peek_token(0, TokenType.Equals):
+                node = self.parse_assignment_statement(node)
+
+        return node
+
     def parse_term(self):
         # handles multiply, division, expressions
         node = self.parse_factor()

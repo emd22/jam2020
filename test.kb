@@ -1,9 +1,20 @@
-let Char: type = {
-    a: str
-    b: int
+let Person = {
+    name: str
+
+    __repr__: func = () {
+        let y = 5;
+        __intern_print__(y);
+    }
 };
 
-__intern_print__(Char);
+let Customer = {
+    customer_id: int
+}
+
+__intern_print__(Person);
+__intern_print__(Person.extend);
+# arguments need a fixin
+ # __intern_print__(__intern_type_compare__(Person, Customer));
 
 let test:func = (x, y) {
     let v1 = -x+y;

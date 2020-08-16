@@ -27,7 +27,7 @@ def print_ast(node):
         print_ast(node.right)
     
     elif node.type == NodeType.Assign:
-        print_ast(node.var)
+        print_ast(node.lhs)
         print_ast(node.value)
         
     elif node.type == NodeType.Declare:

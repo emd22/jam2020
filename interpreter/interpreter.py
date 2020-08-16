@@ -2,16 +2,49 @@ from parser.parser import Parser
 from parser.node import AstNode, NodeType
 from interpreter.scope import *
 from interpreter.stack import Stack
-from interpreter.variable import BuiltinFunction
-from interpreter.type import Type
+from interpreter.function import BuiltinFunction
+from interpreter.typing.basic_type import BasicType
+from interpreter.basic_object import BasicObject, RootObject
+from parser.node import NodeVariable, NodeMemberExpression
 from lexer import TokenType, LexerToken
 
 from error import errors, ErrorType, Error 
 
-def builtin_printn(arguments):   
-    for arg in arguments:
-        print("__intern_print__ says {}".format(arg))
+def _print_object(interpreter, obj):
+    obj_str = repr(obj)
+
+    if isinstance(obj, BasicObject):
+        meth = obj.lookup_member('__repr__')
+
+        if meth is not None:
+            obj_str = interpreter.call_function_expression(meth.value)
+
+    print(obj_str)
+
+def builtin_printn(arguments):
+    interpreter = arguments[0]
+
+    for arg in arguments[1:]:
+        _print_object(interpreter, arg)
+
     return 0
+
+def builtin_type_compare(arguments):
+    interpreter = arguments[0]
+    target = arguments[1]
+    type_obj = arguments[2]
+
+    if not isinstance(target, BasicObject):
+        interpreter.error(target, ErrorType.TypeError, 'argument 1 ({}) is not a BasicObject, cannot perform typecheck'.format(target))
+        return None
+
+    if not isinstance(type_obj, BasicType):
+        interpreter.error(target, ErrorType.TypeError, 'argument 2 ({}) is not a BasicType, cannot perform typecheck'.format(type_obj))
+
+    if target.satisfies_type(type_obj):
+        return 1
+    else:
+        return 0
 
 class Interpreter():
     def __init__(self, parser, filename):
@@ -21,7 +54,8 @@ class Interpreter():
         self.filename = filename
         self.stack = Stack()
         self.builtins = [
-            BuiltinFunction("__intern_print__", None, builtin_printn)
+            BuiltinFunction("__intern_print__", None, builtin_printn),
+            BuiltinFunction("__intern_type_compare__", None, builtin_type_compare)
         ]
         
         self.global_scope = Scope(None)
@@ -84,6 +118,10 @@ class Interpreter():
             return self.visit_function_expression(node)
         elif node.type == NodeType.TypeExpression:
             return self.visit_type_expression(node)
+        elif node.type == NodeType.ObjectExpression:
+            return self.visit_object_expression(node)
+        elif node.type == NodeType.MemberExpression:
+            return self.visit_member_expression(node)
         else:
             raise Exception('Visitor function for {} not defined'.format(node.type))
             
@@ -148,53 +186,88 @@ class Interpreter():
             self.close_scope()
         
     def visit_assign(self, node):
-        var_name = node.var.value
         if node.value.type == NodeType.FunctionExpression:
             value = node.value
         else:
             value = self.visit(node.value)
-    
-        var = self.current_scope.find_variable(var_name)
-        if var != None:
-            var.value = value
+
+        if isinstance(node.lhs, NodeVariable):
+            target = self.walk_variable(node.lhs)
+
+            target.assign_value(value)
+        elif isinstance(node.lhs, NodeMemberExpression):
+            (target, member) = self.walk_member_expression(node.lhs)
+
+            if not isinstance(target, NodeMemberExpression):
+                self.error(node, ErrorType.TypeError, 'member expression not assignable')
+                return None
+
+            # TODO: type contract checking?
+            # objects that have a type tagged on require undergoing validation of the property type
+            # before assigning will work successfully?
+            target.assign_member(member.name, value)
         else:
-            self.error(node, ErrorType.DoesNotExist, "Variable '{}' not defined in scope".format(var_name))
-        #print("Set {} to {}".format(var_name, value))
+            self.error(node, ErrorType.TypeError, 'cannot assign {}'.format(node.lhs))
+
+            return None
+
         return value
     
     def visit_call(self, node):
         #print("Call function '{}'".format(node.var.value))
         
-        var = self.current_scope.find_variable(node.var.value)
-        arguments = []
-        for builtin in self.builtins:
-            if builtin.name == node.var.value:
+        target = None
+
+        # TODO: Do not iterate builtins before local vars -- allow them to be overwritten.
+        # instead, have the interpreter declare the builtins the same way we'd do locals,
+        # but assign them to the appropriate BuiltinFunction objects.
+        if isinstance(node.var, NodeVariable):
+            # check builtins.
+            for builtin in self.builtins:
+                if builtin.name == node.var.value:
+                    target = builtin
+                    break
+
+            if target is None:
+                target = self.visit(node.var) #TODO: turn into general expression, not just vars.
+
+        if target is not None:
+            if isinstance(target, BuiltinFunction):
+                arguments = []
+
+                # built-in function
                 for arg in node.argument_list.arguments:
                     arguments.append(self.visit(arg))
-                return builtin.call(arguments)
-        
-        if var != None:
-            #if type(var) != Function:
-            #    self.error(node, ErrorType.TypeError, 'Calling wrong variable type')
 
-            # push arguments to stack
-            for arg in node.argument_list.arguments:
-                self.stack.push(arg)
+                return builtin.call([self, *arguments])
+            else:
+                # user-defined function
+                # push arguments to stack
+                for arg in node.argument_list.arguments:
+                    self.stack.push(arg)
 
-            value = self.visit(var.value)
+                value = self.call_function_expression(target)
         else:
-            value = 0
+            self.error(node, ErrorType.TypeError, 'invalid call: {} ({}) is not a built-in or user-defined function'.format(node.var.value, target))
+
         return value
+
+    def walk_variable(self, node):
+        var = self.current_scope.find_variable(node.value)
+
+        if var is None:
+            self.error(node, ErrorType.DoesNotExist, "Referencing undefined variable '{}'".format(node.value))
+            return None
+
+        return var
             
     def visit_variable(self, node):
-        #print("Visit variable {}".format(node.value))
-        var = self.current_scope.find_variable(node.value)
-        if var != None:
-            value = var.value
-        else:
-            self.error(node, ErrorType.DoesNotExist, "Referencing undefined variable '{}'".format(node.value))
-            value = 0
-        return value
+        var = self.walk_variable(node)
+
+        if var is not None:
+            return var.value
+
+        return None
         
     def visit_if_statement(self, node):
         expr_result = self.visit(node.expr)
@@ -216,7 +289,7 @@ class Interpreter():
             # set variable to passed in value
             self.current_scope.find_variable(argument.name.value).value = self.visit(value)
 
-    def visit_function_expression(self, node):
+    def call_function_expression(self, node):
         # create our scope before block so argument variables are contained
         self.open_scope()
         # visit our arguments
@@ -226,19 +299,51 @@ class Interpreter():
         # done, close scope
         self.close_scope()
 
+    def visit_function_expression(self, node):
+        pass
+
     def visit_type_expression(self, node):
+        obj_expr = self.visit_object_expression(node)
+
+        return BasicType(node.name, obj_expr.parent, obj_expr.members)
+
+    def visit_object_expression(self, node):
         members = {}
 
         # open scope for members
         self.open_scope()
 
         for member_decl in node.members:
-            members[member_decl.name] = self.visit(member_decl)
+            value = self.visit(member_decl)
+
+            members[member_decl.name.value] = value
 
         # close scope for members
         self.close_scope()
 
-        return Type(node.name, members)
+        return BasicObject(parent=RootObject, members=members)
+
+    def walk_member_expression(self, node):
+        target = self.visit(node.lhs)
+
+        if target is None:
+            self.error(node, ErrorType.TypeError, 'invalid member access: {} has no member {}'.format(target, node.rhs.name))
+            return None
+
+        if not isinstance(target, BasicObject):
+            self.error(node, ErrorType.TypeError, 'invalid member access: target {} is not a BasicObject'.format(target))
+            return None
+
+        member = target.lookup_member(node.identifier.value)
+
+        if member is None:
+            self.error(node, ErrorType.TypeError, 'object {} has no direct or inherited member `{}`'.format(target, node.identifier.value))
+
+        return (target, member)
+
+    def visit_member_expression(self, node):
+        return self.walk_member_expression(node)[1].value
+
 
     def visit_none(self, node):
         pass

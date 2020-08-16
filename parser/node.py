@@ -17,6 +17,8 @@ class NodeType(Enum):
     ArgumentList = auto()
     FunctionExpression = auto()
     TypeExpression = auto()
+    ObjectExpression = auto()
+    MemberExpression = auto()
 
 class AstNode():
     location = (0, 0)
@@ -95,9 +97,9 @@ class NodeCall(AstNode):
 
 # Assignment node; Var = Value
 class NodeAssign(AstNode):
-    def __init__(self, var, value):
-        AstNode.__init__(self, NodeType.Assign, var)
-        self.var = var
+    def __init__(self, lhs, value):
+        self.type = NodeType.Assign
+        self.lhs = lhs
         self.value = value
 
 # Variable node; request value of variable
@@ -131,3 +133,15 @@ class NodeTypeExpression(AstNode):
         self.type = NodeType.TypeExpression
         self.name = name
         self.members = members
+
+class NodeObjectExpression(AstNode):
+    def __init__(self, members):
+        # members are var decls
+        self.type = NodeType.ObjectExpression
+        self.members = members
+
+class NodeMemberExpression(AstNode):
+    def __init__(self, lhs, identifier):
+        self.type = NodeType.MemberExpression
+        self.lhs = lhs
+        self.identifier = identifier
