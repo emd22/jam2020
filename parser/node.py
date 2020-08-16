@@ -48,7 +48,8 @@ class NodeNumber(AstNode):
     def __init__(self, token):
         AstNode.__init__(self, NodeType.Number, token)
         self.token = token
-        self.value = int(token.value)
+        # int(..., 0) for guessing hexadecimal, float, etc.
+        self.value = int(token.value, 0)
         
 class NodeString(AstNode):
     def __init__(self, token):

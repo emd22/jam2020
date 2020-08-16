@@ -21,6 +21,15 @@ class TokenType(Enum):
     Dot = '.'
     Comma = ','
     Not = '!'
+    LessThan = '<'
+    GreaterThan = '>'
+    
+    BitwiseOr = '|'
+    BitwiseAnd = '&'
+    BitwiseNot = '~'
+    
+    BitwiseLShift = auto()
+    BitwiseRShift = auto()
     
     Identifier = auto()
     Number = auto()
@@ -35,15 +44,18 @@ class TokenType(Enum):
             return TokenType(value)
             
         # TODO: add octal, hexadecimal and decimal numbers
-        if (value.isdigit()):
+        if value[0].isdigit():
+            if len(value) > 1:
+                if value[1] == 'x' or value[1] == 'X':
+                    return TokenType.Number
             return TokenType.Number
         
         # TODO: add single quote strings
-        elif (value[0] == '"' and value[-1] == '"'):
+        elif value[0] == '"' and value[-1] == '"':
             return TokenType.String
         
         # check if string is keyword
-        if (value in Keywords._value2member_map_):
+        if value in Keywords._value2member_map_:
             return TokenType.Keyword
         
         # nothing else, must be identifier
@@ -109,7 +121,7 @@ class Lexer():
         return False
     
     def lex(self):
-        splitables = "(){};:+-*/=.,!"
+        splitables = "(){};:+-*/=.,!|&~<>^"
         self.skip_whitespace()
         while self.peek_char(0) != '':
             # encountered whitespace and not in string, push token

@@ -1,3 +1,5 @@
+let false = 0;
+let true  = 1;
 
 /* Print string or number */
 func print(value:any) {
@@ -5,7 +7,7 @@ func print(value:any) {
 };
 
 func main() {
-    print(10-4);
+    print(2*7+3);
 };
 
 main();

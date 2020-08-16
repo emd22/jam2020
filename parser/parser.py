@@ -148,11 +148,14 @@ class Parser():
                 node = self.parse_assignment_statement()
         elif token.type == TokenType.Keyword:
             node = self.parse_keyword()
-            #return node
+            #print(node)
+            return node
         else:
             self.error('Unknown token {} in statement'.format(token.type))
             node = None
-            
+        
+        #print(self.current_token.type)
+        
         if self.current_token.type != TokenType.Semicolon:
             self.error('Missing semicolon')
         return node
@@ -165,9 +168,9 @@ class Parser():
         
         # find all lines in block
         while self.current_token is not None and self.current_token.type == TokenType.Semicolon:
-            self.eat(TokenType.Semicolon)
+            self.eat()
             # We hit last statement in block, break
-            if self.current_token is None or self.current_token.type == TokenType.RBrace:
+            if self.current_token == None or self.current_token.type == TokenType.RBrace:
                 break
             # parse statement and skip to next semicolon
             statements.append(self.parse_statement())
@@ -303,9 +306,6 @@ class Parser():
         # handle '!'
         elif token.type == TokenType.Not:
             self.eat(TokenType.Not)
-            # != statement
-            if (self.current_token.type == TokenType.Equals):
-                node = NodeBinOp()
             node = NodeUnaryOp(token, self.parse_factor())
             return node
             
@@ -340,13 +340,19 @@ class Parser():
     
     def parse_expression(self):
         node = self.parse_term()
-        while self.current_token.type in (TokenType.Plus, TokenType.Minus):
+        while self.current_token.type in (TokenType.Plus, TokenType.Minus, TokenType.BitwiseOr, TokenType.BitwiseAnd):
             token = self.current_token
-            
+        
             if token.type == TokenType.Plus:
                 self.eat(TokenType.Plus)
             elif token.type == TokenType.Minus:
                 self.eat(TokenType.Minus)
+                
+            elif token.type == TokenType.BitwiseOr:
+                self.eat(TokenType.BitwiseOr)
+            elif token.type == TokenType.BitwiseAnd:
+                self.eat(TokenType.BitwiseAnd)
+                
             node = NodeBinOp(left=node, token=token, right=self.parse_term())
         return node
         

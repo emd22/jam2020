@@ -68,6 +68,12 @@ class Interpreter():
             return left * right
         elif node.token.type == TokenType.Divide:
             return left // right
+            
+        elif node.token.type == TokenType.BitwiseOr:
+            return (left | right)
+        elif node.token.type == TokenType.BitwiseAnd:
+            return (left & right)
+            
         return 0
         
     def visit_Type(self, node):
