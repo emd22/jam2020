@@ -1,6 +1,11 @@
-let test:func = (x, y) {
-    let v1 = -x+y;
-    __intern_print__("poop", v1);
+
+/* Print string or number */
+func print(value:any) {
+    __intern_print__(value);
 };
 
-test(5, 10+4);
+func main() {
+    print(10-4);
+};
+
+main();

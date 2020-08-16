@@ -4,7 +4,7 @@ class Keywords(Enum):
     Let = 'let'
     If = 'if'
     Else = 'else'
-    
+    Func = 'func'
 
 class TokenType(Enum):
     LParen = '('
@@ -125,7 +125,7 @@ class Lexer():
                 self.skip_whitespace()
                 continue
             
-            elif self.skip_whitespace() and not self.in_string:
+            elif not self.in_string and self.skip_whitespace():
                 self.push_token()
                 continue
                   

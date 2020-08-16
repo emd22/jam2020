@@ -12,7 +12,8 @@ class Parser():
         
         self.keyword_methods = {
             'let': self.parse_variable_declaration,
-            'if': self.parse_if_statement
+            'if': self.parse_if_statement,
+            'func': self.parse_func_declaration
         }
     
     def next_token(self):
@@ -70,11 +71,12 @@ class Parser():
         self.eat(TokenType.Identifier)
         return node
     
-    def parse_assignment_statement(self, varname=None):
+    def parse_assignment_statement(self, varname=None, require_equals=True):
         if varname == None:
             varname = self.parse_variable()
-            
-        self.eat(TokenType.Equals)
+        
+        if require_equals:
+            self.eat(TokenType.Equals)
     
         if self.current_token.type == TokenType.LParen:
             value = self.parse_parentheses()
@@ -146,10 +148,11 @@ class Parser():
                 node = self.parse_assignment_statement()
         elif token.type == TokenType.Keyword:
             node = self.parse_keyword()
+            #return node
         else:
             self.error('Unknown token {} in statement'.format(token.type))
             node = None
-        
+            
         if self.current_token.type != TokenType.Semicolon:
             self.error('Missing semicolon')
         return node
@@ -195,7 +198,7 @@ class Parser():
     
     def parse_type(self):
         node = NodeVarType(self.current_token)
-        self.eat(self.current_token.type)
+        self.eat()
         return node
         
     def parse_function_call(self):
@@ -233,6 +236,23 @@ class Parser():
 
         return NodeFunctionExpression(argument_list, block)
     
+    def parse_func_declaration(self):
+        # func NAME(...) { ... }
+        
+        # eat func keyword
+        type = self.current_token
+        self.eat(TokenType.Keyword)
+        # eat function name
+        name = self.current_token
+        self.eat(TokenType.Identifier)
+        
+        # parse assignment, parenthesis, etc.
+        value = self.parse_assignment_statement(name, require_equals=False)
+        type_node = NodeVarType(type)
+        node = NodeDeclare(type_node, name, value)
+        
+        return node
+    
     def parse_variable_declaration(self, require_keyword=True):
         # let:TYPE parse_assignment_statement
         
@@ -240,20 +260,20 @@ class Parser():
             # eat let keyword
             self.eat(TokenType.Keyword)
             
-        vname = self.current_token
+        name = self.current_token
         self.eat(TokenType.Identifier)
         # manual type set
-        vtype = None
+        type_node = None
         if self.current_token.type == TokenType.Colon:
             self.eat(TokenType.Colon)
-            vtype = self.parse_type()
+            type_node = self.parse_type()
             
         if self.peek_token().type == TokenType.Equals:
-            val_node = self.parse_assignment_statement(vname)
+            val_node = self.parse_assignment_statement(name)
         else:
-            val_node = NodeNone(vname)
+            val_node = NodeNone(name)
         # TODO: multiple variable declaration(e.g let:int var0,var1)
-        vnodes = NodeDeclare(vtype, vname, val_node)
+        vnodes = NodeDeclare(type_node, name, val_node)
         
         return vnodes
         

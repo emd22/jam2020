@@ -44,7 +44,6 @@ def print_ast(node):
         print_func('<Function>')
         print_ast(node.argument_list)
         print_ast(node.block)
-        
 
 def main():
     filename = "test.kb"

@@ -9,7 +9,7 @@ from error import errors, ErrorType, Error
 
 def builtin_printn(arguments):   
     for arg in arguments:
-        print("__intern_print__ says {}".format(arg))
+        print("{}".format(arg))
     return 0
 
 class Interpreter():
@@ -53,38 +53,11 @@ class Interpreter():
         quit()
         
     def visit(self, node):
-        if node.type == NodeType.Empty:
-            pass
-        elif node.type == NodeType.BinOp:
-            return self.visit_binop(node)
-        elif node.type == NodeType.Number:
-            return self.visit_number(node)
-        elif node.type == NodeType.String:
-            return self.visit_string(node)
-        elif node.type == NodeType.UnaryOp:
-            return self.visit_unaryop(node)
-        elif node.type == NodeType.Block:
-            return self.visit_block(node)
-        elif node.type == NodeType.Assign:
-            return self.visit_assign(node)
-        elif node.type == NodeType.Variable:
-            return self.visit_variable(node)
-        elif node.type == NodeType.Type:
-            return self.visit_type(node)
-        elif node.type == NodeType.Declare:
-            return self.visit_declare(node)
-        elif node.type == NodeType.Call:
-            return self.visit_call(node)
-        elif node.type == NodeType.IfStatement:
-            return self.visit_if_statement(node)
-        elif node.type == NodeType.ArgumentList:
-            return self.visit_argument_list(node)
-        elif node.type == NodeType.FunctionExpression:
-            return self.visit_function_expression(node)
-        else:
-            raise Exception('Visitor function for {} not defined'.format(node.type))
+        caller_name = "visit_{}".format(str(node.type.name))
+        caller = getattr(self, caller_name)
+        return caller(node)
             
-    def visit_binop(self, node):
+    def visit_BinOp(self, node):
         left = self.visit(node.left)
         right = self.visit(node.right)
         if node.token.type == TokenType.Plus:
@@ -97,10 +70,10 @@ class Interpreter():
             return left // right
         return 0
         
-    def visit_type(self, node):
+    def visit_Type(self, node):
         pass
     
-    def visit_declare(self, node):
+    def visit_Declare(self, node):
         if node.type_node != None:
             # set type to VariableType(type_node)
             vtype = VariableType(node.type_node.token.value)
@@ -113,13 +86,13 @@ class Interpreter():
         return val
         
     
-    def visit_number(self, node):
+    def visit_Number(self, node):
         return node.value
     
-    def visit_string(self, node):
+    def visit_String(self, node):
         return node.value
     
-    def visit_unaryop(self, node):
+    def visit_UnaryOp(self, node):
         val = self.visit(node.expression)
         
         if node.token.type == TokenType.Plus:
@@ -132,7 +105,7 @@ class Interpreter():
             else:
                 return 0
             
-    def visit_block(self, node, create_scope=True):
+    def visit_Block(self, node, create_scope=True):
         if create_scope:
             self.open_scope()
 
@@ -142,7 +115,7 @@ class Interpreter():
         if create_scope:
             self.close_scope()
         
-    def visit_assign(self, node):
+    def visit_Assign(self, node):
         var_name = node.var.value
         if node.value.type == NodeType.FunctionExpression:
             value = node.value
@@ -157,7 +130,7 @@ class Interpreter():
         #print("Set {} to {}".format(var_name, value))
         return value
     
-    def visit_call(self, node):
+    def visit_Call(self, node):
         #print("Call function '{}'".format(node.var.value))
         
         var = self.current_scope.find_variable(node.var.value)
@@ -181,7 +154,7 @@ class Interpreter():
             value = 0
         return value
             
-    def visit_variable(self, node):
+    def visit_Variable(self, node):
         #print("Visit variable {}".format(node.value))
         var = self.current_scope.find_variable(node.value)
         if var != None:
@@ -191,37 +164,37 @@ class Interpreter():
             value = 0
         return value
         
-    def visit_if_statement(self, node):
+    def visit_IfStatement(self, node):
         expr_result = self.visit(node.expr)
 
         # todo this should be changed to a general purpose 'is true' check
         if expr_result != 0:
-            self.visit_block(node.block)
+            self.visit_Block(node.block)
         elif node.else_block is not None:
-            self.visit_block(node.else_block)
+            self.visit_Block(node.else_block)
         
-    def visit_argument_list(self, node):
+    def visit_ArgumentList(self, node):
         # read arguments backwards as values are popped from stack
         for argument in reversed(node.arguments):
             # retrieve value
             value = self.stack.pop()
             # declare variable
-            self.visit_declare(argument)
+            self.visit_Declare(argument)
             # TODO: clean up
             # set variable to passed in value
             self.current_scope.find_variable(argument.name.value).value = self.visit(value)
 
-    def visit_function_expression(self, node):
+    def visit_FunctionExpression(self, node):
         # create our scope before block so argument variables are contained
         self.open_scope()
         # visit our arguments
         self.visit(node.argument_list)
         # self.visit would normally be used here, but we need create_scope
-        self.visit_block(node.block, create_scope=False)
+        self.visit_Block(node.block, create_scope=False)
         # done, close scope
         self.close_scope()
 
-    def visit_none(self, node):
+    def visit_Empty(self, node):
         pass
         
     
