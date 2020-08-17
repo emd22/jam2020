@@ -5,6 +5,7 @@ class ErrorType(Enum):
     Syntax = auto()
     DoesNotExist = auto()
     TypeError = auto()
+    MultipleDefinition = auto()
 
 class Error():
     def __init__(self, type, location, message, filename):

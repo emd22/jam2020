@@ -13,9 +13,13 @@ class NodeType(Enum):
     Type     = auto()
     Declare  = auto()
     Call     = auto()
+    Import   = auto() 
     IfStatement  = auto()
     ArgumentList = auto()
     FunctionExpression = auto()
+    TypeExpression = auto()
+    ObjectExpression = auto()
+    MemberExpression = auto()
 
 class AstNode():
     location = (0, 0)
@@ -75,6 +79,10 @@ class NodeVarType(AstNode):
         AstNode.__init__(self, NodeType.Type, token)
         self.token = token
 
+    @property
+    def is_type_type(self):
+        return self.token.value == 'type'
+
 # Declare node; declare variable or function
 class NodeDeclare(AstNode):
     def __init__(self, type, name, value):
@@ -82,18 +90,24 @@ class NodeDeclare(AstNode):
         self.type_node = type
         self.name = name
         self.value = value
+        
+class NodeImport(AstNode):
+    def __init__(self, filename, parser):
+        AstNode.__init__(self, NodeType.Import, filename)
+        self.children = []
+        self.parser = parser
 
 class NodeCall(AstNode):
-    def __init__(self, var, argument_list):
-        AstNode.__init__(self, NodeType.Call, var.token)
-        self.var = var
+    def __init__(self, lhs, argument_list):
+        AstNode.__init__(self, NodeType.Call, lhs.token)
+        self.lhs = lhs
         self.argument_list = argument_list
 
 # Assignment node; Var = Value
 class NodeAssign(AstNode):
-    def __init__(self, var, value):
-        AstNode.__init__(self, NodeType.Assign, var)
-        self.var = var
+    def __init__(self, lhs, value):
+        AstNode.__init__(self, NodeType.Assign, value)
+        self.lhs = lhs
         self.value = value
 
 # Variable node; request value of variable
@@ -121,3 +135,21 @@ class NodeFunctionExpression(AstNode):
         self.argument_list = argument_list
         self.block = block
 
+class NodeTypeExpression(AstNode):
+    def __init__(self, name, members):
+        # members are var decls
+        self.type = NodeType.TypeExpression
+        self.name = name
+        self.members = members
+
+class NodeObjectExpression(AstNode):
+    def __init__(self, members):
+        # members are var decls
+        self.type = NodeType.ObjectExpression
+        self.members = members
+
+class NodeMemberExpression(AstNode):
+    def __init__(self, lhs, identifier):
+        self.type = NodeType.MemberExpression
+        self.lhs = lhs
+        self.identifier = identifier

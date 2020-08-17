@@ -1,13 +1,24 @@
-let false = 0;
-let true  = 1;
+import "std/core.kb";
 
-/* Print string or number */
-func print(value:any) {
-    __intern_print__(value);
+let Person = {
+    name: str
+
+    __repr__: func = () {
+        let y = 5;
+        print(y);
+        return(0);
+    }
 };
 
-func main() {
-    print(2*7+3);
+let test:func = () {
+    return(10);
 };
 
-main();
+print(test());
+
+print(Person);
+print(Person.extend);
+
+#*
+__intern_print__(__intern_type_compare__(Person, Customer));
+*#

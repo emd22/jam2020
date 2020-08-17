@@ -2,7 +2,7 @@ from lexer import Lexer, TokenType, LexerToken
 from parser.parser import Parser
 from parser.node import AstNode, NodeType
 from interpreter.interpreter import Interpreter
-from interpreter.scope import Variable, VariableType
+from interpreter.scope import Variable#, VariableType
 
 def print_func(string):
     print(string)
@@ -27,7 +27,7 @@ def print_ast(node):
         print_ast(node.right)
     
     elif node.type == NodeType.Assign:
-        print_ast(node.var)
+        print_ast(node.lhs)
         print_ast(node.value)
         
     elif node.type == NodeType.Declare:
@@ -55,11 +55,11 @@ def main():
     
     #print_func("=== Parser ===")
     
-    parser = Parser(lexer)
+    parser = Parser(lexer, filename)
     # init interpreter and parse tokens
-    interpreter = Interpreter(parser, filename)
+    interpreter = Interpreter(parser)
     # print them bad boys out
-    #print_ast(interpreter.ast)
+    print_ast(interpreter.ast)
     
     print_func("=== Output ===")
     interpreter.interpret()

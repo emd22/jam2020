@@ -5,6 +5,7 @@ class Keywords(Enum):
     If = 'if'
     Else = 'else'
     Func = 'func'
+    Import = 'import'
 
 class TokenType(Enum):
     LParen = '('
@@ -125,14 +126,25 @@ class Lexer():
         self.skip_whitespace()
         while self.peek_char(0) != '':
             # encountered whitespace and not in string, push token
-            if self.peek_char(0) == '/' and self.peek_char(1) == '*':
-                # skip '/*' characters
-                self.read_char(2)
-                # read until '*/'
-                while (self.read_char() != '*' and self.peek_char(1) != '/'):
-                    pass
-                # skip '*/' characters
-                self.read_char(2)
+            
+            # multiline comments
+            if self.peek_char(0) == '#':
+                self.read_char()
+                if self.peek_char(0) == '*':
+                    # multiline comment
+                    
+                    # skip '*' character
+                    self.read_char()
+                    # read until '*/'
+                    while (self.read_char() != '*' and self.peek_char(1) != '#'):
+                        pass
+                        
+                    # skip '*#' characters
+                    self.read_char(2)
+                else:
+                    while self.read_char() != '\n':
+                        pass
+                        
                 # skip any whitespace after comment
                 self.skip_whitespace()
                 continue
