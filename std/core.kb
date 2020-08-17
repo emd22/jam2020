@@ -1,11 +1,5 @@
-#* Standard library core file *#
+import "std/io.kb";
 
-let print:func = (value:any) {
-    __intern_print__(value);
-    return(0);
-};
-
-let varinfo:func = (varname:str) {
-    __intern_varinfo__(varname);
-    return(0); 
+let varinfo:func = (_vname_:str) {
+    __intern_varinfo__(_vname_);
 };

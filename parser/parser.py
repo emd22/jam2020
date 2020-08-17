@@ -15,7 +15,8 @@ class Parser():
             'let': self.parse_variable_declaration,
             'if': self.parse_if_statement,
             'func': self.parse_func_declaration,
-            'import': self.parse_import
+            'import': self.parse_import,
+            'return': self.parse_return
         }
     
     def next_token(self):
@@ -116,6 +117,11 @@ class Parser():
         node.parser = fileparser
         
         return node
+        
+    def parse_return(self):
+        self.eat(TokenType.Keyword)
+        value_node = self.parse_expression()
+        return NodeFunctionReturn(value_node, self.current_token)
 
     def parse_assignment_statement(self, node, require_equals=True):
         if require_equals:
@@ -294,9 +300,8 @@ class Parser():
     def parse_function_expression(self, argument_list=None):
         if argument_list is None:
             argument_list = self.parse_parentheses()
-
         block = self.parse_block_statement()
-
+        
         return NodeFunctionExpression(argument_list, block)
     
     def parse_func_declaration(self):
@@ -310,9 +315,9 @@ class Parser():
         self.eat(TokenType.Identifier)
         
         # parse assignment, parenthesis, etc.
-        value = self.parse_assignment_statement(name, require_equals=False)
+        val_node = self.parse_assignment_statement(NodeVariable(name), require_equals=False)
         type_node = NodeVarType(type)
-        node = NodeDeclare(type_node, name, value)
+        node = NodeDeclare(type_node, name, val_node)
         
         return node
     

@@ -13,11 +13,12 @@ class NodeType(Enum):
     Type     = auto()
     Declare  = auto()
     Call     = auto()
-    Import   = auto() 
+    Import   = auto()
     IfStatement  = auto()
     ArgumentList = auto()
+    FunctionReturn     = auto()
     FunctionExpression = auto()
-    TypeExpression = auto()
+    TypeExpression   = auto()
     ObjectExpression = auto()
     MemberExpression = auto()
 
@@ -29,9 +30,9 @@ class AstNode():
         self.location = token.location
     def __str__(self):
         try:
-            return "AstNode[{0}, {1}]".format(self.type, self.token)
+            return "AstNode[{0}, {1}]".format(self.type.name, self.token)
         except:
-            return "AstNode[{0}]".format(self.type)
+            return "AstNode[{0}]".format(self.type.name)
             
     def __repr__(self):
         return self.__str__()
@@ -134,6 +135,11 @@ class NodeFunctionExpression(AstNode):
         AstNode.__init__(self, NodeType.FunctionExpression, block)
         self.argument_list = argument_list
         self.block = block
+        
+class NodeFunctionReturn(AstNode):
+    def __init__(self, value_node, token):
+        AstNode.__init__(self, NodeType.FunctionReturn, token)
+        self.value_node = value_node
 
 class NodeTypeExpression(AstNode):
     def __init__(self, name, members):

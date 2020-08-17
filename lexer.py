@@ -6,6 +6,7 @@ class Keywords(Enum):
     Else = 'else'
     Func = 'func'
     Import = 'import'
+    Return = 'return'
 
 class TokenType(Enum):
     LParen = '('
@@ -72,7 +73,7 @@ class LexerToken():
         self.value = value
         self.location = (0, 0)
     def __str__(self):
-        return "LexerToken[Type:{0}, Value:'{1}']".format(self.type, self.value)
+        return "LexerToken[Type:{0}, Value:'{1}']".format(self.type.name, self.value)
     def __repr__(self):
         return self.__str__()
 

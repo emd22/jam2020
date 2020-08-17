@@ -1,5 +1,5 @@
 from parser.parser import Parser
-from parser.node import AstNode, NodeType
+from parser.node import AstNode, NodeType, NodeFunctionReturn
 from interpreter.scope import *
 from interpreter.stack import Stack
 from interpreter.function import BuiltinFunction
@@ -28,8 +28,7 @@ def _print_object(interpreter, node, obj):
 def builtin_varinfo(arguments):
     interpreter = arguments[0]
     var = interpreter.current_scope.find_variable(arguments[2])
-    print(f"Variable '{var.name}' type: {var.type.name}")
-    
+    print(f"Variable '{var.name}' type: {var.type.name} value: {var.value}")
 
 def builtin_printn(arguments):
     interpreter = arguments[0]
@@ -39,13 +38,6 @@ def builtin_printn(arguments):
         _print_object(interpreter, node, arg)
 
     return 0
-    
-def builtin_return(arguments):
-    interpreter = arguments[0]
-    node  = arguments[1]
-    value = arguments[2]
-    
-    interpreter.stack.push(value)
     
 def builtin_type_compare(arguments):
     interpreter = arguments[0]
@@ -76,7 +68,6 @@ class Interpreter():
             BuiltinFunction("__intern_print__", None, builtin_printn),
             BuiltinFunction("__intern_type_compare__", None, builtin_type_compare),
             BuiltinFunction("__intern_varinfo__", None, builtin_varinfo),
-            BuiltinFunction("return", None, builtin_return)
         ]
         
         self.global_scope = Scope(None)
@@ -160,10 +151,18 @@ class Interpreter():
         return val
     
     def visit_Import(self, node):
+        # the imported file is already lexed and parsed from the parser, so this
+        # acts like a block and visits the statements inside. This means that if we
+        # import inside a function, any variables should only be available to that
+        # scope.
         self.selected_parser = node.parser
         for child in node.children:
             self.visit(child)
         self.selected_parser = self.parser
+    
+    def visit_FunctionReturn(self, node):
+        value = self.visit(node.value_node)
+        self.stack.push(value)
     
     def visit_Number(self, node):
         return node.value
@@ -178,6 +177,7 @@ class Interpreter():
             return +val
         elif node.token.type == TokenType.Minus:
             return -val
+            
         elif node.token.type == TokenType.Not:
             if val == 0:
                 return 1
@@ -187,10 +187,13 @@ class Interpreter():
     def visit_Block(self, node, create_scope=True):
         if create_scope:
             self.open_scope()
-
+        
+        # visit each statement in block
         for child in node.children:
             self.visit(child)
-
+            if type(child) == NodeFunctionReturn:
+                break
+            
         if create_scope:
             self.close_scope()
         
@@ -202,8 +205,8 @@ class Interpreter():
 
         if isinstance(node.lhs, NodeVariable):
             target = self.walk_variable(node.lhs)
-
             target.assign_value(value)
+
         elif isinstance(node.lhs, NodeMemberExpression):
             (target, member) = self.walk_member_expression(node.lhs)
 
@@ -226,6 +229,7 @@ class Interpreter():
         #print("Call function '{}'".format(node.var.value))
         
         target = None
+        return_value = 0
 
         # TODO: Do not iterate builtins before local vars -- allow them to be overwritten.
         # instead, have the interpreter declare the builtins the same way we'd do locals,
@@ -241,22 +245,22 @@ class Interpreter():
             target = self.visit(node.lhs) # TODO: turn into general expression, not just vars.
 
         if target is not None:
+            # if a built-in function exists, call it
             if isinstance(target, BuiltinFunction):
-                self.call_builtin_function(target, node, node.argument_list.arguments)
-            else:
-                # user-defined function
+                return_value = self.call_builtin_function(target, node, node.argument_list.arguments)
+            # user-defined function
+            else:               
                 # push arguments to stack
                 for arg in node.argument_list.arguments:
                     self.stack.push(arg)
                 
-                
-                #old_scope = self._top_level_scope
-                #self._top_level_scope = old_scope.parent
-                value = self.call_function_expression(target)
+                self.call_function_expression(target)
+                # the return value is pushed onto the stack at end of block or return
+                # statement. Pop it off and return as a value
+                return_value = self.stack.pop()
         else:
             self.error(node, ErrorType.TypeError, 'invalid call: {} ({}) is not a built-in or user-defined function'.format(node.var.value, target))
-        value = self.stack.pop()
-        return value
+        return return_value
 
     def walk_variable(self, node):
         var = self.current_scope.find_variable(node.value)
@@ -293,7 +297,7 @@ class Interpreter():
             self.visit_Declare(argument)
             # TODO: clean up
             # set variable to passed in value
-            self.current_scope.find_variable(argument.name.value).value = self.visit(value)
+            self.current_scope.set_variable(argument.name.value, self.visit(value))
 
     def visit_FunctionExpression(self, node):
         pass
@@ -314,6 +318,16 @@ class Interpreter():
         self.visit(node.argument_list)
         # self.visit would normally be used here, but we need create_scope
         self.visit_Block(node.block, create_scope=False)
+        
+        # check if block contains a return statement
+        for child in node.block.children:
+            if type(child) == NodeFunctionReturn:
+                break
+        else:
+            # no return statement, push return code 0 to the stack
+            if type(child) != NodeFunctionReturn:
+                self.stack.push(0)
+            
         # done, close scope
         self.close_scope()
 

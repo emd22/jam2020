@@ -1,24 +1,9 @@
 import "std/core.kb";
 
-let Person = {
-    name: str
-
-    __repr__: func = () {
-        let y = 5;
-        print(y);
-        return(0);
-    }
+func test(a) {
+    print(a+5);
 };
 
-let test:func = () {
-    return(10);
-};
-print(Type);
-#print(test());
+let value:int = 20;
+test(value);
 
-#print(Person);
-#print(Person.extend);
-
-#*
-__intern_print__(__intern_type_compare__(Person, Customer));
-*#

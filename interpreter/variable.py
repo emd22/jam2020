@@ -29,7 +29,7 @@ class Value:
 
 class Variable(Value):
     def __init__(self, name, vtype, value):
-        Value.__init__(self, value=value)
+        Value.__init__(self, value)
         self.name = name
         self.value = 0
 
