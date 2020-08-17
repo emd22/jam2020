@@ -19,8 +19,17 @@ STRING_TYPE = BasicType('str', None, {}, True)
 ANY_TYPE = BasicType('any', None, {}, True)
 FUNC_TYPE = BasicType('func', None, {}, True)
 
-class Variable():
+class Value:
+    def __init__(self, value):
+        self.value = value
+
+    def assign_value(self, value):
+        # TODO: type assertions
+        self.value = value
+
+class Variable(Value):
     def __init__(self, name, vtype, value):
+        Value.__init__(self, value=value)
         self.name = name
         self.value = 0
 
@@ -30,7 +39,3 @@ class Variable():
             self.value = value
             
         self.type = vtype
-
-    def assign_value(self, value):
-        # TODO: type assertions
-        self.value = value

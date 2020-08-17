@@ -1,8 +1,22 @@
 from interpreter.basic_object import BasicObject
+from interpreter.function import BuiltinFunction
+
+def builtin_type_repr(arguments):
+    interpreter = arguments[0]
+    node = arguments[1]
+    this_object = arguments[1]
+
+    # TODO: return a string wrapped object?
+    # TODO: each member should have a tagged type
+    return "Type {\n" + '\n'.join(map(lambda x: "\t{},".format(x), this_object.members)) + "}" 
 
 class BasicType(BasicObject):
+    DEFAULT_TYPE_MEMBERS = {
+        '__repr__': BuiltinFunction('__intern_type_repr__', None, builtin_type_repr)
+    }
+
     def __init__(self, name, parent=None, members={}, nominative=False):
-        BasicObject.__init__(self, parent, members)
+        BasicObject.__init__(self, parent, {**members, **BasicType.DEFAULT_TYPE_MEMBERS})
         self.name = name
         self.nominative = nominative
 
@@ -23,7 +37,7 @@ class BasicType(BasicObject):
         if not self.parent.compare_type(other_type.parent):
             return False
 
-        for (mem_name, mem_type) in self.members:
+        for (mem_name, mem_type) in self.members.items():
             if not mem_name in other_type.members:
                 return False
         

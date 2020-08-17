@@ -10,6 +10,19 @@ class BasicObject:
         self.parent = parent
         self.members = members
 
+    def clone(self, parent_override=None):
+        parent = self.parent
+
+        if parent_override is not None:
+            parent = parent_override
+
+        members = {}
+
+        for (key, value) in self.members.items():
+            members[key] = value.clone()
+
+        return BasicObject(parent=parent, members=members)
+
     def assign_member(self, name, value):
         self.members[name] = value
 
@@ -24,7 +37,7 @@ class BasicObject:
 
     def satisfies_type(self, type):
         # all members are str -> BasicObject (or an extension thereof)
-        for (tname, tvalue) in type.members:
+        for (tname, tvalue) in type.members.items():
             if self.lookup_member(tname, tvalue) is None:
                 return False
 
@@ -38,7 +51,7 @@ class BasicObject:
 
         union_members = self.members.copy()
 
-        for (name, value) in other.members:
+        for (name, value) in other.members.items():
             if name in union_members:
                 if not value.compare_type(union_members[name]):
                     union_members[name] = UnionType(union_members[name], value)
@@ -46,14 +59,3 @@ class BasicObject:
             union_members[name] = value
 
         return BasicObject(None, union_members)
-
-def builtin_object_extend(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
-    properties_object = arguments[2]
-
-    return BasicObject(parent=this_object, members=properties_object.members)
-
-RootObject = BasicObject(None, {
-    'extend': BuiltinFunction('__intern_object_extend__', None, builtin_object_extend)
-})

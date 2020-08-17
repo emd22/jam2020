@@ -13,11 +13,11 @@ let Person = {
 let test:func = () {
     return(10);
 };
+print(Type);
+#print(test());
 
-print(test());
-
-print(Person);
-print(Person.extend);
+#print(Person);
+#print(Person.extend);
 
 #*
 __intern_print__(__intern_type_compare__(Person, Customer));

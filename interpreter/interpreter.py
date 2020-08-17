@@ -4,20 +4,24 @@ from interpreter.scope import *
 from interpreter.stack import Stack
 from interpreter.function import BuiltinFunction
 from interpreter.typing.basic_type import BasicType
-from interpreter.basic_object import BasicObject, RootObject
+from interpreter.basic_object import BasicObject
+from interpreter.env.globals import Globals
 from parser.node import NodeVariable, NodeMemberExpression
 from lexer import TokenType, LexerToken
 
 from error import errors, ErrorType, Error 
 
-def _print_object(interpreter, obj):
+def _print_object(interpreter, node, obj):
     obj_str = repr(obj)
 
     if isinstance(obj, BasicObject):
         meth = obj.lookup_member('__repr__')
 
         if meth is not None:
-            obj_str = interpreter.call_function_expression(meth.value)
+            if isinstance(meth.value, BuiltinFunction):
+                obj_str = interpreter.call_builtin_function(meth.value, obj, [])
+            else:
+                obj_str = interpreter.call_function_expression(meth.value)
 
     print(obj_str)
     
@@ -29,9 +33,10 @@ def builtin_varinfo(arguments):
 
 def builtin_printn(arguments):
     interpreter = arguments[0]
+    node = arguments[1]
 
     for arg in arguments[2:]:
-        _print_object(interpreter, arg)
+        _print_object(interpreter, node, arg)
 
     return 0
     
@@ -77,6 +82,8 @@ class Interpreter():
         self.global_scope = Scope(None)
         self._top_level_scope = None
 
+        Globals().apply_to_scope(self.global_scope)
+
     @property
     def current_scope(self):
         if self._top_level_scope is not None:
@@ -100,7 +107,12 @@ class Interpreter():
         return self.visit(self.ast)
         
     def error(self, node, type, message):
-        errors.push_error(Error(type, node.location, message, self.selected_parser.filename))
+        location = None
+
+        if node is not None:
+            location = node.location
+
+        errors.push_error(Error(type, location, message, self.selected_parser.filename))
         errors.print_errors()
         quit()
         
@@ -230,13 +242,7 @@ class Interpreter():
 
         if target is not None:
             if isinstance(target, BuiltinFunction):
-                arguments = []
-
-                # built-in function
-                for arg in node.argument_list.arguments:
-                    arguments.append(self.visit(arg))
-
-                return builtin.call([self, node, *arguments])
+                self.call_builtin_function(target, node, node.argument_list.arguments)
             else:
                 # user-defined function
                 # push arguments to stack
@@ -247,7 +253,6 @@ class Interpreter():
                 #old_scope = self._top_level_scope
                 #self._top_level_scope = old_scope.parent
                 value = self.call_function_expression(target)
-                #self._top_level_scope = old_scope
         else:
             self.error(node, ErrorType.TypeError, 'invalid call: {} ({}) is not a built-in or user-defined function'.format(node.var.value, target))
         value = self.stack.pop()
@@ -293,6 +298,15 @@ class Interpreter():
     def visit_FunctionExpression(self, node):
         pass
 
+    def call_builtin_function(self, fun, this_object, arguments):
+        args = []
+
+        # built-in function
+        for arg in arguments:
+            args.append(self.visit(arg))
+
+        return fun.call([self, this_object, *args])
+
     def call_function_expression(self, node):
         # create our scope before block so argument variables are contained
         self.open_scope()
@@ -322,7 +336,8 @@ class Interpreter():
         # close scope for members
         self.close_scope()
 
-        return BasicObject(parent=RootObject, members=members)
+        # TODO make parent be the global `Object` type.
+        return BasicObject(parent=None, members=members)
 
     def walk_member_expression(self, node):
         target = self.visit(node.lhs)
