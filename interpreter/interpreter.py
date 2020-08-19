@@ -1,5 +1,8 @@
 from parser.parser import Parser
 from parser.node import AstNode, NodeType, NodeFunctionReturn
+from parser.source_location import SourceLocation
+from parser.node import NodeVariable, NodeMemberExpression, NodeFunctionExpression
+
 from interpreter.scope import *
 from interpreter.stack import Stack
 from interpreter.function import BuiltinFunction
@@ -8,17 +11,15 @@ from interpreter.basic_object import BasicObject
 from interpreter.basic_value import BasicValue
 from interpreter.env.globals import Globals
 from interpreter.variable import VariableType
-from parser.node import NodeVariable, NodeMemberExpression
 from lexer import TokenType, LexerToken
 
-from error import errors, ErrorType, Error 
+from error import InterpreterError, ErrorList, ErrorType, Error 
 
 
 class Interpreter():
-    def __init__(self, parser):
-        self.parser = parser
-        self.ast = parser.parse()
-        self.selected_parser = self.parser
+    def __init__(self, source_location):
+        self.source_location = source_location
+        self.error_list = ErrorList()
         # declare scopes + global scope
         self.stack = Stack()
         
@@ -43,19 +44,17 @@ class Interpreter():
         self._top_level_scope = self.current_scope.parent
 
         return self.current_scope
-        
-    def interpret(self):
-        return self.visit(self.ast)
-        
+
     def error(self, node, type, message):
         location = None
 
         if node is not None:
             location = node.location
 
-        errors.push_error(Error(type, location, message, self.selected_parser.filename))
-        errors.print_errors()
-        quit()
+        self.error_list.push_error(Error(type, location, message, self.source_location.filename))
+        self.error_list.print_errors()
+
+        raise InterpreterError('Interpreter error')
         
     def visit(self, node):
         try:
@@ -89,17 +88,23 @@ class Interpreter():
         pass
     
     def visit_Declare(self, node):
-        if node.type_node != None:
-            # set type to VariableType(type_node)
-            vtype = VariableType(node.type_node.token.value)
-        else:
-            # no type node attached, default to VariableType.any
-            vtype = VariableType.Any
+
+        # if node.type_node != None:
+        #     # set type to VariableType(type_node)
+        #     vtype = VariableType(node.type_node.token.value)
+        # else:
+        #     # no type node attached, default to VariableType.any
+        #     vtype = VariableType.Any
+        type_node_value = None # TODO default to Any or type of assignment
+
+        if node.type_node is not None:
+            print("type node: {}".format(node.type_node))
+            type_node_value = self.visit(node.type_node)
 
         if self.current_scope.find_variable_info(node.name.value, limit=True) != None:
             self.error(node, ErrorType.MultipleDefinition, "multiple definition of '{}'".format(node.name.value))
    
-        self.current_scope.declare_variable(node.name.value, vtype)
+        self.current_scope.declare_variable(node.name.value, type_node_value)
         val = self.visit(node.value)
         return val
     
@@ -108,10 +113,13 @@ class Interpreter():
         # acts like a block and visits the statements inside. This means that if we
         # import inside a function, any variables should only be available to that
         # scope.
-        self.selected_parser = node.parser
+        old_source_location = self.source_location
+        self.source_location = node.source_location
+
         for child in node.children:
             self.visit(child)
-        self.selected_parser = self.parser
+
+        self.source_location = old_source_location
     
     def visit_FunctionReturn(self, node):
         value = self.visit(node.value_node)
@@ -206,9 +214,10 @@ class Interpreter():
 
             # if a built-in function exists, call it
             if isinstance(target, BuiltinFunction):
-                return_value = self.call_builtin_function(target, this_value, node.argument_list.arguments, node)
+                return self.call_builtin_function(target, this_value, node.argument_list.arguments, node)
+                
             # user-defined function
-            else:               
+            elif isinstance(target, NodeFunctionExpression):               
                 # push arguments to stack
                 for arg in node.argument_list.arguments:
                     self.stack.push(arg)
@@ -216,11 +225,10 @@ class Interpreter():
                 self.call_function_expression(target)
                 # the return value is pushed onto the stack at end of block or return
                 # statement. Pop it off and return as a value
-                return_value = self.stack.pop()
-        else:
-            self.error(node, ErrorType.TypeError, 'invalid call: {} ({}) is not a built-in or user-defined function'.format(node.var.value, target))
 
-        return return_value
+                return self.stack.pop()
+
+        self.error(node, ErrorType.TypeError, 'invalid call: {} is not callable'.format(target))
 
     def walk_variable(self, node):
         var = self.current_scope.find_variable_info(node.value)
@@ -244,9 +252,12 @@ class Interpreter():
 
         # todo this should be changed to a general purpose 'is true' check
         if expr_result != 0:
-            self.visit_Block(node.block)
+            return self.visit_Block(node.block)
         elif node.else_block is not None:
-            self.visit_Block(node.else_block)
+            # use visit rather than direct to visit_Block
+            # since else_block can also be a NodeIfStatement in the
+            # case of `elif`
+            return self.visit(node.else_block)
         
     def visit_ArgumentList(self, node):
         # read arguments backwards as values are popped from stack
@@ -326,7 +337,7 @@ class Interpreter():
         target = self.visit(node.lhs)
 
         if target is None:
-            self.error(node, ErrorType.TypeError, 'invalid member access: {} has no member {}'.format(target, node.rhs.name))
+            self.error(node, ErrorType.TypeError, 'invalid member access: {} has no member {}'.format(target, node.identifier))
             return None
 
         if not isinstance(target, BasicObject):

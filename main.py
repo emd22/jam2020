@@ -1,67 +1,43 @@
 from lexer import Lexer, TokenType, LexerToken
 from parser.parser import Parser
-from parser.node import AstNode, NodeType
+from parser.source_location import SourceLocation
 from interpreter.interpreter import Interpreter
 
-def print_func(string):
-    print(string)
-
-def print_tokens(lexer):
-    for token in lexer.tokens:
-        print_func(token)
-
-def print_ast(node):
-    if node == None:
-        return
-    
-    print_func(node)
-    
-    if node.type == NodeType.Block:
-        for child in node.children:
-            print_ast(child)
-            
-    elif node.type == NodeType.BinOp:
-        # branch left & right
-        print_ast(node.left)
-        print_ast(node.right)
-    
-    elif node.type == NodeType.Assign:
-        print_ast(node.lhs)
-        print_ast(node.value)
-        
-    elif node.type == NodeType.Declare:
-        print_ast(node.value)
-    elif node.type == NodeType.ArgumentList:
-        print_func('(')
-
-        for argument in node.arguments:
-            print_ast(argument)
-            print_func(', ')
-
-        print_func(')')
-    elif node.type == NodeType.FunctionExpression:
-        print_func('<Function>')
-        print_ast(node.argument_list)
-        print_ast(node.block)
+from repl.repl import Repl
+from ast_printer import AstPrinter
 
 def main():
+    repl = Repl()
+    repl.loop()
+
+    return
+
     filename = "test.kb"
     data = open(filename, "r").read()
 
-    lexer = Lexer(data)
+    lexer = Lexer(data, SourceLocation(filename))
     lexer.lex()
     #print_tokens(lexer)
     
     #print_func("=== Parser ===")
     
-    parser = Parser(lexer, filename)
+    parser = Parser(lexer)
+    ast = parser.parse()
+    error_list = parser.error_list
+
+    if len(error_list.errors) > 0:
+        error_list.print_errors()
+        return
+
     # init interpreter and parse tokens
-    interpreter = Interpreter(parser)
+    interpreter = Interpreter(parser.source_location)
     # print them bad boys out
-    print_ast(interpreter.ast)
+    for node in ast:
+        AstPrinter().print_ast(node)
     
-    print_func("=== Output ===")
-    interpreter.interpret()
+    print("=== Output ===")
+    for node in ast:
+        interpreter.visit(node)
 
 if __name__ == '__main__':
     main()

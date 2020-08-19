@@ -1,17 +1,19 @@
 from lexer import LexerToken, TokenType, Keywords, Lexer
-from error import errors, Error, ErrorType
+from error import ErrorList, Error, ErrorType
+from parser.source_location import SourceLocation
 from parser.node import *
 
 # peter parser
 
 class Parser():
-    def __init__(self, lexer, filename):
+    def __init__(self, lexer):
         self.lexer = lexer
         self.token_index = 0
-        self.current_token = self.next_token()
+        self._current_token = self.next_token()
+        self.error_list = ErrorList()
         
-        self.filename = filename
-        
+        self.source_location = lexer.source_location
+
         self.keyword_methods = {
             'let': self.parse_variable_declaration,
             'if': self.parse_if_statement,
@@ -19,6 +21,17 @@ class Parser():
             'import': self.parse_import,
             'return': self.parse_return
         }
+
+    @property
+    def filename(self):
+        return self.source_location.filename
+    
+    @property
+    def current_token(self):
+        if self._current_token is None:
+            return LexerToken.NONE
+
+        return self._current_token
     
     def expect_token(self, token_type, offset=0, token=None):
         # if no token passed in, peek from offset
@@ -37,7 +50,7 @@ class Parser():
             return None
             
         # return selected token, increment index
-        self.current_token = self.lexer.tokens[self.token_index]
+        self._current_token = self.lexer.tokens[self.token_index]
         self.token_index += 1
         
         return self.current_token
@@ -57,21 +70,18 @@ class Parser():
         return token
     
     def error(self, message):
-        location = None
-
         # tokens have locations attached from the lexer, pass to self.error
         # if an error occurs
-        if self.current_token is not None:
-            location = self.current_token.location
+        location = self.current_token.location
 
-        errors.push_error(Error(ErrorType.Syntax, location, message, self.filename))
+        self.error_list.push_error(Error(ErrorType.Syntax, location, message, self.filename))
 
     # read next token and error if token.type != passed in token type
     def eat(self, token_type=None):
         if token_type is not None:
             token = self.expect_token(token_type)
 
-        self.current_token = self.next_token()
+        self._current_token = self.next_token()
 
         return self.current_token
     
@@ -120,16 +130,20 @@ class Parser():
                 return None
         
         # lex loaded file data
-        lexer = Lexer(data)
+        source_location =  SourceLocation(filename)
+
+        lexer = Lexer(data, source_location)
         lexer.lex()
         
-        parser = Parser(lexer, filename)
+        parser = Parser(lexer)
         
         # an import node acts similar to a block and holds all variables and functions
         # in a tree. A parser is passed for getting various information in the interpreter
-        node = NodeImport(filename_token, parser)
+        node = NodeImport(filename_token, source_location)
         node.children = parser.get_statements()
-        node.parser   = parser
+
+        for error in parser.error_list.errors:
+            self.error_list.push_error(error)
         
         return node
         
@@ -203,8 +217,10 @@ class Parser():
 
     def parse_statement(self):
         token = self.current_token
-                
-        if token.type == TokenType.Keyword:
+
+        if token.type in (TokenType.Semicolon, TokenType.NoneToken):
+            return NodeNone(token)
+        elif token.type == TokenType.Keyword:
             node = self.parse_keyword()
             # TODO: fix block semicolon issue
         else:
@@ -226,10 +242,10 @@ class Parser():
         statements = [self.parse_statement()]
         
         # find all lines in block
-        while self.current_token is not None and self.current_token.type == TokenType.Semicolon:
+        while self.current_token.type == TokenType.Semicolon:
             self.eat(TokenType.Semicolon)
             # We hit last statement in block, break
-            if self.current_token == None or self.current_token.type == TokenType.RBrace:
+            if self.current_token.type in (TokenType.RBrace, TokenType.NoneToken):
                 break
             # parse statement and skip to next semicolon
             statements.append(self.parse_statement())
@@ -304,7 +320,7 @@ class Parser():
                 if self.current_token.type == TokenType.RParen:
                     break
                 self.eat()
-                if self.current_token == None:
+                if self.current_token.type == TokenType.NoneToken:
                     return NodeNone(last)
         
         # eat closing paren
@@ -352,7 +368,12 @@ class Parser():
         # manual type set
         if self.current_token.type == TokenType.Colon:
             self.eat(TokenType.Colon)
-            type_node = self.parse_type()
+            type_node_token = self.current_token
+            type_node = self.parse_expression()
+
+            if type_node is None or (not isinstance(type_node, NodeVariable) and not isinstance(type_node, NodeMemberExpression)):
+                self.error('Declaration type should either be an identifier or member access, got {}'.format(type_node_token.value))
+                return None
 
         if self.current_token.type == TokenType.Equals:
             val_node = self.parse_assignment_statement(NodeVariable(name))
@@ -385,18 +406,35 @@ class Parser():
 
         return NodeTypeExpression(name, members)
 
-    def parse_if_statement(self): 
+    def parse_if_statement(self):
+        # eat `if`
+        if_token = self.current_token
+        if self.eat(TokenType.Keyword) is None:
+            return None
+
         expr = self.parse_expression()
+
+        if expr is None:
+            return None
+
         block = self.parse_block_statement()
+
+        if block is None:
+            return None
+
         else_block = None
         
         token = self.current_token
-        if token != None and Keywords(token.value) == Keywords.Else:
-            # eat else
-            self.eat(TokenType.Keyword)
-            else_block = self.parse_block_statement()
+
+        if token.type == TokenType.Keyword:
+            if Keywords(token.value) == Keywords.Else:
+                # eat else
+                self.eat(TokenType.Keyword)
+                else_block = self.parse_block_statement()
+            elif Keywords(token.value) == Keywords.Elif:
+                else_block = self.parse_if_statement()
         
-        return NodeIfStatement(expr, block, else_block)
+        return NodeIfStatement(expr, block, else_block, if_token)
     
     def parse_factor(self):
         # handles value or (x ± x)
@@ -429,7 +467,7 @@ class Parser():
             
         elif token.type == TokenType.LBrace:
             node = self.parse_object_expression()
-        else:
+        elif token.type == TokenType.Identifier:
             node = self.parse_variable()
 
 
@@ -474,11 +512,5 @@ class Parser():
         return node
         
     def parse(self):
-        tree = NodeBlock(self.current_token)
-        tree.children = self.get_statements()
 
-        if len(errors.errors) > 0:
-            errors.print_errors()
-            quit()
-
-        return tree
+        return self.get_statements()

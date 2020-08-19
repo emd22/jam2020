@@ -32,12 +32,16 @@ class BasicObject(BasicValue):
     def assign_member(self, name, value):
         self.members[name] = value
 
-    def lookup_member(self, name, member_type=None):
+    def lookup_member(self, name, member_type=None, parent_lookup=True):
         if name in self.members:
             if member_type is None or self.members[name].satisfies_type(member_type):
                 return ObjectMember(name, self.members[name])
+        #elif name == 'type':
+        #    return ObjectMember('type', self.parent)
         elif self.parent is not None:
-            return self.parent.lookup_member(name, member_type)
+            circular = self.parent.parent == self
+
+            return self.parent.lookup_member(name, member_type, parent_lookup=parent_lookup and not circular)
 
         return None
 
