@@ -119,8 +119,8 @@ class NodeVariable(AstNode):
         self.value = token.value
         
 class NodeIfStatement(AstNode):
-    def __init__(self, expr, block, else_block):
-        AstNode.__init__(self, NodeType.IfStatement, expr.token)
+    def __init__(self, expr, block, else_block, token):
+        AstNode.__init__(self, NodeType.IfStatement, token)
         self.expr = expr
         self.block = block
         self.else_block = else_block

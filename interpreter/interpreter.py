@@ -283,9 +283,12 @@ class Interpreter():
 
         # todo this should be changed to a general purpose 'is true' check
         if expr_result != 0:
-            self.visit_Block(node.block)
+            return self.visit_Block(node.block)
         elif node.else_block is not None:
-            self.visit_Block(node.else_block)
+            # use visit rather than direct to visit_Block
+            # since else_block can also be a NodeIfStatement in the
+            # case of `elif`
+            return self.visit(node.else_block)
         
     def visit_ArgumentList(self, node):
         # read arguments backwards as values are popped from stack

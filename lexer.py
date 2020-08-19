@@ -5,6 +5,7 @@ class Keywords(Enum):
     Let = 'let'
     If = 'if'
     Else = 'else'
+    Elif = 'elif'
     Func = 'func'
     Import = 'import'
     Return = 'return'

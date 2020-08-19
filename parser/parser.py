@@ -400,18 +400,35 @@ class Parser():
 
         return NodeTypeExpression(name, members)
 
-    def parse_if_statement(self): 
+    def parse_if_statement(self):
+        # eat `if`
+        if_token = self.current_token
+        if self.eat(TokenType.Keyword) is None:
+            return None
+
         expr = self.parse_expression()
+
+        if expr is None:
+            return None
+
         block = self.parse_block_statement()
+
+        if block is None:
+            return None
+
         else_block = None
         
         token = self.current_token
-        if token != None and Keywords(token.value) == Keywords.Else:
-            # eat else
-            self.eat(TokenType.Keyword)
-            else_block = self.parse_block_statement()
+
+        if token.type == TokenType.Keyword:
+            if Keywords(token.value) == Keywords.Else:
+                # eat else
+                self.eat(TokenType.Keyword)
+                else_block = self.parse_block_statement()
+            elif Keywords(token.value) == Keywords.Elif:
+                else_block = self.parse_if_statement()
         
-        return NodeIfStatement(expr, block, else_block)
+        return NodeIfStatement(expr, block, else_block, if_token)
     
     def parse_factor(self):
         # handles value or (x ± x)
