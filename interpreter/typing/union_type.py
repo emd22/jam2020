@@ -1,8 +1,8 @@
 from interpreter.typing.basic_type import BasicType
 
 class UnionType(BasicType):
-    def __init__(self, name, lhs, rhs):
-        BasicType.__init__(self, name, None, {}, False)
+    def __init__(self, lhs, rhs):
+        BasicType.__init__(self, None, {}, False)
         self.lhs = lhs
         self.rhs = rhs
 
@@ -24,3 +24,6 @@ class UnionType(BasicType):
             return self.rhs.get_property_type(name)
 
         return None
+
+    def __repr__(self):
+        return "UnionType({}, {})".format(repr(self.lhs), repr(self.rhs))

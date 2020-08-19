@@ -1,12 +1,15 @@
 from interpreter.function import BuiltinFunction
+from interpreter.basic_value import BasicValue
+from parser.node import NodeFunctionExpression
 
 class ObjectMember:
     def __init__(self, name, value):
         self.name = name
         self.value = value
 
-class BasicObject:
+class BasicObject(BasicValue):
     def __init__(self, parent=None, members={}):
+        BasicValue.__init__(self, None)
         self.parent = parent
         self.members = members
 
@@ -19,7 +22,10 @@ class BasicObject:
         members = {}
 
         for (key, value) in self.members.items():
-            members[key] = value.clone()
+            if isinstance(value, NodeFunctionExpression):
+                members[key] = value
+            else:
+                members[key] = value.clone()
 
         return BasicObject(parent=parent, members=members)
 
@@ -59,3 +65,6 @@ class BasicObject:
             union_members[name] = value
 
         return BasicObject(None, union_members)
+
+    def __repr__(self):
+        return "BasicObject({})".format(repr(self.members))
