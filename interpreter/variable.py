@@ -2,6 +2,7 @@ from enum import Enum, auto
 from parser.node import NodeType, NodeFunctionExpression
 from interpreter.typing.basic_type import BasicType
 from interpreter.function import Function
+from interpreter.basic_value import BasicValue
 
 class VariableType(Enum):
     Auto     = 'auto'
@@ -14,28 +15,18 @@ class VariableType(Enum):
     Array = auto()
     Object = auto() # Class, data structure, etc.
 
-INT_TYPE = BasicType('int', None, {}, True)
-STRING_TYPE = BasicType('str', None, {}, True)
-ANY_TYPE = BasicType('any', None, {}, True)
-FUNC_TYPE = BasicType('func', None, {}, True)
+# class Variable(BasicValue):
+#     def __init__(self, name, vtype, value):
+#         BasicValue.__init__(self, value)
+#         self.name = name
+#         self.value = 0
 
-class Value:
-    def __init__(self, value):
-        self.value = value
-
-    def assign_value(self, value):
-        # TODO: type assertions
-        self.value = value
-
-class Variable(Value):
-    def __init__(self, name, vtype, value):
-        Value.__init__(self, value)
-        self.name = name
-        self.value = 0
-
-        if (type(value) is NodeFunctionExpression):
-            self.value = Function(name, vtype, value)
-        else:
-            self.value = value
+#         if (type(value) is NodeFunctionExpression):
+#             self.value = Function(name, vtype, value)
+#         else:
+#             self.value = value
             
-        self.type = vtype
+#         self.type = vtype
+
+#     def clone(self):
+#         return Variable(self.name, self.vtype, self.value)

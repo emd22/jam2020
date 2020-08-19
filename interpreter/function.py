@@ -16,4 +16,4 @@ class BuiltinFunction(Function):
         self.callback = callback
         
     def call(self, node):
-        self.callback(node)
+        return self.callback(node)

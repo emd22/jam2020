@@ -5,57 +5,14 @@ from interpreter.stack import Stack
 from interpreter.function import BuiltinFunction
 from interpreter.typing.basic_type import BasicType
 from interpreter.basic_object import BasicObject
+from interpreter.basic_value import BasicValue
 from interpreter.env.globals import Globals
+from interpreter.variable import VariableType
 from parser.node import NodeVariable, NodeMemberExpression
 from lexer import TokenType, LexerToken
 
 from error import errors, ErrorType, Error 
 
-def _print_object(interpreter, node, obj):
-    obj_str = repr(obj)
-
-    if isinstance(obj, BasicObject):
-        meth = obj.lookup_member('__repr__')
-
-        if meth is not None:
-            if isinstance(meth.value, BuiltinFunction):
-                obj_str = interpreter.call_builtin_function(meth.value, obj, [])
-            else:
-                obj_str = interpreter.call_function_expression(meth.value)
-
-    print(obj_str)
-    
-def builtin_varinfo(arguments):
-    interpreter = arguments[0]
-    var = interpreter.current_scope.find_variable(arguments[2])
-    print(f"Variable '{var.name}' type: {var.type.name} value: {var.value}")
-
-def builtin_printn(arguments):
-    interpreter = arguments[0]
-    node = arguments[1]
-
-    for arg in arguments[2:]:
-        _print_object(interpreter, node, arg)
-
-    return 0
-    
-def builtin_type_compare(arguments):
-    interpreter = arguments[0]
-    node = arguments[1]
-    target = arguments[2]
-    type_obj = arguments[3]
-
-    if not isinstance(target, BasicObject):
-        interpreter.error(node, ErrorType.TypeError, 'argument 1 ({}) is not a BasicObject, cannot perform typecheck'.format(target))
-        return None
-
-    if not isinstance(type_obj, BasicType):
-        interpreter.error(node, ErrorType.TypeError, 'argument 2 ({}) is not a BasicType, cannot perform typecheck'.format(type_obj))
-
-    if target.satisfies_type(type_obj):
-        return 1
-    else:
-        return 0
 
 class Interpreter():
     def __init__(self, parser):
@@ -64,11 +21,6 @@ class Interpreter():
         self.selected_parser = self.parser
         # declare scopes + global scope
         self.stack = Stack()
-        self.builtins = [
-            BuiltinFunction("__intern_print__", None, builtin_printn),
-            BuiltinFunction("__intern_type_compare__", None, builtin_type_compare),
-            BuiltinFunction("__intern_varinfo__", None, builtin_varinfo),
-        ]
         
         self.global_scope = Scope(None)
         self._top_level_scope = None
@@ -141,9 +93,8 @@ class Interpreter():
         else:
             # no type node attached, default to VariableType.any
             vtype = VariableType.Any
-        
-        defvar = self.current_scope.find_variable(node.name.value, limit=True)
-        if defvar != None:
+
+        if self.current_scope.find_variable_info(node.name.value, limit=True) != None:
             self.error(node, ErrorType.MultipleDefinition, "multiple definition of '{}'".format(node.name.value))
    
         self.current_scope.declare_variable(node.name.value, vtype)
@@ -227,27 +178,33 @@ class Interpreter():
     
     def visit_Call(self, node):
         #print("Call function '{}'".format(node.var.value))
-        
+
         target = None
         return_value = 0
 
         # TODO: Do not iterate builtins before local vars -- allow them to be overwritten.
         # instead, have the interpreter declare the builtins the same way we'd do locals,
         # but assign them to the appropriate BuiltinFunction objects.
-        if isinstance(node.lhs, NodeVariable):
-            # check builtins.
-            for builtin in self.builtins:
-                if builtin.name == node.lhs.value:
-                    target = builtin
-                    break
+        # if isinstance(node.lhs, NodeVariable):
+        #     # check builtins.
+        #     for builtin in self.builtins:
+        #         if builtin.name == node.lhs.value:
+        #             target = builtin
+        #             break
 
         if target is None:
             target = self.visit(node.lhs) # TODO: turn into general expression, not just vars.
 
         if target is not None:
+            this_value = None
+
+            # for `a.b()`, pass in `a` as the this value.
+            if isinstance(node.lhs, NodeMemberExpression):
+                this_value = self.visit(node.lhs.lhs)
+
             # if a built-in function exists, call it
             if isinstance(target, BuiltinFunction):
-                return_value = self.call_builtin_function(target, node, node.argument_list.arguments)
+                return_value = self.call_builtin_function(target, this_value, node.argument_list.arguments, node)
             # user-defined function
             else:               
                 # push arguments to stack
@@ -260,16 +217,17 @@ class Interpreter():
                 return_value = self.stack.pop()
         else:
             self.error(node, ErrorType.TypeError, 'invalid call: {} ({}) is not a built-in or user-defined function'.format(node.var.value, target))
+
         return return_value
 
     def walk_variable(self, node):
-        var = self.current_scope.find_variable(node.value)
+        var = self.current_scope.find_variable_info(node.value)
 
         if var is None:
             self.error(node, ErrorType.DoesNotExist, "Referencing undefined variable '{}'".format(node.value))
             return None
 
-        return var
+        return var.value_wrapper
             
     def visit_Variable(self, node):
         var = self.walk_variable(node)
@@ -302,14 +260,20 @@ class Interpreter():
     def visit_FunctionExpression(self, node):
         pass
 
-    def call_builtin_function(self, fun, this_object, arguments):
+    def call_builtin_function(self, fun, this_object, arguments, node):
         args = []
 
         # built-in function
         for arg in arguments:
             args.append(self.visit(arg))
 
-        return fun.call([self, this_object, *args])
+        basic_value_result = fun.call([self, this_object, *args])
+
+        if not isinstance(basic_value_result, BasicValue):
+            self.error(node, ErrorType.TypeError, 'expected method {} to return an instance of BasicValue, got {}'.format(fun, basic_value_result))
+            return None
+
+        return basic_value_result
 
     def call_function_expression(self, node):
         # create our scope before block so argument variables are contained
@@ -334,7 +298,7 @@ class Interpreter():
     def visit_TypeExpression(self, node):
         obj_expr = self.visit_object_expression(node)
 
-        return BasicType(node.name, obj_expr.parent, obj_expr.members)
+        return BasicType(obj_expr.parent, obj_expr.members)
 
     def visit_ObjectExpression(self, node):
         members = {}

@@ -1,48 +1,41 @@
 from interpreter.typing.basic_type import BasicType
 from interpreter.basic_object import BasicObject
-from interpreter.scope import VariableType
-from interpreter.variable import Value
+from interpreter.variable import VariableType
+from interpreter.basic_value import BasicValue
 from interpreter.function import BuiltinFunction
-from error import ErrorType
-
-# PLACEHOLDER
-def builtin_to_int(arguments):
-    print("to_int called with arugments {}".format(arguments))
-
-    return Value(int(arguments[1].value))
-
-def builtin_str_len(arguments):
-    return Value(len(arguments[1].value))
-
-def builtin_object_new(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
-
-    new_instance = None
-
-    if 'instance' in this_object.members and isinstance(this_object.members['instance'], BasicObject):
-        new_instance = this_object.members['instance'].clone(parent_override=this_object)
-    else:
-        interpreter.error(None, ErrorType.TypeError, 'object {} cannot be constructed because no cloneable `instance` member exists'.format(this_object))
-        return None
-
-    return new_instance
+from interpreter.env.builtins import *
 
 class Globals:
     def __init__(self):
-        basic_type = BasicType('Type', None, {}, True)
+        basic_type = BasicType(
+            None,
+            {
+                'name': 'Type',
+                'extend': BuiltinFunction('Type.extend', None, builtin_type_extend),
+                # 'type': BuiltinFunction('Type.type', None, builtin_type_type),
+                'to_str': BuiltinFunction('Type.to_str', None, builtin_type_to_str),
+                # 'new': BuiltinFunction('Object.new', None, builtin_object_new),
+            },
+            True
+        )
         basic_object = BasicType(
-            'Object',
             basic_type,
             {
-                'new': BuiltinFunction('__intern_object_new__', None, builtin_object_new)
+                'name': 'Object',
+                'new': BuiltinFunction('Object.new', None, builtin_object_new),
+                'type': BuiltinFunction('Object.type', None, builtin_object_type),
+                'to_str': BuiltinFunction('Object.to_str', None, builtin_object_to_str)
             }
         )
+
+        basic_type.parent = basic_object # circular
+
         basic_number = BasicType(
-            'Num',
             basic_object,
             {
-                'to_int': BuiltinFunction('__intern_to_int__', None, builtin_to_int)
+                'name': 'Num',
+                'to_int': BuiltinFunction('Num.to_int', None, builtin_to_int),
+                'to_str': BuiltinFunction('Num.to_str', None, builtin_num_to_str)
             }
         )
 
@@ -54,11 +47,11 @@ class Globals:
                 'Int',
                 VariableType.Type,
                 BasicType(
-                    'Int',
                     basic_number,
                     {
+                        'name': 'Int',
                         'instance': BasicObject(members={
-                            '_value': Value(value=0)
+                            '_value': BasicValue(value=0)
                         }),
                     }
                 )
@@ -67,11 +60,11 @@ class Globals:
                 'Float',
                 VariableType.Type,
                 BasicType(
-                    'Float',
                     basic_number,
                     {
+                        'name': 'Float',
                         'instance': BasicObject(members={
-                            '_value': Value(value=0.0)
+                            '_value': BasicValue(value=0.0)
                         })
                     }
                 )
@@ -80,16 +73,20 @@ class Globals:
                 'Str',
                 VariableType.Type,
                 BasicType(
-                    'Str',
                     basic_object,
                     {
+                        'name': 'Str',
                         'instance': BasicObject(members={
-                            '_value': Value(value="")
+                            '_value': BasicValue(value="")
                         }),
-                        'len': BuiltinFunction('__intern_str_len__', None, builtin_str_len)
+                        'len': BuiltinFunction('Str.len', None, builtin_str_len),
+                        'to_str': BuiltinFunction('Str.to_str', None, builtin_str_to_str)
                     }
                 )
-            )
+            ),
+            ('__intern_print__', VariableType.Function, BuiltinFunction("__intern_print__", None, builtin_printn)),
+            ('__intern_type_compare__', VariableType.Function, BuiltinFunction("__intern_type_compare__", None, builtin_type_compare)),
+            ('__intern_varinfo__', VariableType.Function, BuiltinFunction("__intern_varinfo__", None, builtin_varinfo)),
         ]
 
     def apply_to_scope(self, scope):
@@ -98,5 +95,7 @@ class Globals:
 
             scope.declare_variable(name, var_type)
 
-            var = scope.find_variable(name)
+            var = scope.find_variable_value(name)
             var.assign_value(value)
+
+        print(scope)

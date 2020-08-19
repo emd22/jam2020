@@ -28,6 +28,11 @@ class AstNode():
         self.type = type
         self.token = token
         self.location = token.location
+
+    @property
+    def this_object(self):
+        return self
+
     def __str__(self):
         try:
             return "AstNode[{0}, {1}]".format(self.type.name, self.token)
@@ -104,6 +109,10 @@ class NodeCall(AstNode):
         self.lhs = lhs
         self.argument_list = argument_list
 
+    @property
+    def this_object(self):
+        return self.lhs.this_object
+
 # Assignment node; Var = Value
 class NodeAssign(AstNode):
     def __init__(self, lhs, value):
@@ -159,3 +168,11 @@ class NodeMemberExpression(AstNode):
         self.type = NodeType.MemberExpression
         self.lhs = lhs
         self.identifier = identifier
+
+    @property
+    def token(self):
+        return self.identifier
+
+    @property
+    def this_object(self):
+        return self.lhs.this_object

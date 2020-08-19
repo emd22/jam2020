@@ -13,8 +13,30 @@ class Error():
         self.filename = filename
         self.message = message
         self.location = location
+
+    @property
+    def location_filename(self):
+        if self.filename is None:
+            return '<none>'
+
+        return self.filename
+
+    @property
+    def location_row(self):
+        if self.location is None:
+            return 0
+
+        return self.location[1]
+
+    @property
+    def location_col(self):
+        if self.location is None:
+            return 0
+
+        return self.location[0]
+
     def __repr__(self):
-        nstr = f"{self.filename}:{self.location[1]}:{self.location[0]}: {LogColour.Error}{self.type.name} error:{LogColour.Default}"
+        nstr = f"{self.location_filename}:{self.location_row}:{self.location_col}: {LogColour.Error}{self.type.name} error:{LogColour.Default}"
         return f"{LogColour.Bold}{nstr}{LogColour.Default} {self.message}"
     __str__ = __repr__
         

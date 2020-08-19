@@ -1,30 +1,27 @@
 from interpreter.basic_object import BasicObject
+from interpreter.basic_value import BasicValue
 from interpreter.function import BuiltinFunction
 
-def builtin_type_repr(arguments):
-    interpreter = arguments[0]
-    node = arguments[1]
-    this_object = arguments[1]
-
-    # TODO: return a string wrapped object?
-    # TODO: each member should have a tagged type
-    return "Type {\n" + '\n'.join(map(lambda x: "\t{},".format(x), this_object.members)) + "}" 
-
 class BasicType(BasicObject):
+    REPR_FUNCTION_NAME = 'to_str'
+
     DEFAULT_TYPE_MEMBERS = {
-        '__repr__': BuiltinFunction('__intern_type_repr__', None, builtin_type_repr)
+        # REPR_FUNCTION_NAME: BuiltinFunction('__intern_type_repr__', None, builtin_type_repr)
     }
 
-    def __init__(self, name, parent=None, members={}, nominative=False):
+    def __init__(self, parent=None, members={}, nominative=False):
         BasicObject.__init__(self, parent, {**members, **BasicType.DEFAULT_TYPE_MEMBERS})
-        self.name = name
         self.nominative = nominative
+
+    @property
+    def type_name(self):
+        return self.members['name']
 
     def compare_type(self, other_type):
         if other_type == self:
             return True
 
-        if self.nominative and self.name != other_type.name:
+        if (self.nominative and self.type_name is not None) and self.type_name != other_type.type_name:
             return False
 
         if self.parent is None:
@@ -46,17 +43,23 @@ class BasicType(BasicObject):
 
         return True
 
-    def has_property(self, name, property_type=None):
-        if not name in self.members:
-            return False
+    def has_property(self, name, property_type=None, limit=False):
+        if name in self.members:
+            return True
 
-        if property_type is not None:
-            return property_type.compare_type(self.members[name])
-
-        return True
-
-    def get_property_type(self, name):
-        if not name in self.members:
+        if limit or self.parent is None:
             return None
 
-        return self.members[name]
+        return self.parent.has_property(name, property_type)
+
+    def get_property_type(self, name, limit=False):
+        if name in self.members:
+            return self.members[name]
+
+        if limit or self.parent is None:
+            return None
+
+        return self.parent.get_property_type(name)
+
+    def __repr__(self):
+        return "BasicType({})".format(repr(self.members))

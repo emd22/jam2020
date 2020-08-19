@@ -2,7 +2,6 @@ from lexer import Lexer, TokenType, LexerToken
 from parser.parser import Parser
 from parser.node import AstNode, NodeType
 from interpreter.interpreter import Interpreter
-from interpreter.scope import Variable#, VariableType
 
 def print_func(string):
     print(string)
