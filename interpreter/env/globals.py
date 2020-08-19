@@ -35,7 +35,11 @@ class Globals:
             'Object',
             basic_type,
             {
-                'new': BuiltinFunction('__intern_object_new__', None, builtin_object_new)
+                'instance': BasicObject(members={}),
+                'name': 'Object',
+                'new': BuiltinFunction('Object.new', None, builtin_object_new),
+                'type': BuiltinFunction('Object.type', None, builtin_object_type),
+                'to_str': BuiltinFunction('Object.to_str', None, builtin_object_to_str)
             }
         )
         basic_number = BasicType(
@@ -46,9 +50,18 @@ class Globals:
             }
         )
 
+        basic_function = BasicType(
+            basic_object,
+            {
+                'name': 'Func'
+                # TODO call function
+            }
+        )
+
         self.variables = [
             ('Type', VariableType.Object, basic_type),
             ('Object', VariableType.Type, basic_object),
+            ('Func', VariableType.Type, basic_function),
             ('Num', VariableType.Type, basic_number),
             (
                 'Int',

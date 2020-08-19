@@ -2,7 +2,6 @@ from lexer import Lexer, TokenType, LexerToken
 from parser.parser import Parser
 from parser.source_location import SourceLocation
 from interpreter.interpreter import Interpreter
-from interpreter.scope import Variable#, VariableType
 from repl.repl import Repl
 from ast_printer import AstPrinter
 

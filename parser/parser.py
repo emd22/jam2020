@@ -141,6 +141,9 @@ class Parser():
         # in a tree. A parser is passed for getting various information in the interpreter
         node = NodeImport(filename_token, source_location)
         node.children = parser.get_statements()
+
+        for error in parser.error_list.errors:
+            self.error_list.push_error(error)
         
         return node
         
@@ -367,7 +370,12 @@ class Parser():
         # manual type set
         if self.current_token.type == TokenType.Colon:
             self.eat(TokenType.Colon)
-            type_node = self.parse_type()
+            type_node_token = self.current_token
+            type_node = self.parse_expression()
+
+            if type_node is None or (not isinstance(type_node, NodeVariable) and not isinstance(type_node, NodeMemberExpression)):
+                self.error('Declaration type should either be an identifier or member access, got {}'.format(type_node_token.value))
+                return None
 
         if self.current_token.type == TokenType.Equals:
             val_node = self.parse_assignment_statement(NodeVariable(name))

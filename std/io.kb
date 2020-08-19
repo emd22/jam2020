@@ -1,4 +1,4 @@
-let print:func = (_value_:any) {
+let print: func = (_value_) {
     __intern_print__(_value_);
     return _value_;
 };
