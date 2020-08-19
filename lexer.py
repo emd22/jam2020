@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from parser.source_location import SourceLocation
 
 class Keywords(Enum):
     Let = 'let'
@@ -9,6 +10,8 @@ class Keywords(Enum):
     Return = 'return'
 
 class TokenType(Enum):
+    NoneToken = auto()
+
     LParen = '('
     RParen = ')'
     LBrace = '{'
@@ -68,25 +71,31 @@ class TokenType(Enum):
         return value in self._value2member_map_
 
 class LexerToken():
-    def __init__(self, value):
-        self.type = TokenType.get_type(TokenType, value)
+    def __init__(self, value, token_type=None):
+        if token_type is None:
+            self.type = TokenType.get_type(TokenType, value)
+        else:
+            self.type = token_type
         self.value = value
         self.location = (0, 0)
     def __str__(self):
-        return "LexerToken[Type:{0}, Value:'{1}']".format(self.type.name, self.value)
+        return "LexerToken[Type:{0}, Value:'{1}']".format(self.type, self.value)
     def __repr__(self):
         return self.__str__()
 
+LexerToken.NONE = LexerToken('', TokenType.NoneToken)
+
 class Lexer():
-    def __init__(self, data):
+    def __init__(self, data, source_location):
         self.tokens = []
         self.data = data
         self.token_data = ""
         self.index = 0
+        self.source_location = source_location
         
         # Error handling
-        self.row = 1
-        self.col = 1
+        self.source_location.row = 1
+        self.source_location.col = 1
         
         self.in_string = False
     
@@ -96,10 +105,10 @@ class Lexer():
             return ''
         rval = self.data[self.index]
         self.index += amt
-        self.col += 1
+        self.source_location.col += 1
         if rval == '\n':
-            self.col = 1
-            self.row += 1
+            self.source_location.col = 1
+            self.source_location.row += 1
         return rval
     
     # return character and keep index
@@ -111,7 +120,7 @@ class Lexer():
     
     def push_token(self):
         token = LexerToken(self.token_data)
-        token.location = (self.col, self.row)
+        token.location = self.source_location.col_row
         self.tokens.append(token)
         self.token_data = ""
     

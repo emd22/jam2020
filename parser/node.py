@@ -93,10 +93,10 @@ class NodeDeclare(AstNode):
         self.value = value
         
 class NodeImport(AstNode):
-    def __init__(self, filename, parser):
+    def __init__(self, filename, source_location):
         AstNode.__init__(self, NodeType.Import, filename)
         self.children = []
-        self.parser = parser
+        self.source_location = source_location
 
 class NodeCall(AstNode):
     def __init__(self, lhs, argument_list):

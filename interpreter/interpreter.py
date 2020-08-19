@@ -1,5 +1,6 @@
 from parser.parser import Parser
 from parser.node import AstNode, NodeType, NodeFunctionReturn
+from parser.source_location import SourceLocation
 from interpreter.scope import *
 from interpreter.stack import Stack
 from interpreter.function import BuiltinFunction
@@ -9,7 +10,7 @@ from interpreter.env.globals import Globals
 from parser.node import NodeVariable, NodeMemberExpression
 from lexer import TokenType, LexerToken
 
-from error import errors, ErrorType, Error 
+from error import InterpreterError, ErrorList, ErrorType, Error 
 
 def _print_object(interpreter, node, obj):
     obj_str = repr(obj)
@@ -58,10 +59,9 @@ def builtin_type_compare(arguments):
         return 0
 
 class Interpreter():
-    def __init__(self, parser):
-        self.parser = parser
-        self.ast = parser.parse()
-        self.selected_parser = self.parser
+    def __init__(self, source_location):
+        self.source_location = source_location
+        self.error_list = ErrorList()
         # declare scopes + global scope
         self.stack = Stack()
         self.builtins = [
@@ -91,19 +91,17 @@ class Interpreter():
         self._top_level_scope = self.current_scope.parent
 
         return self.current_scope
-        
-    def interpret(self):
-        return self.visit(self.ast)
-        
+
     def error(self, node, type, message):
         location = None
 
         if node is not None:
             location = node.location
 
-        errors.push_error(Error(type, location, message, self.selected_parser.filename))
-        errors.print_errors()
-        quit()
+        self.error_list.push_error(Error(type, location, message, self.source_location.filename))
+        self.error_list.print_errors()
+
+        raise InterpreterError('Interpreter error')
         
     def visit(self, node):
         caller_name = "visit_{}".format(str(node.type.name))
@@ -153,10 +151,13 @@ class Interpreter():
         # acts like a block and visits the statements inside. This means that if we
         # import inside a function, any variables should only be available to that
         # scope.
-        self.selected_parser = node.parser
+        old_source_location = self.source_location
+        self.source_location = node.source_location
+
         for child in node.children:
             self.visit(child)
-        self.selected_parser = self.parser
+
+        self.source_location = old_source_location
     
     def visit_FunctionReturn(self, node):
         value = self.visit(node.value_node)

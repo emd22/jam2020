@@ -1,6 +1,9 @@
 from enum import Enum, auto
 from util import LogColour
 
+class InterpreterError(Exception):
+    pass
+
 class ErrorType(Enum):
     Syntax = auto()
     DoesNotExist = auto()
@@ -31,5 +34,4 @@ class ErrorList():
         
     def get_errors(self):
         return self.errors
-        
-errors = ErrorList()
+
