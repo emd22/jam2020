@@ -1,9 +1,8 @@
 import "std/core.kb";
 
 func test(a) {
-    print(a+5);
+    print(a);
 };
 
-let value:int = 20;
-test(value);
-
+let value:int = 10;
+test(value+5);

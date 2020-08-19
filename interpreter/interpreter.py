@@ -83,13 +83,11 @@ class Interpreter():
         return self.global_scope
 
     def open_scope(self):
-        #print("Open Scope")
         self._top_level_scope = Scope(self.current_scope)
 
     def close_scope(self):
         if self.current_scope == self.global_scope:
             raise Exception('cannot close global scope!')
-        #print("Close scope")
         self._top_level_scope = self.current_scope.parent
 
         return self.current_scope
