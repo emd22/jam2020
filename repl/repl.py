@@ -290,4 +290,4 @@ REPL_WELCOME_MESSAGE = """
   {}
 
 ---------------------------------
-    """.format('\n  '.join(map(lambda key: "{}\t\t--  {}".format(key, Repl.WALKTHROUGH_MESSAGES[key][0]), Repl.WALKTHROUGH_MESSAGES)))
+    """.format('\n  '.join(map(lambda key: "{}--  {}".format(key.ljust(16), Repl.WALKTHROUGH_MESSAGES[key][0]), Repl.WALKTHROUGH_MESSAGES)))

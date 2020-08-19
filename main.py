@@ -1,5 +1,4 @@
 from lexer import Lexer, TokenType, LexerToken
-from parser.parser import Parser
 from parser.source_location import SourceLocation
 from interpreter.interpreter import Interpreter
 

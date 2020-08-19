@@ -25,16 +25,23 @@ def _print_object(interpreter, node, obj):
 
             obj_str = basic_value_repr.value
 
-    print(obj_str)
+    print("{}".format(obj_str))
     
 def builtin_varinfo(arguments):
     interpreter = arguments[0]
     var = interpreter.current_scope.find_variable_info(arguments[2])
 
-    varinfo_str = f"Variable '{arguments[2]}'\n\t" \
-        f"decltype: {var.decltype}\n\t" \
-        f"value: {var.value_wrapper}\n\t" \
-        f"runtime type: {var.value_wrapper.lookup_type(interpreter.global_scope)}\n"
+    #varinfo_str = f"Variable '{arguments[2]}'\n\t" \
+    #    f"decltype: {var.decltype}\n\t" \
+    #    f"value: {var.value_wrapper}\n\t" \
+    #    f"runtime type: {var.value_wrapper.lookup_type(interpreter.global_scope)}\n"
+        
+    varinfo_str = \
+    f"""Variable '{arguments[2]}'
+    decltype: {var.decltype}
+    value: {var.value_wrapper}
+    runtime type: {var.value_wrapper.lookup_type(interpreter.global_scope)}
+    """
 
     return BasicValue(varinfo_str)
 

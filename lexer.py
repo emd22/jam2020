@@ -56,8 +56,7 @@ class TokenType(Enum):
                     return TokenType.Number
             return TokenType.Number
         
-        # TODO: add single quote strings
-        elif value[0] == '"' and value[-1] == '"':
+        elif (value[0] == '"' and value[-1] == '"') or (value[0] == '\'' and value[-1] == '\''):
             return TokenType.String
         
         # check if string is keyword
@@ -97,8 +96,6 @@ class Lexer():
         # Error handling
         self.source_location.row = 1
         self.source_location.col = 1
-        
-        self.in_string = False
     
     # return character and progress through buffer
     def read_char(self, amt=1):
@@ -135,6 +132,9 @@ class Lexer():
     def lex(self):
         splitables = "(){};:+-*/=.,!|&~<>^"
         self.skip_whitespace()
+        
+        string_type = None
+        
         while self.peek_char(0) != '':
             # encountered whitespace and not in string, push token
             
@@ -160,11 +160,11 @@ class Lexer():
                 self.skip_whitespace()
                 continue
             
-            elif not self.in_string and self.skip_whitespace():
+            elif string_type == None and self.skip_whitespace():
                 self.push_token()
                 continue
                   
-            elif self.peek_char(0) in splitables and not self.in_string:
+            elif self.peek_char(0) in splitables and string_type == None:
                 if not self.peek_char(-1).isspace() and self.peek_char(-1) not in splitables:
                     self.push_token()
                 self.token_data = self.read_char()
@@ -172,9 +172,22 @@ class Lexer():
                 self.skip_whitespace()
                 continue
   
-            # check if string character, toggle is_string
+            # check if string character
             if (self.peek_char(0) == '"'):
-                self.in_string = not self.in_string
+                # if currently in double quotes string, end and set string_type to none
+                if string_type == '"':
+                    string_type = None
+                # if no string is open, open a new one
+                elif string_type == None:
+                    string_type = '"'
+                # if currently in single quotes string, ignore
+                    
+            elif (self.peek_char(0) == '\''):
+                if string_type == '\'':
+                    string_type = None
+                elif string_type == None:
+                    string_type = '\''
+                    
             self.token_data += self.read_char()
         # still some data left in token_data, push to end
         if self.token_data != '':
