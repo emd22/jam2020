@@ -85,16 +85,20 @@ def builtin_object_new(arguments):
         return None
 
     # if there is a constructor function, call that...
-    constructor_method = this_object.lookup_member('new')
+    constructor_method_member = this_object.lookup_member('__construct__')
 
-    if constructor_method is not None:
+    if constructor_method_member is not None:
+        constructor_method = constructor_method_member.value
+
         if isinstance(constructor_method, BuiltinFunction):
             interpreter.call_builtin_function(constructor_method, this_object, arguments[2:-1], None)
         elif isinstance(constructor_method, NodeFunctionExpression):
             # push this object + any arguments passed here to the function
+            interpreter.stack.push(new_instance)
+
             sliced = arguments[2:-1]
 
-            for i in range(0, len(constructor_method.argument_list.arguments)):
+            for i in range(0, len(constructor_method.argument_list.arguments) - 1):
                 if i >= len(sliced):
                     interpreter.stack.push(BasicValue(None))
                 else:
@@ -159,7 +163,9 @@ def builtin_type_extend(arguments):
     instance_members = {}
 
     if 'instance' in this_object.members:
-        instance_members = this_object.members['instance'].copy()
+        instance_members = this_object.members['instance'].clone().members
+        #for (member_name, member_value) in this_object.members['instance'].members.items():
+         #instance_members[member_name] = member_value.clone()
 
     instance_members.update(extended_properties)
 

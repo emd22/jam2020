@@ -1,24 +1,5 @@
 import "std/io.kb";
 
-
 let varinfo:func = (_vname_:str) {
    return  __intern_varinfo__(_vname_);
 };
-
-print(Int.type());
-
-print(varinfo("Int"));
-
-let Person = Type.extend({
-    instance = {
-        say_hi: func = () {
-            return "hi";
-        }
-    };
-
-    new: func = (self) {
-
-    };
-});
-
-print(mytype.new().say_hi());

@@ -136,12 +136,12 @@ class Lexer():
                     
                     # skip '*' character
                     self.read_char()
-                    # read until '*/'
+                    # read until '*#'
                     while (self.read_char() != '*' and self.peek_char(1) != '#'):
                         pass
                         
                     # skip '*#' characters
-                    self.read_char(2)
+                    self.read_char(1)
                 else:
                     while self.read_char() != '\n':
                         pass

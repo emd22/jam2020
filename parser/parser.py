@@ -189,6 +189,7 @@ class Parser():
                     self.eat(TokenType.Comma)
                 else:
                     break
+                    
             argument_list = NodeArgumentList(arguments, self.current_token)
         
         if argument_list is None:
@@ -206,15 +207,12 @@ class Parser():
         if token.type == TokenType.Keyword:
             node = self.parse_keyword()
             # TODO: fix block semicolon issue
-            #return node
         else:
             node = self.parse_expression()
             
             if node is None:
                 self.error('Unknown token {} in statement'.format(token.type))
                 node = None
-        
-        #print(self.current_token.type)
         
         if self.current_token.type != TokenType.Semicolon:
             self.error('Missing semicolon')
@@ -279,7 +277,7 @@ class Parser():
 
             members.append(var_decl)
 
-            token = self.current_token()
+            token = self.current_token
 
         if self.eat(TokenType.RBrace) is None:
             return None

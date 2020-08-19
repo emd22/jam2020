@@ -58,8 +58,12 @@ class Interpreter():
         quit()
         
     def visit(self, node):
-        caller_name = "visit_{}".format(str(node.type.name))
-        caller = getattr(self, caller_name)
+        try:
+            caller_name = "visit_{}".format(str(node.type.name))
+            caller = getattr(self, caller_name)
+        except:
+            print('No visitor function defined for node')
+            quit()
         return caller(node)
             
     def visit_BinOp(self, node):
@@ -253,7 +257,10 @@ class Interpreter():
             self.visit_Declare(argument)
             # TODO: clean up
             # set variable to passed in value
-            self.current_scope.set_variable(argument.name.value, self.visit(value))
+            if isinstance(value, AstNode):
+                value = self.visit(value)
+
+            self.current_scope.set_variable(argument.name.value, value)
 
     def visit_FunctionExpression(self, node):
         pass

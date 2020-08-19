@@ -22,10 +22,10 @@ class BasicObject(BasicValue):
         members = {}
 
         for (key, value) in self.members.items():
-            if isinstance(value, NodeFunctionExpression):
-                members[key] = value
-            else:
+            if isinstance(value, BasicValue):
                 members[key] = value.clone()
+            else:
+                members[key] = value # this should actually just throw eventually unless it's a NodeFunctionExpression.
 
         return BasicObject(parent=parent, members=members)
 
