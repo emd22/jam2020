@@ -11,6 +11,8 @@ from util import LogColour
 # text seeking and other cool things
 import readline
 
+import signal
+
 class Repl:
     REPL_FILENAME = '<repl>'
     
@@ -206,7 +208,22 @@ class Repl:
 
     def __init__(self):
         self.interpreter = Interpreter(SourceLocation(Repl.REPL_FILENAME))
-
+        self.repl_import_defaults()
+        signal.signal(signal.SIGINT, self.at_exit)
+        
+    def at_exit(self, signal, frame):
+        print('\nExitting REPL...')
+        exit(0)
+        
+    def repl_import_defaults(self):
+        # generate import nodes
+        repl_import_nodes = [
+            Parser.import_file(Parser, 'std/__core__.kb'),
+            Parser.import_file(Parser, 'std/__repl__.kb')
+        ]
+        # eval asts
+        self.eval_line_ast(repl_import_nodes)
+        
     def loop(self):
         print(REPL_WELCOME_MESSAGE)
         
@@ -227,7 +244,7 @@ class Repl:
         (brace_counter, bracket_counter, paren_counter) = self.count_continuation_tokens(line)
 
         while brace_counter > 0 or bracket_counter > 0 or paren_counter > 0:
-            next_line = input()
+            next_line = input('... ')
             line += next_line + '\n'
             (brace_counter, bracket_counter, paren_counter) = self.count_continuation_tokens(line)
 
@@ -239,7 +256,10 @@ class Repl:
         if len(error_list.errors) > 0:
             error_list.print_errors()
             return
+            
+        self.eval_line_ast(line_ast)
 
+    def eval_line_ast(self, line_ast):
         last_value = None
 
         for node in line_ast:
@@ -256,6 +276,7 @@ class Repl:
         lexer.lex()
 
         parser = Parser(lexer)
+        
         return (parser.parse(), parser.error_list)
 
     def count_continuation_tokens(self, line):

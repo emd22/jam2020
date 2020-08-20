@@ -4,6 +4,10 @@ let varinfo = (_vname_) {
    return  __intern_varinfo__(_vname_);
 };
 
+func exit(_rcode_) {
+    __intern_exit__(_rcode_);
+};
+
 let Person = Type.extend({
     instance = {
         say_hi = () {

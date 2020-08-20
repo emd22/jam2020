@@ -53,7 +53,16 @@ def builtin_printn(arguments):
         _print_object(interpreter, node, arg)
 
     return BasicValue(None)
+
+def builtin_exit(arguments):
+    interpreter = arguments[0]
+    node        = arguments[1]
+    return_code = arguments[2]
     
+    exit(return_code)
+    
+    return BasicValue(0)
+
 def builtin_type_compare(arguments):
     interpreter = arguments[0]
     node = arguments[1]
