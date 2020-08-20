@@ -109,6 +109,36 @@ class Parser():
 
         return NodeMemberExpression(lhs, rhs_name)
         
+    def import_file(self, filename, filename_token=None):
+        try:
+            fp = open(filename, 'r')
+        except FileNotFoundError:
+            self.error('source file \'{}\' does not exist'.format(filename))
+            return None
+                
+        data = fp.read()
+        
+        # lex loaded file data
+        source_location =  SourceLocation(filename)
+
+        lexer = Lexer(data, source_location)
+        lexer.lex()
+        
+        parser = Parser(lexer)
+        
+        # an import node acts similar to a block and holds all variables and functions
+        # in a tree. A parser is passed for getting various information in the interpreter
+        if filename_token == None:
+            filename_token = LexerToken(f'"{filename}"')
+        
+        node = NodeImport(filename_token, source_location)
+        node.children = parser.get_statements()
+
+        for error in parser.error_list.errors:
+            self.error_list.push_error(error)
+        
+        return node
+        
     def parse_import(self):
         self.eat(TokenType.Keyword)
         
@@ -121,31 +151,7 @@ class Parser():
         # trim off ""
         filename = self.current_token.value[1:-1]
         self.eat(TokenType.String)
-        
-        with open(filename, 'r') as fp:
-            try:
-                data = fp.read()
-            except IOError:
-                self.error('source file \'{}\' does not exist'.format(filename))
-                return None
-        
-        # lex loaded file data
-        source_location =  SourceLocation(filename)
-
-        lexer = Lexer(data, source_location)
-        lexer.lex()
-        
-        parser = Parser(lexer)
-        
-        # an import node acts similar to a block and holds all variables and functions
-        # in a tree. A parser is passed for getting various information in the interpreter
-        node = NodeImport(filename_token, source_location)
-        node.children = parser.get_statements()
-
-        for error in parser.error_list.errors:
-            self.error_list.push_error(error)
-        
-        return node
+        return self.import_file(filename, filename_token)
         
     def parse_return(self):
         self.eat(TokenType.Keyword)

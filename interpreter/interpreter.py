@@ -61,7 +61,7 @@ class Interpreter():
             caller_name = "visit_{}".format(str(node.type.name))
             caller = getattr(self, caller_name)
         except:
-            print('No visitor function defined for node')
+            print('No visitor function defined for node {}'.format(node))
             quit()
         return caller(node)
             

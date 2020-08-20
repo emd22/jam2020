@@ -7,6 +7,10 @@ from error import InterpreterError
 from ast_printer import AstPrinter
 from util import LogColour
 
+# when including readline, it switches input() over and allows
+# text seeking and other cool things
+import readline
+
 class Repl:
     REPL_FILENAME = '<repl>'
     
@@ -205,11 +209,13 @@ class Repl:
 
     def loop(self):
         print(REPL_WELCOME_MESSAGE)
-
+        
         while True:
             self.accept_input()
 
     def accept_input(self):
+        line = ""
+        
         line = input('>>> ')
 
         trimmed = line.strip()

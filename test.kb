@@ -1,42 +1,6 @@
-import "std/core.kb";
-
 func test(a) {
     print(a);
 };
 
-let Person = Type.extend({
-    instance = {
-        say_hi: func = () {
-            return "hi";
-        }
-        
-        name: str = "poo poo pee pee"
-    }
-    
-    __construct__: func = (self) {
-        print(self);
-    }
-    
-});
-
-# MAKE OBJECTS WITH NO ASSIGNMENT TAKE DEFAULT VALUES
-
-let Customer = Person.extend({
-    instance = {
-        customer_id: str = "hi"
-    }
-    
-    __construct__: func = (self) {
-        print("construct customer");
-        print("self = ");
-        print(varinfo("self"));
-        print(self.name);
-    }
-});
-
-print(Person.new());
-print(Customer.new());
-
-
-let value:int = 10;
+let value = 10;
 test(value+5);
