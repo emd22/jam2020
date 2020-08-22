@@ -176,6 +176,18 @@ class Parser():
         self.eat(TokenType.LParen)
 
         argument_list = None
+        
+        old_index = self.token_index
+        
+        while self.next_token() not in (TokenType.RParen, None):
+            pass
+        else:
+            print(self.current_token.type)
+            if self.current_token.type == TokenType.LBrace:
+                print('Braceeee')
+                
+        self.token_index = old_index
+        self._current_token = self.lexer.tokens[self.token_index-1]
 
         if self.current_token in (TokenType.RParen, TokenType.Identifier):
             expr = self.parse_expression()
@@ -223,12 +235,13 @@ class Parser():
 
     def parse_statement(self):
         token = self.current_token
-
-        if token.type in (TokenType.Semicolon, TokenType.NoneToken):
-            return NodeNone(token)
-        elif token.type == TokenType.Keyword:
+            
+        if token.type == TokenType.Keyword:
             node = self.parse_keyword()
-            # TODO: fix block semicolon issue
+            if node.type == NodeType.Declare and node.value.type == NodeType.Assign:
+                rhs = node.value.value
+                if rhs.type == NodeType.FunctionExpression:
+                    return node
         else:
             node = self.parse_expression()
             
@@ -238,7 +251,8 @@ class Parser():
         
         if self.current_token.type != TokenType.Semicolon:
             self.error('Missing semicolon')
-    
+        self.eat(TokenType.Semicolon)
+            
         return node
     
     def get_statements(self):
@@ -247,14 +261,15 @@ class Parser():
 
         statements = [self.parse_statement()]
         
-        # find all lines in block
-        while self.current_token.type == TokenType.Semicolon:
-            self.eat(TokenType.Semicolon)
+        # read until no statements left
+        while self.current_token != None:
             # We hit last statement in block, break
             if self.current_token.type in (TokenType.RBrace, TokenType.NoneToken):
                 break
+                
+            statement = self.parse_statement()
             # parse statement and skip to next semicolon
-            statements.append(self.parse_statement())
+            statements.append(statement)
         
         return statements
 
@@ -518,5 +533,4 @@ class Parser():
         return node
         
     def parse(self):
-
         return self.get_statements()

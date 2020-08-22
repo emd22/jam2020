@@ -36,7 +36,6 @@ def main():
     ]
     
     ast = global_import_nodes+parser.parse()
-    print('****{}'.format(type(ast)))
     error_list = parser.error_list
 
     if len(error_list.errors) > 0:
@@ -46,8 +45,8 @@ def main():
     # init interpreter and parse tokens
     interpreter = Interpreter(parser.source_location)
 
-    for node in ast:
-        AstPrinter().print_ast(node)
+    #for node in ast:
+    #    AstPrinter().print_ast(node)
     
     print("=== Output ===")
     for node in ast:

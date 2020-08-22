@@ -212,7 +212,7 @@ class Repl:
         signal.signal(signal.SIGINT, self.at_exit)
         
     def at_exit(self, signal, frame):
-        print('\nExitting REPL...')
+        print('\nExiting...')
         exit(0)
         
     def repl_import_defaults(self):

@@ -109,4 +109,4 @@ class Globals:
             var = scope.find_variable_value(name)
             var.assign_value(value)
 
-        print(scope)
+        #print(scope)

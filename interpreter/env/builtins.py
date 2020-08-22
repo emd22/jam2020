@@ -6,7 +6,7 @@ from parser.node import NodeFunctionExpression
 from error import ErrorType
 
 def _print_object(interpreter, node, obj):
-    obj_str = repr(obj)
+    obj_str = str(obj)
 
     if isinstance(obj, BasicObject):
         meth = obj.lookup_member(BasicType.REPR_FUNCTION_NAME)
@@ -25,7 +25,7 @@ def _print_object(interpreter, node, obj):
 
             obj_str = basic_value_repr.value
 
-    print("{}".format(obj_str))
+    print(obj_str)
     
 def builtin_varinfo(arguments):
     interpreter = arguments[0]
