@@ -264,7 +264,7 @@ class Parser():
         return node
     
     def get_statements(self):
-        if self.current_token.type == TokenType.RBrace:
+        if self.current_token.type == TokenType.RBrace or self.current_token.type == TokenType.NoneToken:
             return []
 
         statements = [self.parse_statement()]
