@@ -235,9 +235,16 @@ class Parser():
 
     def parse_statement(self):
         token = self.current_token
+        
+        # empty statement, eat semicolon and try again
+        if token.type == TokenType.Semicolon:
+            self.eat(TokenType.Semicolon)
+            return self.parse_statement()
             
         if token.type == TokenType.Keyword:
             node = self.parse_keyword()
+            
+            # check if node is function block, exempt from semicolon
             if node.type == NodeType.Declare and node.value.type == NodeType.Assign:
                 rhs = node.value.value
                 if rhs.type == NodeType.FunctionExpression:
@@ -251,6 +258,7 @@ class Parser():
         
         if self.current_token.type != TokenType.Semicolon:
             self.error('Missing semicolon')
+        # eat semicolon at end of statement
         self.eat(TokenType.Semicolon)
             
         return node
