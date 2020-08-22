@@ -4,3 +4,5 @@ func adder(val) {
 }
 let value = 10*2;
 print(adder(value));
+
+let x: Int = 2;

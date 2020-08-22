@@ -166,7 +166,11 @@ class Parser():
             value = self.parse_parenthesis()
         else:
             value = self.parse_expression()
-            
+
+        if value is None:
+            self.error('Invalid assignment')
+            return None
+
         node = NodeAssign(node, value)
         
         return node
@@ -243,9 +247,13 @@ class Parser():
             
         if token.type == TokenType.Keyword:
             node = self.parse_keyword()
+            print("keyword token = {}".format(token))
+
+            if node is None:
+                return None
             
             # check if node is function block, exempt from semicolon
-            if node.type == NodeType.Declare and node.value.type == NodeType.Assign:
+            if node.type == NodeType.Declare and (node.value is not None and node.value.type == NodeType.Assign):
                 rhs = node.value.value
                 if rhs.type == NodeType.FunctionExpression:
                     return node
@@ -398,10 +406,11 @@ class Parser():
         if self.current_token.type == TokenType.Colon:
             self.eat(TokenType.Colon)
             type_node_token = self.current_token
-            type_node = self.parse_expression()
+            type_node = self.parse_factor()
+            print("type_node = {}".format(type_node))
 
             if type_node is None or (not isinstance(type_node, NodeVariable) and not isinstance(type_node, NodeMemberExpression)):
-                self.error('Declaration type should either be an identifier or member access, got {}'.format(type_node_token.value))
+                self.error('Declaration type should either be an identifier or member access, got {}'.format(type_node_token))
                 return None
 
         if self.current_token.type == TokenType.Equals:
@@ -500,11 +509,9 @@ class Parser():
             node = self.parse_variable()
 
 
-        while node != None and self.current_token.type in (TokenType.Dot, TokenType.Equals, TokenType.LParen):
+        while node != None and self.current_token.type in (TokenType.Dot, TokenType.LParen):
             if self.peek_token(0, expected_type=TokenType.Dot):
                 node = self.parse_member_expression(node)
-            elif self.peek_token(0, expected_type=TokenType.Equals):
-                node = self.parse_assignment_statement(node)
             elif self.peek_token(0, expected_type=TokenType.LParen):
                 node = self.parse_function_call(node)
 
@@ -524,10 +531,13 @@ class Parser():
     
     def parse_expression(self):
         node = self.parse_term()
-        while self.current_token.type in (TokenType.Plus, TokenType.Minus, TokenType.BitwiseOr, TokenType.BitwiseAnd):
+        while self.current_token.type in (TokenType.Equals, TokenType.Plus, TokenType.Minus, TokenType.BitwiseOr, TokenType.BitwiseAnd):
             token = self.current_token
         
-            if token.type == TokenType.Plus:
+            if self.peek_token(0, expected_type=TokenType.Equals):
+                node = self.parse_assignment_statement(node)
+                continue
+            elif token.type == TokenType.Plus:
                 self.eat(TokenType.Plus)
             elif token.type == TokenType.Minus:
                 self.eat(TokenType.Minus)

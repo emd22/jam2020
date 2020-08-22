@@ -13,6 +13,16 @@ class BasicObject(BasicValue):
         self.parent = parent
         self.members = members
 
+    def extract_value(self):
+        return self
+
+    def lookup_type(self, global_scope):
+        if self.parent is not None:
+            return self.parent
+
+        # BasicValue lookup_type call - resolves to Object usually
+        return super.lookup_type(global_scope)
+
     def clone(self, parent_override=None):
         parent = self.parent
 
