@@ -176,18 +176,6 @@ class Parser():
         self.eat(TokenType.LParen)
 
         argument_list = None
-        
-        old_index = self.token_index
-        
-        while self.next_token() not in (TokenType.RParen, None):
-            pass
-        else:
-            print(self.current_token.type)
-            if self.current_token.type == TokenType.LBrace:
-                print('Braceeee')
-                
-        self.token_index = old_index
-        self._current_token = self.lexer.tokens[self.token_index-1]
 
         if self.current_token in (TokenType.RParen, TokenType.Identifier):
             expr = self.parse_expression()

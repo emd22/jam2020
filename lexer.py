@@ -50,10 +50,13 @@ class TokenType(Enum):
             return TokenType(value)
             
         # TODO: add octal, hexadecimal and decimal numbers
-        if value[0].isdigit():
+        if value[0].isdigit() or value[0] == '.':
             if len(value) > 1:
                 if value[1] == 'x' or value[1] == 'X':
                     return TokenType.Number
+                    
+            if '.' in value:
+                return TokenType.Number
             return TokenType.Number
         
         elif (value[0] == '"' and value[-1] == '"') or (value[0] == '\'' and value[-1] == '\''):
@@ -165,12 +168,17 @@ class Lexer():
                 continue
                   
             elif self.peek_char(0) in splitables and string_type == None:
+                if self.peek_char(-1).isdigit() and self.peek_char(0) == '.':
+                    self.token_data += self.read_char()
+                    continue
+                    
                 if not self.peek_char(-1).isspace() and self.peek_char(-1) not in splitables:
                     self.push_token()
+                    
                 self.token_data = self.read_char()
                 self.push_token()
                 self.skip_whitespace()
-                continue
+                continue                
   
             # check if string character
             if (self.peek_char(0) == '"'):

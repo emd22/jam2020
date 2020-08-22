@@ -37,8 +37,7 @@ class AstNode():
         try:
             return "AstNode[{0}, {1}]".format(self.type.name, self.token)
         except:
-            return "AstNode[{0}]".format(self.type.name)
-            
+            return "AstNode[{0}]".format(self.type.name) 
     def __repr__(self):
         return self.__str__()
         
@@ -58,8 +57,11 @@ class NodeNumber(AstNode):
     def __init__(self, token):
         AstNode.__init__(self, NodeType.Number, token)
         self.token = token
-        # int(..., 0) for guessing hexadecimal, float, etc.
-        self.value = int(token.value, 0)
+        # int(..., 0) for guessing hexadecimal etc.
+        if '.' in token.value:
+            self.value = float(token.value)
+        else:
+            self.value = int(token.value, 0)
         
 class NodeString(AstNode):
     def __init__(self, token):
