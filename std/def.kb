@@ -1,11 +1,56 @@
-let Float = Type.extend({
-  name: str = 'Float'
+let Num = Type.extend({
+  name = 'Num'
+
+  to_int: Func = (self) {
+    return __intern_to_int__(self._value);
+  }
+
+  to_str: Func = (self) {
+    return __intern_num_to_str__(self._value);
+  }
+});
+
+let Float = Num.extend({
+  name = 'Float'
 
   instance = {
     _value = 0.0
   }
 });
 
+let Int = Num.extend({
+  name = 'Int'
+
+  instance = {
+    _value = 0
+  }
+});
+
+let Str = Type.extend({
+  name = 'Str'
+
+  instance = {
+    _value = ''
+  }
+
+  __construct__: Func = (self, value) {
+    self._value = value;
+  }
+
+  len: Func = (self) {
+    return __intern_str_len__(self._value);
+  }
+  
+  append: Func = (self, value) {
+    return __intern_str_append__(self._value, value);
+  }
+
+  to_str: Func = (self) {
+    print("to_str for ");
+    print(self);
+    return self._value;
+  }
+});
 
 let int = Int;
 let str = Str;

@@ -83,10 +83,24 @@ def builtin_type_compare(arguments):
 
 # PLACEHOLDER
 def builtin_to_int(arguments):
-    return BasicValue(int(arguments[1].value))
+    return BasicValue(int(str(arguments[2].extract_value())))
 
 def builtin_str_len(arguments):
-    return BasicValue(len(arguments[1].value))
+    return BasicValue(len(str(arguments[2].extract_value())))
+
+def builtin_str_append(arguments):
+    interpreter = arguments[0]
+    this_object = arguments[1]
+
+    str_value_start = arguments[2]
+
+    str_value = str(str_value_start.extract_value())
+
+    if len(arguments) > 3:
+        for arg in arguments[3:]:
+            str_value = str_value + str(arg.extract_value())
+
+    return BasicValue(str_value)
 
 def builtin_object_new(arguments):
     interpreter = arguments[0]
@@ -231,3 +245,4 @@ def builtin_file_write(arguments):
     f.close()
 
     return BasicValue(file_path)
+
