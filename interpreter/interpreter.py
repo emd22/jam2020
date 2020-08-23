@@ -14,8 +14,7 @@ from interpreter.variable import VariableType
 from interpreter.env.builtins import builtin_object_new
 from lexer import TokenType, LexerToken
 
-from error import InterpreterError, ErrorList, ErrorType, Error 
-
+from error import InterpreterError, ErrorList, ErrorType, Error
 
 class Interpreter():
     def __init__(self, source_location):
@@ -71,14 +70,16 @@ class Interpreter():
         right = self.visit(node.right)
         # TODO operator overloading by calling method on obj
         # Int method __add__ could just be a builtin method intern_int_add
+        funstr = '__noop__'
+        
         if node.token.type == TokenType.Plus:
-            return BasicValue(left.value + right.value)
+            funstr = '__add__'
         elif node.token.type == TokenType.Minus:
-            return BasicValue(left.value - right.value)
+            funstr = '__sub__'
         elif node.token.type == TokenType.Multiply:
-            return BasicValue(left.value * right.value)
+            funstr = '__mul__'
         elif node.token.type == TokenType.Divide:
-            return BasicValue(left.value // right.value)
+            funstr = '__div__'
             
         elif node.token.type == TokenType.BitwiseOr:
             return BasicValue(left.value | right.value)
@@ -90,7 +91,19 @@ class Interpreter():
         elif node.token.type == TokenType.NotCompare:
             return BasicValue(int(left.value != right.value))
             
-        return BasicValue(0)
+        member_access_call_node = NodeCall(
+            NodeMemberExpression(
+                node.left,
+                LexerToken(funstr, TokenType.Identifier),
+                node.token
+            ),
+            NodeArgumentList(
+                [node.right],
+                node.token
+            )
+        )
+
+        return self.visit(member_access_call_node)
         
     def visit_Type(self, node):
         pass
@@ -271,10 +284,10 @@ class Interpreter():
                     return None
 
                 #TODO assert argument size is declared arg size - 1
-
+                
                 # push arguments to stack
                 for arg in node.argument_list.arguments:
-                    self.stack.push(arg)
+                    self.stack.push(self.visit(arg))
 
                 
                 self.call_function_expression(target)
@@ -369,6 +382,7 @@ class Interpreter():
                 break
 
         # no return statement, push return code 0 to the stack
+        #print("last_child = {}".format(last_child))
         if type(last_child) != NodeFunctionReturn:
             self.stack.push(0)
             

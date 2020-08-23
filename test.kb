@@ -6,15 +6,18 @@ func print_times(str, times) {
 }
 
 let x: float = 2.0;
+
 #let input_val = Console.read();
 #print(input_val);
 
 # let file = File.open('test.kb');
 # print(file);
 
-print("hello".append(" world"));
+let a:str = "hello"+" world";
+print(a);
 
-print("hi".len());
+let b:Bool = Bool.new(0);
 
-print_times("Hello, World!", 5);
+b = true;
 
+print(b);

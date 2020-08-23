@@ -54,7 +54,12 @@ class Globals:
             ('__intern_array_at__', VariableType.Function, BuiltinFunction("__intern_array_at__", None, builtin_array_at)),
             ('__intern_console_input__', VariableType.Function, BuiltinFunction("__intern_console_input__", None, builtin_console_input)),
             ('__intern_file_read__', VariableType.Function, BuiltinFunction("__intern_file_read__", None, builtin_file_read)),
-            ('__intern_file_write__', VariableType.Function, BuiltinFunction("__intern_file_write__", None, builtin_file_write))
+            ('__intern_file_write__', VariableType.Function, BuiltinFunction("__intern_file_write__", None, builtin_file_write)),
+            
+            ('__intern_int_add__', VariableType.Function, BuiltinFunction("__intern_int_add__", None, builtin_int_add)),
+            ('__intern_int_sub__', VariableType.Function, BuiltinFunction("__intern_int_sub__", None, builtin_int_sub)),
+            ('__intern_int_mul__', VariableType.Function, BuiltinFunction("__intern_int_mul__", None, builtin_int_mul)),
+            ('__intern_int_div__', VariableType.Function, BuiltinFunction("__intern_int_div__", None, builtin_int_div)),
         ]
 
     def vartype_to_typeobject(self, vartype):

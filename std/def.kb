@@ -1,5 +1,9 @@
 let Num = Type.extend({
   name = 'Num'
+  
+  func __construct__(self, value) {
+      self._value = value;
+  }
 
   func to_int(self) {
     return __intern_to_int__(self._value);
@@ -24,6 +28,20 @@ let Int = Num.extend({
   instance = {
     _value = 0
   }
+  
+  func __add__(self, value) {
+      return __intern_int_add__(self._value, value);
+  }
+  func __sub__(self, value) {     
+      return __intern_int_sub__(self._value, value);
+  }
+  
+  func __mul__(self, value) {
+      return __intern_int_mul__(self._value, value);
+  }
+  func __div__(self, value) {     
+      return __intern_int_div__(self._value, value);
+  }
 });
 
 let Array = Type.extend({
@@ -38,13 +56,41 @@ let Array = Type.extend({
   }
 
   func len(self) {
-    return __intern_array_len__(self._value);
+    let _rval = __intern_array_len__(self._value);
+    return _rval;
   }
 
   func __at__(self, index) {
     return __intern_array_at__(self._value, index);
   }
 });
+
+let Bool = Num.extend({
+    name = 'Bool'
+    
+    true
+    false
+    
+    instance = {
+        _value = 0
+    }
+    
+    func __construct__(self, value) {
+        self._value = !!value;
+    }
+    
+    func to_str(self) {
+        let rval = "false";
+        if self._value {
+            rval = "true";
+        }
+        return rval;
+    }
+});
+
+Bool.true = Bool.new(1);
+Bool.false = Bool.new(0);
+Bool.instance._value = Bool.false;
 
 let Str = Array.extend({
   name = 'Str'
@@ -60,6 +106,10 @@ let Str = Array.extend({
   func append(self, value) {
     return __intern_str_append__(self._value, value);
   }
+  
+  func __add__(self, value) {
+      return self.append(value);
+  }
 
   func to_str(self) {
     return self._value;
@@ -71,4 +121,7 @@ let str = Str;
 let num = Num;
 let float = Float;
 let type = Type;
+
+let true: Bool = Bool.true;
+let false: Bool = Bool.false;
 

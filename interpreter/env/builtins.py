@@ -2,11 +2,14 @@ from interpreter.typing.basic_type import BasicType
 from interpreter.basic_object import BasicObject
 from interpreter.basic_value import BasicValue
 from interpreter.function import BuiltinFunction
+from interpreter.env.builtin.arith import *
 from parser.node import NodeFunctionExpression, NodeCall, NodeArgumentList, NodeMemberExpression
 from error import ErrorType
 
 def _print_object(interpreter, node, obj):
     obj_str = str(obj)
+
+    obj = interpreter.basic_value_to_object(node, obj)
 
     if isinstance(obj, BasicObject):
         meth = obj.lookup_member(BasicType.REPR_FUNCTION_NAME)
@@ -14,12 +17,6 @@ def _print_object(interpreter, node, obj):
         basic_value_repr = None
 
         if meth is not None:
-            # basic_value_repr = interpreter.visit_Call(
-            #     NodeCall(
-            #         NodeMemberExpression(node, NodeBasicType.REPR_FUNCTION_NAME),
-            #         NodeArgumentList([node], node.token)
-            #     )
-            # )
             if isinstance(meth.value, BuiltinFunction):
                 basic_value_repr = interpreter.call_builtin_function(meth.value, obj, [], node)
             else:
@@ -179,14 +176,10 @@ def builtin_object_to_str(arguments):
 def builtin_value_to_str(arguments):
     interpreter = arguments[0]
     this_object = arguments[1]
+    
+    passed_arg = arguments[2].extract_value()
 
-    value_member = this_object.lookup_member('_value')
-
-    if value_member is None:
-        interpreter.error(None, ErrorType.TypeError, '_value is not a member of {}'.format(this_object))
-        return None
-
-    return BasicValue(str(value_member.value))
+    return BasicValue(str(passed_arg))
 
 def builtin_num_to_str(arguments):
     return builtin_value_to_str(arguments)
@@ -266,5 +259,3 @@ def builtin_file_write(arguments):
     f.close()
 
     return BasicValue(file_path)
-
-
