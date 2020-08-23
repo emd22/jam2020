@@ -7,7 +7,7 @@ from interpreter.env.builtins import *
 
 class Globals:
     def __init__(self):
-        basic_type = BasicType(
+        self.basic_type = BasicType(
             None,
             {
                 'name': 'Type',
@@ -18,8 +18,8 @@ class Globals:
             },
             True
         )
-        basic_object = BasicType(
-            basic_type,
+        self.basic_object = BasicType(
+            self.basic_type,
             {
                 'instance': BasicObject(members={}),
                 'name': 'Object',
@@ -29,10 +29,10 @@ class Globals:
             }
         )
 
-        basic_type.parent = basic_object # circular
+        self.basic_type.parent = self.basic_object # circular
 
-        basic_number = BasicType(
-            basic_object,
+        self.basic_number = BasicType(
+            self.basic_object,
             {
                 'name': 'Num',
                 'to_int': BuiltinFunction('Num.to_int', None, builtin_to_int),
@@ -40,59 +40,65 @@ class Globals:
             }
         )
 
-        basic_function = BasicType(
-            basic_object,
+        self.func_type = BasicType(
+            self.basic_object,
             {
                 'name': 'Func'
                 # TODO call function
             }
         )
 
+        self.int_type = BasicType(
+            self.basic_number,
+            {
+                'name': 'Int',
+                'instance': BasicObject(members={
+                    '_value': BasicValue(value=0)
+                }),
+            }
+        )
+
+        self.float_type = BasicType(
+            self.basic_number,
+            {
+                'name': 'Float',
+                'instance': BasicObject(members={
+                    '_value': BasicValue(value=0.0)
+                })
+            }
+        )
+
+        self.str_type = BasicType(
+            self.basic_object,
+            {
+                'name': 'Str',
+                'instance': BasicObject(members={
+                    '_value': BasicValue(value="")
+                }),
+                'len': BuiltinFunction('Str.len', None, builtin_str_len),
+                'to_str': BuiltinFunction('Str.to_str', None, builtin_str_to_str)
+            }
+        )
+
         self.variables = [
-            ('Type', VariableType.Object, basic_type),
-            ('Object', VariableType.Type, basic_object),
-            ('Func', VariableType.Type, basic_function),
-            ('Num', VariableType.Type, basic_number),
+            ('Type', VariableType.Object, self.basic_type),
+            ('Object', VariableType.Type, self.basic_object),
+            ('Func', VariableType.Type, self.func_type),
+            ('Num', VariableType.Type, self.basic_number),
             (
                 'Int',
                 VariableType.Type,
-                BasicType(
-                    basic_number,
-                    {
-                        'name': 'Int',
-                        'instance': BasicObject(members={
-                            '_value': BasicValue(value=0)
-                        }),
-                    }
-                )
+                self.int_type
             ),
             (
                 'Float',
                 VariableType.Type,
-                BasicType(
-                    basic_number,
-                    {
-                        'name': 'Float',
-                        'instance': BasicObject(members={
-                            '_value': BasicValue(value=0.0)
-                        })
-                    }
-                )
+                self.float_type
             ),
             (
                 'Str',
                 VariableType.Type,
-                BasicType(
-                    basic_object,
-                    {
-                        'name': 'Str',
-                        'instance': BasicObject(members={
-                            '_value': BasicValue(value="")
-                        }),
-                        'len': BuiltinFunction('Str.len', None, builtin_str_len),
-                        'to_str': BuiltinFunction('Str.to_str', None, builtin_str_to_str)
-                    }
-                )
+                self.str_type
             ),
             ('__intern_print__', VariableType.Function, BuiltinFunction("__intern_print__", None, builtin_printn)),
             ('__intern_type_compare__', VariableType.Function, BuiltinFunction("__intern_type_compare__", None, builtin_type_compare)),
@@ -100,11 +106,28 @@ class Globals:
             ('__intern_exit__', VariableType.Function, BuiltinFunction("__intern_exit__", None, builtin_exit)),
         ]
 
+    def vartype_to_typeobject(self, vartype):
+        if vartype == VariableType.Int:
+            return self.int_type
+        # elif vartype == VariableType.Float
+        elif vartype == VariableType.String:
+            return self.str_type
+        elif vartype == VariableType.Function:
+            return self.func_type
+        elif vartype == VariableType.Type:
+            return self.basic_type
+        elif vartype == VariableType.Object:
+            return self.basic_object
+
+        raise Exception('No conversion defined for {}'.format(vartype))
+
     def apply_to_scope(self, scope):
         for (name, vtype, value) in self.variables:
             var_type = vtype
 
-            scope.declare_variable(name, var_type)
+            type_object = self.vartype_to_typeobject(var_type)
+
+            scope.declare_variable(name, type_object)
 
             var = scope.find_variable_value(name)
             var.assign_value(value)

@@ -1,3 +1,4 @@
+import "std/def.kb";
 import "std/io.kb";
 
 let varinfo = (_vname_) {

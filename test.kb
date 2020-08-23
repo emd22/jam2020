@@ -2,5 +2,7 @@
 func adder(val) {
     return val*2+4;
 }
-let value = 1.02+1.04;
-print(value);
+let value = 10*2;
+print(adder(value));
+
+let x: float = 2.0;

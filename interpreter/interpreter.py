@@ -68,21 +68,24 @@ class Interpreter():
     def visit_BinOp(self, node):
         left = self.visit(node.left)
         right = self.visit(node.right)
+        # TODO operator overloading by calling method on obj
+        # Int method __add__ could just be a builtin method intern_int_add
         if node.token.type == TokenType.Plus:
-            return left + right
+            return BasicValue(left.value + right.value)
         elif node.token.type == TokenType.Minus:
-            return left - right
+            return BasicValue(left.value - right.value)
         elif node.token.type == TokenType.Multiply:
-            return left * right
+            return BasicValue(left.value * right.value)
         elif node.token.type == TokenType.Divide:
-            return left // right
+            # TODO float divisoin.
+            return BasicValue(left.value // right.value)
             
         elif node.token.type == TokenType.BitwiseOr:
-            return (left | right)
+            return BasicValue(left.value | right.value)
         elif node.token.type == TokenType.BitwiseAnd:
-            return (left & right)
+            return BasicValue(left.value & right.value)
             
-        return 0
+        return BasicValue(0)
         
     def visit_Type(self, node):
         pass
@@ -98,7 +101,6 @@ class Interpreter():
         type_node_value = None # TODO default to Any or type of assignment
 
         if node.type_node is not None:
-            print("type node: {}".format(node.type_node))
             type_node_value = self.visit(node.type_node)
 
         if self.current_scope.find_variable_info(node.name.value, limit=True) != None:
@@ -126,24 +128,24 @@ class Interpreter():
         self.stack.push(value)
     
     def visit_Number(self, node):
-        return node.value
+        return BasicValue(node.value)
     
     def visit_String(self, node):
-        return node.value
+        return BasicValue(node.value)
     
     def visit_UnaryOp(self, node):
         val = self.visit(node.expression)
         
         if node.token.type == TokenType.Plus:
-            return +val
+            return BasicValue(+val.value)
         elif node.token.type == TokenType.Minus:
-            return -val
+            return BasicValue(-val.value)
             
         elif node.token.type == TokenType.Not:
-            if val == 0:
-                return 1
+            if val is None or val.value == 0:
+                return BasicValue(1)
             else:
-                return 0
+                return BasicValue(0)
             
     def visit_Block(self, node, create_scope=True):
         if create_scope:
@@ -157,7 +159,36 @@ class Interpreter():
             
         if create_scope:
             self.close_scope()
-        
+
+    def assignment_typecheck(self, node, type_object, assignment_value):
+        if type_object is None:
+            self.error(node.lhs, ErrorType.TypeError, 'Set with decltype but decltype resolved to None')
+            return False
+        elif not isinstance(type_object, BasicType):
+            self.error(node.lhs, ErrorType.TypeError, '{} is not a valid type object and cannot be used as a declaration type'.format(type_object))
+            return False
+        else:
+            assignment_type = BasicValue(assignment_value).lookup_type(self.global_scope)
+
+            if isinstance(assignment_type, BasicObject):
+                assignment_type = assignment_value.parent
+
+            if assignment_type is None:
+                self.error(node.value, ErrorType.TypeError, 'Assignment requires type {} but could not resolve a runtime type of assignment value'.format(type_object))
+                return None
+            if isinstance(assignment_type, BasicValue):
+                assignment_type = assignment_type.extract_value()
+
+            if not isinstance(assignment_type, BasicType):
+                self.error(node.value, ErrorType.TypeError, '{} is not a valid runtime type object'.format(assignment_type))
+                return False
+    
+            if not type_object.compare_type(assignment_type):
+                self.error(node.value, ErrorType.TypeError, 'Attempted to assign <{}> to a value of type <{}>'.format(type_object.friendly_typename, assignment_type.friendly_typename))
+                return False
+
+        return True
+
     def visit_Assign(self, node):
         if node.value.type == NodeType.FunctionExpression:
             value = node.value
@@ -165,8 +196,17 @@ class Interpreter():
             value = self.visit(node.value)
 
         if isinstance(node.lhs, NodeVariable):
-            target = self.walk_variable(node.lhs)
-            target.assign_value(value)
+            target_info = self.walk_variable(node.lhs)
+            target_value = target_info.value_wrapper
+
+            # TYPE CHECK
+            if target_info.decltype is not None:
+                typecheck_value = self.assignment_typecheck(node, target_info.decltype, value)
+
+                if typecheck_value is not True:
+                    return None
+
+            target_value.assign_value(value)
 
         elif isinstance(node.lhs, NodeMemberExpression):
             (target, member) = self.walk_member_expression(node.lhs)
@@ -237,13 +277,13 @@ class Interpreter():
             self.error(node, ErrorType.DoesNotExist, "Referencing undefined variable '{}'".format(node.value))
             return None
 
-        return var.value_wrapper
+        return var
             
     def visit_Variable(self, node):
         var = self.walk_variable(node)
 
         if var is not None:
-            return var.value
+            return var.value_wrapper.value
 
         return None
         

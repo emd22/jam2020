@@ -5,6 +5,7 @@ from parser.parser import Parser
 from parser.node import NodeImport
 from parser.source_location import SourceLocation
 from interpreter.interpreter import Interpreter
+from error import InterpreterError
 
 from repl.repl import Repl
 from ast_printer import AstPrinter
@@ -49,8 +50,13 @@ def main():
     #    AstPrinter().print_ast(node)
     
     print("=== Output ===")
-    for node in ast:
-        interpreter.visit(node)
+
+    try:
+        for node in ast:
+            interpreter.visit(node)
+    except InterpreterError:
+        # errors printed
+        pass
 
 if __name__ == '__main__':
     main()
