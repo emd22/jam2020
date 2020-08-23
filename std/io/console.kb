@@ -1,10 +1,10 @@
 
 let Console: type = Type.extend({
-  write: Func = (_, line) {
+  func write(_, line) {
     __intern_print__(line);
   }
 
-  read: Func = (_) {
+  func read(_) {
     return __intern_console_input__();
   }
 });

@@ -17,6 +17,8 @@ class TokenType(Enum):
     RParen = ')'
     LBrace = '{'
     RBrace = '}'
+    LBracket = '['
+    RBracket = ']'
     Plus = '+'
     Minus = '-'
     Multiply = '*'
@@ -133,7 +135,7 @@ class Lexer():
         return False
     
     def lex(self):
-        splitables = "(){};:+-*/=.,!|&~<>^"
+        splitables = "(){}[];:+-*/=.,!|&~<>^"
         self.skip_whitespace()
         
         string_type = None

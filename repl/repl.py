@@ -175,6 +175,8 @@ class Repl:
   That's the power that inheritance has to offer.
         """),
 
+        'arrays': ('', ''),
+
         'modules': ('Using code from other files + using the `io` module', """
   Sometimes, especially in large projects,
   you will want to pull in code from other files.

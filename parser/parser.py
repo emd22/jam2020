@@ -98,6 +98,8 @@ class Parser():
         if self.eat(TokenType.Dot) is None:
             return None
 
+        token = self.current_token
+
         # expect identifier for right hand side
         rhs_name = self.peek_token(0, expected_type=TokenType.Identifier)
 
@@ -107,7 +109,25 @@ class Parser():
 
         self.eat(TokenType.Identifier)
 
-        return NodeMemberExpression(lhs, rhs_name)
+        return NodeMemberExpression(lhs, rhs_name, token)
+   
+    def parse_array_access_expression(self, lhs):
+        if self.eat(TokenType.LBracket) is None:
+            return None
+
+        token = self.current_token
+
+        # get internal expr
+        access_expr = self.parse_expression()
+
+        if access_expr is None:
+            self.error('invalid array access expression')
+            return None
+
+        if self.eat(TokenType.RBracket) is None:
+            return None
+
+        return NodeArrayAccessExpression(lhs, access_expr, token)
         
     def import_file(self, filename, filename_token=None):
         try:
@@ -298,6 +318,36 @@ class Parser():
 
         return block
 
+    def parse_array_expression(self):
+        members = []
+    
+
+        # eat left bracket
+        if self.eat(TokenType.LBracket) is None:
+            return None
+
+        token = self.current_token
+
+        while token.type != TokenType.RBracket:
+            # parse expr
+            item_expr = self.parse_expression()
+
+            if item_expr is None:
+                self.error('invalid array member item {}'.format(self.current_token))
+                return None
+
+            members.append(item_expr)
+
+            if self.current_token.type == TokenType.Comma:
+                self.eat(TokenType.Comma)
+            else:
+                break
+
+        if self.eat(TokenType.RBracket) is None:
+            return None
+
+        return NodeArrayExpression(members, token)
+
     def parse_object_expression(self):
         members = [] # array of var declarations
 
@@ -385,6 +435,8 @@ class Parser():
         if require_keyword:
             # eat let keyword
             self.eat(TokenType.Keyword)
+        elif self.peek_token(0, expected_type=TokenType.Keyword) and self.peek_token(0).value == 'func':
+            return self.parse_func_declaration()
             
         name = self.current_token
         self.eat(TokenType.Identifier)
@@ -395,7 +447,6 @@ class Parser():
             self.eat(TokenType.Colon)
             type_node_token = self.current_token
             type_node = self.parse_factor()
-            print("type_node = {}".format(type_node))
 
             if type_node is None or (not isinstance(type_node, NodeVariable) and not isinstance(type_node, NodeMemberExpression)):
                 self.error('Declaration type should either be an identifier or member access, got {}'.format(type_node_token))
@@ -410,27 +461,6 @@ class Parser():
         vnodes = NodeDeclare(type_node, name, val_node)
         
         return vnodes
-
-    def parse_type_declaration(self, name):
-        members = [] # array of var declarations
-
-        # eat left brace
-        if self.eat(TokenType.LBrace) is None:
-            return None
-
-        token = self.current_token
-
-        # find all lines in block
-        while token.type != TokenType.RBrace:
-            # parse variable declaration
-            members.append(self.parse_variable_declaration())
-
-            token = self.current_token
-
-        if self.eat(TokenType.RBrace) is None:
-            return None
-
-        return NodeTypeExpression(name, members)
 
     def parse_if_statement(self):
         # eat `if`
@@ -490,16 +520,19 @@ class Parser():
             self.eat(TokenType.LParen)
             node = self.parse_expression()
             self.eat(TokenType.RParen)
-            
+        elif token.type == TokenType.LBracket:
+            node = self.parse_array_expression()
         elif token.type == TokenType.LBrace:
             node = self.parse_object_expression()
         elif token.type == TokenType.Identifier:
             node = self.parse_variable()
 
 
-        while node != None and self.current_token.type in (TokenType.Dot, TokenType.LParen):
+        while node != None and self.current_token.type in (TokenType.Dot, TokenType.LParen, TokenType.LBracket):
             if self.peek_token(0, expected_type=TokenType.Dot):
                 node = self.parse_member_expression(node)
+            elif self.peek_token(0, expected_type=TokenType.LBracket):
+                node = self.parse_array_access_expression(node)
             elif self.peek_token(0, expected_type=TokenType.LParen):
                 node = self.parse_function_call(node)
 

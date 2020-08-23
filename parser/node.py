@@ -18,9 +18,10 @@ class NodeType(Enum):
     ArgumentList = auto()
     FunctionReturn     = auto()
     FunctionExpression = auto()
-    TypeExpression   = auto()
+    ArrayExpression   = auto()
     ObjectExpression = auto()
     MemberExpression = auto()
+    ArrayAccessExpression = auto()
 
 class AstNode():
     location = (0, 0)
@@ -111,10 +112,6 @@ class NodeCall(AstNode):
         self.lhs = lhs
         self.argument_list = argument_list
 
-    @property
-    def this_object(self):
-        return self.lhs.this_object
-
 # Assignment node; Var = Value
 class NodeAssign(AstNode):
     def __init__(self, lhs, value):
@@ -152,12 +149,12 @@ class NodeFunctionReturn(AstNode):
         AstNode.__init__(self, NodeType.FunctionReturn, token)
         self.value_node = value_node
 
-class NodeTypeExpression(AstNode):
-    def __init__(self, name, members):
+class NodeArrayExpression(AstNode):
+    def __init__(self, members, token):
         # members are var decls
-        self.type = NodeType.TypeExpression
-        self.name = name
+        self.type = NodeType.ArrayExpression
         self.members = members
+        self.token = token
 
 class NodeObjectExpression(AstNode):
     def __init__(self, members):
@@ -166,15 +163,15 @@ class NodeObjectExpression(AstNode):
         self.members = members
 
 class NodeMemberExpression(AstNode):
-    def __init__(self, lhs, identifier):
+    def __init__(self, lhs, identifier, token):
         self.type = NodeType.MemberExpression
         self.lhs = lhs
         self.identifier = identifier
+        self.token = token
 
-    @property
-    def token(self):
-        return self.identifier
-
-    @property
-    def this_object(self):
-        return self.lhs.this_object
+class NodeArrayAccessExpression(AstNode):
+    def __init__(self, lhs, access_expr, token):
+        self.type = NodeType.ArrayAccessExpression
+        self.lhs = lhs
+        self.access_expr = access_expr
+        self.token = token

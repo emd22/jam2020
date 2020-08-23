@@ -1,7 +1,7 @@
 from parser.parser import Parser
 from parser.node import AstNode, NodeType, NodeFunctionReturn
 from parser.source_location import SourceLocation
-from parser.node import NodeVariable, NodeMemberExpression, NodeFunctionExpression
+from parser.node import *
 
 from interpreter.scope import *
 from interpreter.stack import Stack
@@ -233,17 +233,8 @@ class Interpreter():
         #print("Call function '{}'".format(node.var.value))
 
         target = None
-        return_value = 0
-
-        # TODO: Do not iterate builtins before local vars -- allow them to be overwritten.
-        # instead, have the interpreter declare the builtins the same way we'd do locals,
-        # but assign them to the appropriate BuiltinFunction objects.
-        # if isinstance(node.lhs, NodeVariable):
-        #     # check builtins.
-        #     for builtin in self.builtins:
-        #         if builtin.name == node.lhs.value:
-        #             target = builtin
-        #             break
+        return_value = 0 # TODO make Null-ish type -- "Unset" type ?
+        # TODO make it an error if you declare the type function should return and no value provided
 
         if target is None:
             target = self.visit(node.lhs) # TODO: turn into general expression, not just vars.
@@ -269,7 +260,7 @@ class Interpreter():
                 if is_member_call: # a.b('test') -> pass 'a' in as first argument
                     self.stack.push(this_value)
 
-                    expected_arg_count -= 1
+                    given_arg_count += 1
 
                 if expected_arg_count != given_arg_count:
                     self.error(node, ErrorType.ArgumentError, 'method expected {} arguments, {} given'.format(expected_arg_count, given_arg_count))
@@ -280,10 +271,6 @@ class Interpreter():
                 # push arguments to stack
                 for arg in node.argument_list.arguments:
                     self.stack.push(arg)
-                # else:
-                #     for i in range(0, len(node.argument_list.arguments)):
-                #         arg = node.argument_list.arguments[i]
-                #         self.stack.push(arg)
 
                 
                 self.call_function_expression(target)
@@ -364,21 +351,28 @@ class Interpreter():
         self.visit_Block(node.block, create_scope=False)
         
         # check if block contains a return statement
+        last_child = None
         for child in node.block.children:
+            last_child = child
             if type(child) == NodeFunctionReturn:
                 break
-        else:
-            # no return statement, push return code 0 to the stack
-            if type(child) != NodeFunctionReturn:
-                self.stack.push(0)
+
+        # no return statement, push return code 0 to the stack
+        if type(last_child) != NodeFunctionReturn:
+            self.stack.push(0)
             
         # done, close scope
         self.close_scope()
 
-    def visit_TypeExpression(self, node):
-        obj_expr = self.visit_object_expression(node)
+    def visit_ArrayExpression(self, node):
+        members = []
 
-        return BasicType(obj_expr.parent, obj_expr.members)
+        for member_decl in node.members:
+            value = self.visit(member_decl)
+
+            members.append(value)
+
+        return BasicValue(members)
 
     def visit_ObjectExpression(self, node):
         members = {}
@@ -432,6 +426,21 @@ class Interpreter():
 
     def visit_MemberExpression(self, node):
         return self.walk_member_expression(node)[1].value
+
+    def visit_ArrayAccessExpression(self, node):
+        member_access_call_node = NodeCall(
+            NodeMemberExpression(
+                node.lhs,
+                LexerToken('__at__', TokenType.Identifier),
+                node.token
+            ),
+            NodeArgumentList(
+                [node.access_expr],
+                node.token
+            )
+        )
+
+        return self.visit(member_access_call_node)
         
     def visit_Empty(self, node):
         pass

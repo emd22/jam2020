@@ -96,6 +96,18 @@ def builtin_to_int(arguments):
 def builtin_str_len(arguments):
     return BasicValue(len(str(arguments[2].extract_value())))
 
+def builtin_array_len(arguments):
+    return BasicValue(len(arguments[2].extract_value()))
+
+def builtin_array_at(arguments):
+    obj = arguments[2].extract_value()
+    index = arguments[3].extract_value()
+
+    # TODO: exception for out of range,
+    # check index is int, etc.
+
+    return BasicValue(obj[index])
+
 def builtin_str_append(arguments):
     interpreter = arguments[0]
     this_object = arguments[1]
@@ -254,4 +266,5 @@ def builtin_file_write(arguments):
     f.close()
 
     return BasicValue(file_path)
+
 

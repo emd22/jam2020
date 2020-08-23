@@ -1,11 +1,11 @@
 let Num = Type.extend({
   name = 'Num'
 
-  to_int: Func = (self) {
+  func to_int(self) {
     return __intern_to_int__(self._value);
   }
 
-  to_str: Func = (self) {
+  func to_str(self) {
     return __intern_num_to_str__(self._value);
   }
 });
@@ -26,26 +26,42 @@ let Int = Num.extend({
   }
 });
 
-let Str = Type.extend({
+let Array = Type.extend({
+  name = 'Array'
+
+  instance = {
+    _value = []
+  }
+
+  func __construct__(self, value) {
+    self._value = value;
+  }
+
+  func len(self) {
+    return __intern_array_len__(self._value);
+  }
+
+  func __at__(self, index) {
+    return __intern_array_at__(self._value, index);
+  }
+});
+
+let Str = Array.extend({
   name = 'Str'
 
   instance = {
     _value = ''
   }
 
-  __construct__: Func = (self, value) {
+  func __construct__(self, value) {
     self._value = value;
   }
-
-  len: Func = (self) {
-    return __intern_str_len__(self._value);
-  }
   
-  append: Func = (self, value) {
+  func append(self, value) {
     return __intern_str_append__(self._value, value);
   }
 
-  to_str: Func = (self) {
+  func to_str(self) {
     return self._value;
   }
 });
