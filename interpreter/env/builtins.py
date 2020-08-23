@@ -112,7 +112,7 @@ def builtin_object_new(arguments):
             # push this object + any arguments passed here to the function
             interpreter.stack.push(new_instance)
 
-            sliced = arguments[2:-1]
+            sliced = arguments[2:]
 
             for i in range(0, len(constructor_method.argument_list.arguments) - 1):
                 if i >= len(sliced):
@@ -201,3 +201,33 @@ def builtin_type_to_str(arguments):
     this_object = arguments[1]
 
     return BasicValue(repr(this_object))
+
+def builtin_console_input(arguments):
+    input_result = input()
+
+    return BasicValue(input_result)
+
+def builtin_file_read(arguments):
+    interpreter = arguments[0]
+    this_object = arguments[1]
+
+    file_path = arguments[2]
+
+    # TODO some kind of exception checking system
+    f = open(file_path.extract_value(), 'r')
+    s = f.read()
+
+    return BasicValue(s)
+
+def builtin_file_write(arguments):
+    interpreter = arguments[0]
+    this_object = arguments[1]
+
+    file_path = arguments[2]
+    write_value = arguments[3]
+
+    f = open(file_path.extract_value(), 'w')
+    f.write(str(write_value.extract_value()))
+    f.close()
+
+    return BasicValue(file_path)

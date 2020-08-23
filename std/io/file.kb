@@ -1,0 +1,23 @@
+let File: type = Type.extend({
+  instance = {
+    data: str
+    filename: str
+  }
+
+  __construct__: Func = (self, filename, data) {
+    self.filename = filename;
+    self.data = data;
+  }
+
+  open: Func = (filename) {
+    let data = __intern_file_read__(filename);
+
+    return File.new(filename, data);
+  }
+
+  write: Func = (filename, value) {
+    __intern_file_write__(filename, value);
+
+    return File.new(filename, value);
+  }
+});

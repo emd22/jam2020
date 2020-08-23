@@ -1,17 +1,14 @@
+let Float = Type.extend({
+  name: str = 'Float'
+
+  instance = {
+    _value = 0.0
+  }
+});
+
+
 let int = Int;
 let str = Str;
 let num = Num;
 let float = Float;
 let type = Type;
-
-func add(x, y) {
-  return x + y;
-}
-
-
-let Console: type = Type.extend({
-  print: Func = (line) {
-
-  }
-});
-let j: Int = add(4, 5);

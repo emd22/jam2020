@@ -10,7 +10,7 @@ class Globals:
         self.basic_type = BasicType(
             None,
             {
-                'name': 'Type',
+                'name': BasicValue('Type'),
                 'extend': BuiltinFunction('Type.extend', None, builtin_type_extend),
                 # 'type': BuiltinFunction('Type.type', None, builtin_type_type),
                 'to_str': BuiltinFunction('Type.to_str', None, builtin_type_to_str),
@@ -22,7 +22,7 @@ class Globals:
             self.basic_type,
             {
                 'instance': BasicObject(members={}),
-                'name': 'Object',
+                'name': BasicValue('Object'),
                 'new': BuiltinFunction('Object.new', None, builtin_object_new),
                 'type': BuiltinFunction('Object.type', None, builtin_object_type),
                 'to_str': BuiltinFunction('Object.to_str', None, builtin_object_to_str)
@@ -34,7 +34,7 @@ class Globals:
         self.basic_number = BasicType(
             self.basic_object,
             {
-                'name': 'Num',
+                'name': BasicValue('Num'),
                 'to_int': BuiltinFunction('Num.to_int', None, builtin_to_int),
                 'to_str': BuiltinFunction('Num.to_str', None, builtin_num_to_str)
             }
@@ -43,7 +43,7 @@ class Globals:
         self.func_type = BasicType(
             self.basic_object,
             {
-                'name': 'Func'
+                'name': BasicValue('Func')
                 # TODO call function
             }
         )
@@ -51,27 +51,27 @@ class Globals:
         self.int_type = BasicType(
             self.basic_number,
             {
-                'name': 'Int',
+                'name': BasicValue('Int'),
                 'instance': BasicObject(members={
                     '_value': BasicValue(value=0)
                 }),
             }
         )
 
-        self.float_type = BasicType(
-            self.basic_number,
-            {
-                'name': 'Float',
-                'instance': BasicObject(members={
-                    '_value': BasicValue(value=0.0)
-                })
-            }
-        )
+        # self.float_type = BasicType(
+        #     self.basic_number,
+        #     {
+        #         'name': BasicValue('Float'),
+        #         'instance': BasicObject(members={
+        #             '_value': BasicValue(value=0.0)
+        #         })
+        #     }
+        # )
 
         self.str_type = BasicType(
             self.basic_object,
             {
-                'name': 'Str',
+                'name': BasicValue('Str'),
                 'instance': BasicObject(members={
                     '_value': BasicValue(value="")
                 }),
@@ -90,11 +90,11 @@ class Globals:
                 VariableType.Type,
                 self.int_type
             ),
-            (
-                'Float',
-                VariableType.Type,
-                self.float_type
-            ),
+            # (
+            #     'Float',
+            #     VariableType.Type,
+            #     self.float_type
+            # ),
             (
                 'Str',
                 VariableType.Type,
@@ -104,6 +104,9 @@ class Globals:
             ('__intern_type_compare__', VariableType.Function, BuiltinFunction("__intern_type_compare__", None, builtin_type_compare)),
             ('__intern_varinfo__', VariableType.Function, BuiltinFunction("__intern_varinfo__", None, builtin_varinfo)),
             ('__intern_exit__', VariableType.Function, BuiltinFunction("__intern_exit__", None, builtin_exit)),
+            ('__intern_console_input__', VariableType.Function, BuiltinFunction("__intern_console_input__", None, builtin_console_input)),
+            ('__intern_file_read__', VariableType.Function, BuiltinFunction("__intern_file_read__", None, builtin_file_read)),
+            ('__intern_file_write__', VariableType.Function, BuiltinFunction("__intern_file_write__", None, builtin_file_write))
         ]
 
     def vartype_to_typeobject(self, vartype):

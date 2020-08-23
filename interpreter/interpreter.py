@@ -211,9 +211,11 @@ class Interpreter():
         elif isinstance(node.lhs, NodeMemberExpression):
             (target, member) = self.walk_member_expression(node.lhs)
 
-            if not isinstance(target, NodeMemberExpression):
+            if not isinstance(target, BasicObject):
                 self.error(node, ErrorType.TypeError, 'member expression not assignable')
                 return None
+
+            target_type = target.parent
 
             # TODO: type contract checking?
             # objects that have a type tagged on require undergoing validation of the property type

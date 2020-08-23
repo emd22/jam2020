@@ -4,6 +4,9 @@ class BasicValue:
     def __init__(self, value):
         self.assign_value(value)
 
+    def compare_value(self, other):
+        return self.extract_value() == other.extract_value()
+
     def assign_value(self, value):
         self.value = value
 
