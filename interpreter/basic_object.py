@@ -34,6 +34,9 @@ class BasicObject(BasicValue):
     def extract_value(self):
         return self
 
+    def extract_basicvalue(self):
+        return self
+
     def lookup_type(self, global_scope):
         if self.parent is not None:
             return self.parent

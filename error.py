@@ -9,6 +9,7 @@ class ErrorType(Enum):
     DoesNotExist = auto()
     TypeError = auto()
     MultipleDefinition = auto()
+    ArgumentError = auto()
 
 class Error():
     def __init__(self, type, location, message, filename):

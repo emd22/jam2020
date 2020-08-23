@@ -9,21 +9,19 @@ let File: type = Type.extend({
     self.data = data;
   }
 
-  open: Func = (filename) {
+  open: Func = (_, filename) {
     let data = __intern_file_read__(filename);
 
     return File.new(filename, data);
   }
 
-  write: Func = (filename, value) {
+  write: Func = (_, filename, value) {
     __intern_file_write__(filename, value);
 
     return File.new(filename, value);
   }
 
   to_str: Func = (self) {
-    print("func to self");
-
     return self.data;
   }
 });

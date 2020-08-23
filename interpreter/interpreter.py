@@ -11,6 +11,7 @@ from interpreter.basic_object import BasicObject
 from interpreter.basic_value import BasicValue
 from interpreter.env.globals import Globals
 from interpreter.variable import VariableType
+from interpreter.env.builtins import builtin_object_new
 from lexer import TokenType, LexerToken
 
 from error import InterpreterError, ErrorList, ErrorType, Error 
@@ -248,10 +249,12 @@ class Interpreter():
             target = self.visit(node.lhs) # TODO: turn into general expression, not just vars.
 
         if target is not None:
-            this_value = node.lhs
+            this_value = None
+            is_member_call = False
 
             # for `a.b()`, pass in `a` as the this value.
             if isinstance(node.lhs, NodeMemberExpression):
+                is_member_call = True
                 this_value = self.visit(node.lhs.lhs)
 
             # if a built-in function exists, call it
@@ -260,12 +263,28 @@ class Interpreter():
                 
             # user-defined function
             elif isinstance(target, NodeFunctionExpression):
-                if this_value is not None: # a.b('test') -> pass 'a' in as first argument
+                expected_arg_count = len(target.argument_list.arguments)
+                given_arg_count = len(node.argument_list.arguments)
+
+                if is_member_call: # a.b('test') -> pass 'a' in as first argument
                     self.stack.push(this_value)
+
+                    expected_arg_count -= 1
+
+                if expected_arg_count != given_arg_count:
+                    self.error(node, ErrorType.ArgumentError, 'method expected {} arguments, {} given'.format(expected_arg_count, given_arg_count))
+                    return None
+
+                #TODO assert argument size is declared arg size - 1
 
                 # push arguments to stack
                 for arg in node.argument_list.arguments:
                     self.stack.push(arg)
+                # else:
+                #     for i in range(0, len(node.argument_list.arguments)):
+                #         arg = node.argument_list.arguments[i]
+                #         self.stack.push(arg)
+
                 
                 self.call_function_expression(target)
                 # the return value is pushed onto the stack at end of block or return
@@ -378,6 +397,23 @@ class Interpreter():
         # TODO make parent be the global `Object` type.
         return BasicObject(parent=None, members=members)
 
+    def basic_value_to_object(self, node, target):
+        target = BasicValue(target).extract_basicvalue()
+
+        if not isinstance(target, BasicObject):
+            target_type_object = target.lookup_type(self.global_scope).extract_basicvalue()
+
+            if target_type_object is None:
+                self.error(node, ErrorType.TypeError, 'invalid member access: target {} is not a BasicObject'.format(target))
+                return None
+
+            # for a string this would basically mean:
+            # "hello ".append("world")
+            # -> Str.new("hello ").append("world")
+            target = builtin_object_new([self, target_type_object, target])
+
+        return target
+
     def walk_member_expression(self, node):
         target = self.visit(node.lhs)
 
@@ -385,9 +421,7 @@ class Interpreter():
             self.error(node, ErrorType.TypeError, 'invalid member access: {} has no member {}'.format(target, node.identifier))
             return None
 
-        if not isinstance(target, BasicObject):
-            self.error(node, ErrorType.TypeError, 'invalid member access: target {} is not a BasicObject'.format(target))
-            return None
+        target = self.basic_value_to_object(node, target)
 
         member = target.lookup_member(node.identifier.value)
 

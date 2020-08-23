@@ -9,7 +9,7 @@ let x: float = 2.0;
 #let input_val = Console.read();
 #print(input_val);
 
-let file = File.open('test.kb');
-print(file);
+# let file = File.open('test.kb');
+# print(file);
 
-print(Str.new("hello").append(" world").len());
+print("hello".append(" world"));

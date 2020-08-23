@@ -26,7 +26,6 @@ def _print_object(interpreter, node, obj):
                 interpreter.stack.push(obj)
                 interpreter.call_function_expression(meth.value)
                 basic_value_repr = interpreter.stack.pop()
-                interpreter.stack.pop()
 
             if not isinstance(basic_value_repr, BasicValue):
                 interpreter.error(node, ErrorType.TypeError, 'expected {} method to return an instance of BasicValue, got {}'.format(BasicType.REPR_FUNCTION_NAME, basic_value_repr))
@@ -143,7 +142,6 @@ def builtin_object_new(arguments):
                 else:
                     interpreter.stack.push(sliced[i])
 
-
             interpreter.call_function_expression(constructor_method)
         else:
             interpreter.error(None, ErrorType.TypeError, 'invalid constructor type {}'.format(constructor_method))
@@ -235,6 +233,8 @@ def builtin_file_read(arguments):
     this_object = arguments[1]
 
     file_path = arguments[2]
+
+    print("file_path = {}".format(file_path))
 
     # TODO some kind of exception checking system
     f = open(file_path.extract_value(), 'r')

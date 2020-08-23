@@ -10,6 +10,12 @@ class BasicValue:
     def assign_value(self, value):
         self.value = value
 
+    def extract_basicvalue(self):
+        if isinstance(self.value, BasicValue):
+            return self.value.extract_basicvalue()
+
+        return self
+
     def extract_value(self):
         if isinstance(self.value, BasicValue):#type(self.value) == BasicValue:
             return self.value.extract_value()
