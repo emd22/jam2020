@@ -2,7 +2,7 @@ from interpreter.typing.basic_type import BasicType
 from interpreter.basic_object import BasicObject
 from interpreter.basic_value import BasicValue
 from interpreter.function import BuiltinFunction
-from parser.node import NodeFunctionExpression
+from parser.node import NodeFunctionExpression, NodeCall, NodeArgumentList, NodeMemberExpression
 from error import ErrorType
 
 def _print_object(interpreter, node, obj):
@@ -14,10 +14,19 @@ def _print_object(interpreter, node, obj):
         basic_value_repr = None
 
         if meth is not None:
+            # basic_value_repr = interpreter.visit_Call(
+            #     NodeCall(
+            #         NodeMemberExpression(node, NodeBasicType.REPR_FUNCTION_NAME),
+            #         NodeArgumentList([node], node.token)
+            #     )
+            # )
             if isinstance(meth.value, BuiltinFunction):
                 basic_value_repr = interpreter.call_builtin_function(meth.value, obj, [], node)
             else:
-                basic_value_repr = interpreter.call_function_expression(meth.value)
+                interpreter.stack.push(obj)
+                interpreter.call_function_expression(meth.value)
+                basic_value_repr = interpreter.stack.pop()
+                interpreter.stack.pop()
 
             if not isinstance(basic_value_repr, BasicValue):
                 interpreter.error(node, ErrorType.TypeError, 'expected {} method to return an instance of BasicValue, got {}'.format(BasicType.REPR_FUNCTION_NAME, basic_value_repr))

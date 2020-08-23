@@ -20,4 +20,10 @@ let File: type = Type.extend({
 
     return File.new(filename, value);
   }
+
+  to_str: Func = (self) {
+    print("func to self");
+
+    return self.data;
+  }
 });

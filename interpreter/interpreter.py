@@ -61,8 +61,8 @@ class Interpreter():
             caller_name = "visit_{}".format(str(node.type.name))
             caller = getattr(self, caller_name)
         except:
-            print('No visitor function defined for node {}'.format(node))
-            quit()
+            raise Exception('No visitor function defined for node {}'.format(node))
+
         return caller(node)
             
     def visit_BinOp(self, node):
@@ -248,7 +248,7 @@ class Interpreter():
             target = self.visit(node.lhs) # TODO: turn into general expression, not just vars.
 
         if target is not None:
-            this_value = None
+            this_value = node.lhs
 
             # for `a.b()`, pass in `a` as the this value.
             if isinstance(node.lhs, NodeMemberExpression):
@@ -259,7 +259,10 @@ class Interpreter():
                 return self.call_builtin_function(target, this_value, node.argument_list.arguments, node)
                 
             # user-defined function
-            elif isinstance(target, NodeFunctionExpression):               
+            elif isinstance(target, NodeFunctionExpression):
+                if this_value is not None: # a.b('test') -> pass 'a' in as first argument
+                    self.stack.push(this_value)
+
                 # push arguments to stack
                 for arg in node.argument_list.arguments:
                     self.stack.push(arg)

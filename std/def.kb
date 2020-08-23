@@ -46,8 +46,6 @@ let Str = Type.extend({
   }
 
   to_str: Func = (self) {
-    print("to_str for ");
-    print(self);
     return self._value;
   }
 });
