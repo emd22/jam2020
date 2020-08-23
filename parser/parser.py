@@ -584,10 +584,11 @@ class Parser():
             TokenType.Equals, TokenType.Plus, 
             TokenType.Minus, TokenType.BitwiseOr, 
             TokenType.BitwiseAnd, TokenType.Compare,
-            TokenType.NotCompare,
-        )+multiop_types
-        
-        
+            TokenType.NotCompare, TokenType.Spaceship,
+            TokenType.LessThan, TokenType.GreaterThan,
+            TokenType.LessThanEqual, TokenType.GreaterThanEqual
+        ) + multiop_types
+
         while self.current_token.type in expected_types:
             token = self.current_token
         

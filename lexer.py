@@ -31,7 +31,9 @@ class TokenType(Enum):
     Comma = ','
     Not = '!'
     LessThan = '<'
+    LessThanEqual = '<='
     GreaterThan = '>'
+    GreaterThanEqual = '>='
     
     BitwiseOr = '|'
     BitwiseAnd = '&'
@@ -39,6 +41,7 @@ class TokenType(Enum):
     
     Compare = '=='
     NotCompare = '!='
+    Spaceship = '<=>'
     
     PlusEquals = '+='
     MinusEquals = '-='

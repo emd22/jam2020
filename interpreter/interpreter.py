@@ -85,7 +85,16 @@ class Interpreter():
             return BasicValue(left.value | right.value)
         elif node.token.type == TokenType.BitwiseAnd:
             return BasicValue(left.value & right.value)
-            
+        elif node.token.type == TokenType.Spaceship:
+            funstr = '__compare__'
+        elif node.token.type == TokenType.LessThan:
+            funstr = '__lt__'
+        elif node.token.type == TokenType.LessThanEqual:
+            funstr = '__lte__'
+        elif node.token.type == TokenType.GreaterThan:
+            funstr = '__gt__'
+        elif node.token.type == TokenType.GreaterThanEqual:
+            funstr = '__gte__'
         elif node.token.type == TokenType.Compare:
             return BasicValue(int(left.value == right.value))
         elif node.token.type == TokenType.NotCompare:
