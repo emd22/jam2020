@@ -46,8 +46,8 @@ def main():
     # init interpreter and parse tokens
     interpreter = Interpreter(parser.source_location)
 
-    #for node in ast:
-    #    AstPrinter().print_ast(node)
+    for node in ast:
+        AstPrinter().print_ast(node)
     
     print("=== Output ===")
 

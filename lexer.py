@@ -9,6 +9,7 @@ class Keywords(Enum):
     Func = 'func'
     Import = 'import'
     Return = 'return'
+    While = 'while'
 
 class TokenType(Enum):
     NoneToken = auto()
@@ -35,6 +36,14 @@ class TokenType(Enum):
     BitwiseOr = '|'
     BitwiseAnd = '&'
     BitwiseNot = '~'
+    
+    Compare = '=='
+    NotCompare = '!='
+    
+    PlusEquals = '+='
+    MinusEquals = '-='
+    MultiplyEquals = '*='
+    DivideEquals = '/='
     
     BitwiseLShift = auto()
     BitwiseRShift = auto()
@@ -140,9 +149,7 @@ class Lexer():
         
         string_type = None
         
-        while self.peek_char(0) != '':
-            # encountered whitespace and not in string, push token
-            
+        while self.peek_char(0) != '':            
             # multiline comments
             if self.peek_char(0) == '#':
                 self.read_char()
@@ -167,11 +174,25 @@ class Lexer():
                 self.skip_whitespace()
                 continue
             
+            # encountered whitespace and not in string, push token
             elif string_type == None and self.skip_whitespace():
                 self.push_token()
                 continue
                   
             elif self.peek_char(0) in splitables and string_type == None:
+                if self.peek_char(0) in ('!', '='):
+                    if self.peek_char(1) == '=':
+                        self.token_data += self.read_char()
+                        self.token_data += self.read_char()
+                        continue
+                    
+                if self.peek_char(0) in ('+', '-', '*', '/'):
+                    if self.peek_char(1) == '=':
+                        self.token_data += self.read_char()
+                        self.token_data += self.read_char()
+                        continue
+                
+                
                 if self.peek_char(-1).isdigit() and self.peek_char(0) == '.':
                     self.token_data += self.read_char()
                     continue

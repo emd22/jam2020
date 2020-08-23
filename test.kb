@@ -1,9 +1,9 @@
-
-func adder(val) {
-    return val*2+4;
+func print_times(str, times) {
+    while times {
+        print(str);
+        times -= 1;
+    }
 }
-let value = 10*2;
-print(adder(value));
 
 let x: float = 2.0;
 #let input_val = Console.read();
@@ -16,4 +16,5 @@ print("hello".append(" world"));
 
 print("hi".len());
 
-# test;
+print_times("Hello, World!", 5);
+
