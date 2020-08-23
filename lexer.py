@@ -159,7 +159,9 @@ class Lexer():
                     self.read_char(1)
                 else:
                     while self.read_char() != '\n':
-                        pass
+                        # EOF
+                        if self.peek_char(0) == '':
+                            break
                         
                 # skip any whitespace after comment
                 self.skip_whitespace()

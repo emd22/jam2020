@@ -15,3 +15,5 @@ let x: float = 2.0;
 print("hello".append(" world"));
 
 print("hi".len());
+
+# test;
