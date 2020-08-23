@@ -78,13 +78,17 @@ class Interpreter():
         elif node.token.type == TokenType.Multiply:
             return BasicValue(left.value * right.value)
         elif node.token.type == TokenType.Divide:
-            # TODO float divisoin.
             return BasicValue(left.value // right.value)
             
         elif node.token.type == TokenType.BitwiseOr:
             return BasicValue(left.value | right.value)
         elif node.token.type == TokenType.BitwiseAnd:
             return BasicValue(left.value & right.value)
+            
+        elif node.token.type == TokenType.Compare:
+            return BasicValue(int(left.value == right.value))
+        elif node.token.type == TokenType.NotCompare:
+            return BasicValue(int(left.value != right.value))
             
         return BasicValue(0)
         
@@ -302,13 +306,20 @@ class Interpreter():
         expr_result = self.visit(node.expr)
 
         # todo this should be changed to a general purpose 'is true' check
-        if expr_result != 0:
+        if expr_result.truthy:
             return self.visit_Block(node.block)
         elif node.else_block is not None:
             # use visit rather than direct to visit_Block
             # since else_block can also be a NodeIfStatement in the
             # case of `elif`
             return self.visit(node.else_block)
+            
+    def visit_While(self, node):
+        expr_result = self.visit(node.expr)
+        
+        if expr_result.truthy:
+            self.visit(node.block)
+            self.visit_While(node)
         
     def visit_ArgumentList(self, node):
         # read arguments backwards as values are popped from stack

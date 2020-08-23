@@ -14,6 +14,7 @@ class NodeType(Enum):
     Declare  = auto()
     Call     = auto()
     Import   = auto()
+    While    = auto()
     IfStatement  = auto()
     ArgumentList = auto()
     FunctionReturn     = auto()
@@ -105,6 +106,12 @@ class NodeImport(AstNode):
         AstNode.__init__(self, NodeType.Import, filename)
         self.children = []
         self.source_location = source_location
+
+class NodeWhile(AstNode):
+    def __init__(self, expr, block, token):
+        AstNode.__init__(self, NodeType.While, token)
+        self.block = block
+        self.expr = expr
 
 class NodeCall(AstNode):
     def __init__(self, lhs, argument_list):

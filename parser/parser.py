@@ -19,7 +19,8 @@ class Parser():
             'if': self.parse_if_statement,
             'func': self.parse_func_declaration,
             'import': self.parse_import,
-            'return': self.parse_return
+            'return': self.parse_return,
+            'while': self.parse_while,
         }
 
     @property
@@ -41,7 +42,7 @@ class Parser():
         if token.type == token_type:
             return token
         else:
-            self.error('expected {0} but recieved {1}'.format(token_type, token.type))
+            self.error('expected {0} but recieved {1}'.format(token_type.name, token.type.name))
             return None
     
     def next_token(self):
@@ -159,6 +160,24 @@ class Parser():
         
         return node
         
+    def parse_while(self):
+        # eat while statement
+        token = self.current_token
+        if not self.eat(TokenType.Keyword):
+            return None
+
+        expression = self.parse_expression()
+
+        if expression == None:
+            return None
+
+        block = self.parse_block_statement()
+
+        if block == None:
+            return None
+        
+        return NodeWhile(expression, block, token)
+        
     def parse_import(self):
         self.eat(TokenType.Keyword)
         
@@ -178,9 +197,10 @@ class Parser():
         value_node = self.parse_expression()
         return NodeFunctionReturn(value_node, self.current_token)
 
-    def parse_assignment_statement(self, node, require_equals=True):
-        if require_equals:
-            self.eat(TokenType.Equals)
+    def parse_assignment_statement(self, node, require_operator=True):
+        # operator would be '=' or '+=', '-=', etc.
+        if require_operator:
+            self.eat()
     
         if self.current_token.type == TokenType.LParen:
             value = self.parse_parenthesis()
@@ -255,7 +275,6 @@ class Parser():
             
         if token.type == TokenType.Keyword:
             node = self.parse_keyword()
-            print("keyword token = {}".format(token))
 
             if node is None:
                 return None
@@ -265,6 +284,9 @@ class Parser():
                 rhs = node.value.value
                 if rhs.type == NodeType.FunctionExpression:
                     return node
+            
+            if node.type in (NodeType.IfStatement, NodeType.While):
+                return node
         else:
             node = self.parse_expression()
             
@@ -423,7 +445,7 @@ class Parser():
         self.eat(TokenType.Identifier)
         
         # parse assignment, parenthesis, etc.
-        val_node = self.parse_assignment_statement(NodeVariable(name), require_equals=False)
+        val_node = self.parse_assignment_statement(NodeVariable(name), require_operator=False)
         type_node = NodeVarType(type)
         node = NodeDeclare(type_node, name, val_node)
         
@@ -552,21 +574,45 @@ class Parser():
     
     def parse_expression(self):
         node = self.parse_term()
-        while self.current_token.type in (TokenType.Equals, TokenType.Plus, TokenType.Minus, TokenType.BitwiseOr, TokenType.BitwiseAnd):
+        
+        multiop_types = (
+            TokenType.PlusEquals, TokenType.MinusEquals, 
+            TokenType.MultiplyEquals, TokenType.DivideEquals
+        )
+        
+        expected_types = (
+            TokenType.Equals, TokenType.Plus, 
+            TokenType.Minus, TokenType.BitwiseOr, 
+            TokenType.BitwiseAnd, TokenType.Compare,
+            TokenType.NotCompare,
+        )+multiop_types
+        
+        
+        while self.current_token.type in expected_types:
             token = self.current_token
         
             if self.peek_token(0, expected_type=TokenType.Equals):
                 node = self.parse_assignment_statement(node)
                 continue
-            elif token.type == TokenType.Plus:
-                self.eat(TokenType.Plus)
-            elif token.type == TokenType.Minus:
-                self.eat(TokenType.Minus)
                 
-            elif token.type == TokenType.BitwiseOr:
-                self.eat(TokenType.BitwiseOr)
-            elif token.type == TokenType.BitwiseAnd:
-                self.eat(TokenType.BitwiseAnd)
+            if self.current_token.type in multiop_types:
+                # parse (lhs [operator] rhs) and return assign node
+                assign_node = self.parse_assignment_statement(node)
+                
+                # this is slightly sketchy, but also will be able to handle
+                # operations like <<= and any other multichar operation
+                operation = LexerToken(token.value.strip('='))
+                
+                # make value (lhs [operator] rhs)
+                value_node = NodeBinOp(left=NodeVariable(assign_node.lhs), token=operation, right=assign_node.value)
+                
+                # final node should be (lhs [=] lhs [operator] rhs)
+                assign_node.value = value_node
+                node = assign_node
+                continue
+                
+            if token.type in expected_types:
+                self.eat()
                 
             node = NodeBinOp(left=node, token=token, right=self.parse_term())
         return node

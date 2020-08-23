@@ -21,6 +21,12 @@ class BasicValue:
             return self.value.extract_value()
 
         return self.value
+        
+    @property
+    def truthy(self):
+        value = self.extract_value()
+
+        return value != 0
 
     def lookup_type(self, global_scope):
         from interpreter.basic_object import BasicObject
@@ -45,3 +51,4 @@ class BasicValue:
 
     def __repr__(self):
         return repr(self.value)
+        
