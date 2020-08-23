@@ -6,9 +6,9 @@ class UnionType(BasicType):
         self.lhs = lhs
         self.rhs = rhs
 
-    def compare_type(self, other_type):
+    def compare_value(self, other_type):
         # TODO test this, might have to compare lhs,rhs as one against other_type.
-        return self.lhs.compare_type(other_type) or self.rhs.compare_type(other_type)
+        return self.lhs.compare_value(other_type) or self.rhs.compare_value(other_type)
 
     def has_property(self, name, property_type=None):
         return self.lhs.has_property(name, property_type) or self.rhs.has_property(name, property_type)

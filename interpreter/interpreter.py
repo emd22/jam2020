@@ -1,7 +1,7 @@
 from parser.parser import Parser
 from parser.node import AstNode, NodeType, NodeFunctionReturn
 from parser.source_location import SourceLocation
-from parser.node import NodeVariable, NodeMemberExpression, NodeFunctionExpression
+from parser.node import *
 
 from interpreter.scope import *
 from interpreter.stack import Stack
@@ -11,6 +11,7 @@ from interpreter.basic_object import BasicObject
 from interpreter.basic_value import BasicValue
 from interpreter.env.globals import Globals
 from interpreter.variable import VariableType
+from interpreter.env.builtins import builtin_object_new
 from lexer import TokenType, LexerToken
 
 from error import InterpreterError, ErrorList, ErrorType, Error 
@@ -61,8 +62,8 @@ class Interpreter():
             caller_name = "visit_{}".format(str(node.type.name))
             caller = getattr(self, caller_name)
         except:
-            print('No visitor function defined for node {}'.format(node))
-            quit()
+            raise Exception('No visitor function defined for node {}'.format(node))
+
         return caller(node)
             
     def visit_BinOp(self, node):
@@ -211,9 +212,11 @@ class Interpreter():
         elif isinstance(node.lhs, NodeMemberExpression):
             (target, member) = self.walk_member_expression(node.lhs)
 
-            if not isinstance(target, NodeMemberExpression):
+            if not isinstance(target, BasicObject):
                 self.error(node, ErrorType.TypeError, 'member expression not assignable')
                 return None
+
+            target_type = target.parent
 
             # TODO: type contract checking?
             # objects that have a type tagged on require undergoing validation of the property type
@@ -230,26 +233,19 @@ class Interpreter():
         #print("Call function '{}'".format(node.var.value))
 
         target = None
-        return_value = 0
-
-        # TODO: Do not iterate builtins before local vars -- allow them to be overwritten.
-        # instead, have the interpreter declare the builtins the same way we'd do locals,
-        # but assign them to the appropriate BuiltinFunction objects.
-        # if isinstance(node.lhs, NodeVariable):
-        #     # check builtins.
-        #     for builtin in self.builtins:
-        #         if builtin.name == node.lhs.value:
-        #             target = builtin
-        #             break
+        return_value = 0 # TODO make Null-ish type -- "Unset" type ?
+        # TODO make it an error if you declare the type function should return and no value provided
 
         if target is None:
             target = self.visit(node.lhs) # TODO: turn into general expression, not just vars.
 
         if target is not None:
             this_value = None
+            is_member_call = False
 
             # for `a.b()`, pass in `a` as the this value.
             if isinstance(node.lhs, NodeMemberExpression):
+                is_member_call = True
                 this_value = self.visit(node.lhs.lhs)
 
             # if a built-in function exists, call it
@@ -257,10 +253,25 @@ class Interpreter():
                 return self.call_builtin_function(target, this_value, node.argument_list.arguments, node)
                 
             # user-defined function
-            elif isinstance(target, NodeFunctionExpression):               
+            elif isinstance(target, NodeFunctionExpression):
+                expected_arg_count = len(target.argument_list.arguments)
+                given_arg_count = len(node.argument_list.arguments)
+
+                if is_member_call: # a.b('test') -> pass 'a' in as first argument
+                    self.stack.push(this_value)
+
+                    given_arg_count += 1
+
+                if expected_arg_count != given_arg_count:
+                    self.error(node, ErrorType.ArgumentError, 'method expected {} arguments, {} given'.format(expected_arg_count, given_arg_count))
+                    return None
+
+                #TODO assert argument size is declared arg size - 1
+
                 # push arguments to stack
                 for arg in node.argument_list.arguments:
                     self.stack.push(arg)
+
                 
                 self.call_function_expression(target)
                 # the return value is pushed onto the stack at end of block or return
@@ -340,21 +351,28 @@ class Interpreter():
         self.visit_Block(node.block, create_scope=False)
         
         # check if block contains a return statement
+        last_child = None
         for child in node.block.children:
+            last_child = child
             if type(child) == NodeFunctionReturn:
                 break
-        else:
-            # no return statement, push return code 0 to the stack
-            if type(child) != NodeFunctionReturn:
-                self.stack.push(0)
+
+        # no return statement, push return code 0 to the stack
+        if type(last_child) != NodeFunctionReturn:
+            self.stack.push(0)
             
         # done, close scope
         self.close_scope()
 
-    def visit_TypeExpression(self, node):
-        obj_expr = self.visit_object_expression(node)
+    def visit_ArrayExpression(self, node):
+        members = []
 
-        return BasicType(obj_expr.parent, obj_expr.members)
+        for member_decl in node.members:
+            value = self.visit(member_decl)
+
+            members.append(value)
+
+        return BasicValue(members)
 
     def visit_ObjectExpression(self, node):
         members = {}
@@ -373,6 +391,23 @@ class Interpreter():
         # TODO make parent be the global `Object` type.
         return BasicObject(parent=None, members=members)
 
+    def basic_value_to_object(self, node, target):
+        target = BasicValue(target).extract_basicvalue()
+
+        if not isinstance(target, BasicObject):
+            target_type_object = target.lookup_type(self.global_scope).extract_basicvalue()
+
+            if target_type_object is None:
+                self.error(node, ErrorType.TypeError, 'invalid member access: target {} is not a BasicObject'.format(target))
+                return None
+
+            # for a string this would basically mean:
+            # "hello ".append("world")
+            # -> Str.new("hello ").append("world")
+            target = builtin_object_new([self, target_type_object, target])
+
+        return target
+
     def walk_member_expression(self, node):
         target = self.visit(node.lhs)
 
@@ -380,9 +415,7 @@ class Interpreter():
             self.error(node, ErrorType.TypeError, 'invalid member access: {} has no member {}'.format(target, node.identifier))
             return None
 
-        if not isinstance(target, BasicObject):
-            self.error(node, ErrorType.TypeError, 'invalid member access: target {} is not a BasicObject'.format(target))
-            return None
+        target = self.basic_value_to_object(node, target)
 
         member = target.lookup_member(node.identifier.value)
 
@@ -393,6 +426,21 @@ class Interpreter():
 
     def visit_MemberExpression(self, node):
         return self.walk_member_expression(node)[1].value
+
+    def visit_ArrayAccessExpression(self, node):
+        member_access_call_node = NodeCall(
+            NodeMemberExpression(
+                node.lhs,
+                LexerToken('__at__', TokenType.Identifier),
+                node.token
+            ),
+            NodeArgumentList(
+                [node.access_expr],
+                node.token
+            )
+        )
+
+        return self.visit(member_access_call_node)
         
     def visit_Empty(self, node):
         pass

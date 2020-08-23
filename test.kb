@@ -6,3 +6,14 @@ let value = 10*2;
 print(adder(value));
 
 let x: float = 2.0;
+#let input_val = Console.read();
+#print(input_val);
+
+# let file = File.open('test.kb');
+# print(file);
+
+print("hello".append(" world"));
+
+print("hi".len());
+
+# test;

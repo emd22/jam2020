@@ -1,17 +1,73 @@
+let Num = Type.extend({
+  name = 'Num'
+
+  func to_int(self) {
+    return __intern_to_int__(self._value);
+  }
+
+  func to_str(self) {
+    return __intern_num_to_str__(self._value);
+  }
+});
+
+let Float = Num.extend({
+  name = 'Float'
+
+  instance = {
+    _value = 0.0
+  }
+});
+
+let Int = Num.extend({
+  name = 'Int'
+
+  instance = {
+    _value = 0
+  }
+});
+
+let Array = Type.extend({
+  name = 'Array'
+
+  instance = {
+    _value = []
+  }
+
+  func __construct__(self, value) {
+    self._value = value;
+  }
+
+  func len(self) {
+    return __intern_array_len__(self._value);
+  }
+
+  func __at__(self, index) {
+    return __intern_array_at__(self._value, index);
+  }
+});
+
+let Str = Array.extend({
+  name = 'Str'
+
+  instance = {
+    _value = ''
+  }
+
+  func __construct__(self, value) {
+    self._value = value;
+  }
+  
+  func append(self, value) {
+    return __intern_str_append__(self._value, value);
+  }
+
+  func to_str(self) {
+    return self._value;
+  }
+});
+
 let int = Int;
 let str = Str;
 let num = Num;
 let float = Float;
 let type = Type;
-
-func add(x, y) {
-  return x + y;
-}
-
-
-let Console: type = Type.extend({
-  print: Func = (line) {
-
-  }
-});
-let j: Int = add(4, 5);

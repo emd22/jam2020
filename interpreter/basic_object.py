@@ -13,7 +13,28 @@ class BasicObject(BasicValue):
         self.parent = parent
         self.members = members
 
+    def compare_value(self, other):
+        if other == self:
+            return True
+
+        if not isinstance(other, BasicObject):
+            return False
+
+        for (mem_name, mem_value) in self.members.items():
+            object_member = other.lookup_member(mem_name)
+
+            if object_member is None:
+                return False
+
+            if not mem_value.compare_value(object_member.value):
+                return False
+        
+        return True
+
     def extract_value(self):
+        return self
+
+    def extract_basicvalue(self):
         return self
 
     def lookup_type(self, global_scope):
@@ -48,7 +69,7 @@ class BasicObject(BasicValue):
                 return ObjectMember(name, self.members[name])
         #elif name == 'type':
         #    return ObjectMember('type', self.parent)
-        elif self.parent is not None:
+        elif parent_lookup and self.parent is not None:
             circular = self.parent.parent == self
 
             return self.parent.lookup_member(name, member_type, parent_lookup=parent_lookup and not circular)
@@ -73,7 +94,7 @@ class BasicObject(BasicValue):
 
         for (name, value) in other.members.items():
             if name in union_members:
-                if not value.compare_type(union_members[name]):
+                if not value.compare_value(union_members[name]):
                     union_members[name] = UnionType(union_members[name], value)
         else:
             union_members[name] = value

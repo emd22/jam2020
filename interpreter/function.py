@@ -17,3 +17,6 @@ class BuiltinFunction(Function):
         
     def call(self, node):
         return self.callback(node)
+
+    def compare_value(self, other):
+        return self == other

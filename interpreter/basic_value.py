@@ -4,11 +4,20 @@ class BasicValue:
     def __init__(self, value):
         self.assign_value(value)
 
+    def compare_value(self, other):
+        return self.extract_value() == other.extract_value()
+
     def assign_value(self, value):
         self.value = value
 
+    def extract_basicvalue(self):
+        if isinstance(self.value, BasicValue):
+            return self.value.extract_basicvalue()
+
+        return self
+
     def extract_value(self):
-        if isinstance(self.value, BasicValue):#type(self.value) == BasicValue:
+        if isinstance(self.value, BasicValue):
             return self.value.extract_value()
 
         return self.value
@@ -26,12 +35,8 @@ class BasicValue:
             return global_scope.find_variable_value('Int')
         elif type(self.value) is float:
             return global_scope.find_variable_value('Float')
-        # elif isinstance(self.value, BasicObject):
-            # print("self.value.parent is {}".format(self.value.parent))
-            # if self.value.parent is not None:
-            #     return self.value.parent
-            # else:
-            #     return global_scope.find_variable_value('Object')
+        elif type(self.value) is list:
+            return global_scope.find_variable_value('Array')
         else:
             return global_scope.find_variable_value('Any')
 
@@ -40,4 +45,3 @@ class BasicValue:
 
     def __repr__(self):
         return repr(self.value)
-        # return "BasicValue({})".format(repr(self.value))

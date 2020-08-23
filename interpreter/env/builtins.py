@@ -2,7 +2,7 @@ from interpreter.typing.basic_type import BasicType
 from interpreter.basic_object import BasicObject
 from interpreter.basic_value import BasicValue
 from interpreter.function import BuiltinFunction
-from parser.node import NodeFunctionExpression
+from parser.node import NodeFunctionExpression, NodeCall, NodeArgumentList, NodeMemberExpression
 from error import ErrorType
 
 def _print_object(interpreter, node, obj):
@@ -14,10 +14,18 @@ def _print_object(interpreter, node, obj):
         basic_value_repr = None
 
         if meth is not None:
+            # basic_value_repr = interpreter.visit_Call(
+            #     NodeCall(
+            #         NodeMemberExpression(node, NodeBasicType.REPR_FUNCTION_NAME),
+            #         NodeArgumentList([node], node.token)
+            #     )
+            # )
             if isinstance(meth.value, BuiltinFunction):
                 basic_value_repr = interpreter.call_builtin_function(meth.value, obj, [], node)
             else:
-                basic_value_repr = interpreter.call_function_expression(meth.value)
+                interpreter.stack.push(obj)
+                interpreter.call_function_expression(meth.value)
+                basic_value_repr = interpreter.stack.pop()
 
             if not isinstance(basic_value_repr, BasicValue):
                 interpreter.error(node, ErrorType.TypeError, 'expected {} method to return an instance of BasicValue, got {}'.format(BasicType.REPR_FUNCTION_NAME, basic_value_repr))
@@ -83,10 +91,36 @@ def builtin_type_compare(arguments):
 
 # PLACEHOLDER
 def builtin_to_int(arguments):
-    return BasicValue(int(arguments[1].value))
+    return BasicValue(int(str(arguments[2].extract_value())))
 
 def builtin_str_len(arguments):
-    return BasicValue(len(arguments[1].value))
+    return BasicValue(len(str(arguments[2].extract_value())))
+
+def builtin_array_len(arguments):
+    return BasicValue(len(arguments[2].extract_value()))
+
+def builtin_array_at(arguments):
+    obj = arguments[2].extract_value()
+    index = arguments[3].extract_value()
+
+    # TODO: exception for out of range,
+    # check index is int, etc.
+
+    return BasicValue(obj[index])
+
+def builtin_str_append(arguments):
+    interpreter = arguments[0]
+    this_object = arguments[1]
+
+    str_value_start = arguments[2]
+
+    str_value = str(str_value_start.extract_value())
+
+    if len(arguments) > 3:
+        for arg in arguments[3:]:
+            str_value = str_value + str(arg.extract_value())
+
+    return BasicValue(str_value)
 
 def builtin_object_new(arguments):
     interpreter = arguments[0]
@@ -112,14 +146,13 @@ def builtin_object_new(arguments):
             # push this object + any arguments passed here to the function
             interpreter.stack.push(new_instance)
 
-            sliced = arguments[2:-1]
+            sliced = arguments[2:]
 
             for i in range(0, len(constructor_method.argument_list.arguments) - 1):
                 if i >= len(sliced):
                     interpreter.stack.push(BasicValue(None))
                 else:
                     interpreter.stack.push(sliced[i])
-
 
             interpreter.call_function_expression(constructor_method)
         else:
@@ -201,3 +234,37 @@ def builtin_type_to_str(arguments):
     this_object = arguments[1]
 
     return BasicValue(repr(this_object))
+
+def builtin_console_input(arguments):
+    input_result = input()
+
+    return BasicValue(input_result)
+
+def builtin_file_read(arguments):
+    interpreter = arguments[0]
+    this_object = arguments[1]
+
+    file_path = arguments[2]
+
+    print("file_path = {}".format(file_path))
+
+    # TODO some kind of exception checking system
+    f = open(file_path.extract_value(), 'r')
+    s = f.read()
+
+    return BasicValue(s)
+
+def builtin_file_write(arguments):
+    interpreter = arguments[0]
+    this_object = arguments[1]
+
+    file_path = arguments[2]
+    write_value = arguments[3]
+
+    f = open(file_path.extract_value(), 'w')
+    f.write(str(write_value.extract_value()))
+    f.close()
+
+    return BasicValue(file_path)
+
+
