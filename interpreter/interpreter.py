@@ -273,6 +273,7 @@ class Interpreter():
             if isinstance(node.lhs, NodeMemberExpression):
                 is_member_call = True
                 this_value = self.visit(node.lhs.lhs)
+                #print('SPINAL {}'.format(this_value))
 
             # if a built-in function exists, call it
             if isinstance(target, BuiltinFunction):
@@ -285,7 +286,6 @@ class Interpreter():
 
                 if is_member_call: # a.b('test') -> pass 'a' in as first argument
                     self.stack.push(this_value)
-
                     given_arg_count += 1
 
                 if expected_arg_count != given_arg_count:
@@ -297,7 +297,6 @@ class Interpreter():
                 # push arguments to stack
                 for arg in node.argument_list.arguments:
                     self.stack.push(self.visit(arg))
-
                 
                 self.call_function_expression(target)
                 # the return value is pushed onto the stack at end of block or return
@@ -339,9 +338,9 @@ class Interpreter():
     def visit_While(self, node):
         expr_result = self.visit(node.expr)
         
-        if expr_result.truthy:
-            self.visit(node.block)
-            self.visit_While(node)
+        while expr_result.truthy:
+            self.visit_Block(node.block)
+            expr_result = self.visit(node.expr)
         
     def visit_ArgumentList(self, node):
         # read arguments backwards as values are popped from stack

@@ -148,6 +148,12 @@ class Lexer():
     
     def lex(self):
         splitables = "(){}[];:+-*/=.,!|&~<>^"
+        multichar_splitables = [
+            '==', '!=', '<=', '>=',
+            '+=', '-=', '*=', '/=',
+            '==', '!='
+        ]
+        
         self.skip_whitespace()
         
         string_type = None
@@ -183,18 +189,17 @@ class Lexer():
                 continue
                   
             elif self.peek_char(0) in splitables and string_type == None:
-                if self.peek_char(0) in ('!', '='):
-                    if self.peek_char(1) == '=':
-                        self.token_data += self.read_char()
-                        self.token_data += self.read_char()
-                        continue
-                    
-                if self.peek_char(0) in ('+', '-', '*', '/'):
-                    if self.peek_char(1) == '=':
-                        self.token_data += self.read_char()
-                        self.token_data += self.read_char()
-                        continue
-                
+                continue_me_baybeh = False
+                for tok in multichar_splitables:
+                    idx = self.data.find(tok, self.index, self.index+len(tok))
+                    if idx != -1:
+                        print('idx: {}'.format(idx))
+                        for i in range(len(tok)):
+                            self.token_data += self.read_char()
+                        continue_me_baybeh = True
+
+                if continue_me_baybeh:
+                    continue
                 
                 if self.peek_char(-1).isdigit() and self.peek_char(0) == '.':
                     self.token_data += self.read_char()

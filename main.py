@@ -30,6 +30,9 @@ def main():
     lexer = Lexer(data, SourceLocation(filename))
     lexer.lex()
     
+    for token in lexer.tokens:
+        print(token)
+
     parser = Parser(lexer)
     
     global_import_nodes = [

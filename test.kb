@@ -1,23 +1,6 @@
-func print_times(str, times) {
-    while times {
-        print(str);
-        times -= 1;
-    }
-}
+import "examples/ttt.kb";
 
-let x: float = 2.0;
+print('Fix this andrew '*5);
 
-#let input_val = Console.read();
-#print(input_val);
-
-# let file = File.open('test.kb');
-# print(file);
-
-let a:str = "hello"+" world";
-print(a);
-
-let b:Bool = Bool.new(0);
-
-b = true;
-
-print(b);
+let ex_ttt = ttt.new();
+ex_ttt.board_draw();

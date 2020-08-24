@@ -61,7 +61,8 @@ let Array = Type.extend({
   }
 
   func __at__(self, index) {
-    return __intern_array_at__(self._value, index);
+    let value = __intern_array_at__(self._value, index);
+    return value;
   }
 });
 
@@ -109,6 +110,15 @@ let Str = Array.extend({
   
   func __add__(self, value) {
       return self.append(value);
+  }
+
+  func __mul__(self, value) {
+      let str = "";
+      while value {
+        str = __intern_str_append__(self._value, str);
+        value -= 1;
+      }
+      return str;
   }
 
   func to_str(self) {
