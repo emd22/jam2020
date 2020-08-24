@@ -74,6 +74,7 @@ class Interpreter():
         
         if node.token.type == TokenType.Plus:
             funstr = '__add__'
+            # return BasicValue(left.value + right.value)
         elif node.token.type == TokenType.Minus:
             funstr = '__sub__'
         elif node.token.type == TokenType.Multiply:
@@ -351,7 +352,7 @@ class Interpreter():
             return var.value_wrapper.value
 
         return None
-        
+
     def visit_IfStatement(self, node):
         expr_result = self.visit(node.expr)
 
@@ -415,7 +416,7 @@ class Interpreter():
 
         # no return statement, push return code 0 to the stack
         if type(last_child) != NodeFunctionReturn:
-            self.stack.push(0)
+            self.stack.push(BasicValue(0)) # should just be null or something
 
         # done, close scope
         self.close_scope()
