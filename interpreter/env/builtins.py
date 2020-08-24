@@ -122,6 +122,7 @@ def builtin_str_append(arguments):
 def builtin_object_new(arguments):
     interpreter = arguments.interpreter
     this_object = arguments.this_object
+    node = arguments.node
 
     new_instance = None
 
@@ -138,18 +139,22 @@ def builtin_object_new(arguments):
         constructor_method = constructor_method_member.value
 
         if isinstance(constructor_method, BuiltinFunction):
-            interpreter.call_builtin_function(constructor_method, this_object, arguments[2:-1], None)
+            interpreter.call_builtin_function(constructor_method, this_object, arguments.arguments, None)
         elif isinstance(constructor_method, NodeFunctionExpression):
             # push this object + any arguments passed here to the function
-            interpreter.stack.push(new_instance)
+            passed_args = [new_instance, *arguments.arguments]
 
-            for i in range(0, len(constructor_method.argument_list.arguments) - 1):
-                if i >= len(arguments.arguments):
+            for i in range(0, len(constructor_method.argument_list.arguments)):
+                if i >= len(passed_args):
                     interpreter.stack.push(BasicValue(None))
                 else:
-                    interpreter.stack.push(arguments.arguments[i])
+                    interpreter.stack.push(passed_args[i])
 
             interpreter.call_function_expression(constructor_method)
+
+            # pop return value off stack - if no `return X` is given,
+            # a default value is pushed to stack anyway.
+            interpreter.stack.pop()
         else:
             interpreter.error(None, ErrorType.TypeError, 'invalid constructor type {}'.format(constructor_method))
 

@@ -37,10 +37,12 @@ Func.patch({
 
 let Num = Type.extend({
   name = 'Num'
-  
   func __construct__(self, value) {
       self._value = value;
+
+      return self;
   }
+  
 
   func to_int(self) {
     return __intern_to_int__(self._value);
@@ -57,6 +59,12 @@ let Float = Num.extend({
   instance = {
     _value = 0.0
   }
+  func __construct__(self, value) {
+      self._value = value;
+
+      return self;
+  }
+  
 });
 
 let Int = Num.extend({
@@ -64,6 +72,11 @@ let Int = Num.extend({
 
   instance = {
     _value = 0
+  }
+  func __construct__(self, value) {
+      self._value = value;
+
+      return self;
   }
   
   func __add__(self, value) {

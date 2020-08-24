@@ -257,12 +257,9 @@ class Interpreter():
         return value
     
     def visit_Call(self, node):
-        target = None
+        target = self.visit(node.lhs)
         return_value = 0 # TODO make Null-ish type -- "Unset" type ?
         # TODO make it an error if you declare the type function should return and no value provided
-
-        if target is None:
-            target = self.visit(node.lhs) # TODO: turn into general expression, not just vars.
 
         if target is not None:
             this_value = None
@@ -279,8 +276,6 @@ class Interpreter():
                 for arg in node.argument_list.arguments:
                     args.append(self.visit(arg))
                 return self.call_builtin_function(target, this_value, args, node)
-
-
             # user-defined function
             elif isinstance(target, NodeFunctionExpression):
                 expected_arg_count = len(target.argument_list.arguments)

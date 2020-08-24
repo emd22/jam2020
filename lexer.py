@@ -193,7 +193,6 @@ class Lexer():
                 for tok in multichar_splitables:
                     idx = self.data.find(tok, self.index, self.index+len(tok))
                     if idx != -1:
-                        print('idx: {}'.format(idx))
                         for i in range(len(tok)):
                             self.token_data += self.read_char()
                         continue_me_baybeh = True
