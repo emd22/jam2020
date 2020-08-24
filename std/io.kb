@@ -2,5 +2,5 @@ import "std/io/console.kb";
 import "std/io/file.kb";
 
 let print = (_value_) {
-    __intern_print__(_value_);
+    return __intern_print__(_value_);
 }

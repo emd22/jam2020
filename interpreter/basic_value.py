@@ -1,4 +1,5 @@
 from parser.node import NodeFunctionExpression
+from interpreter.function import BuiltinFunction
 
 class BasicValue:
     def __init__(self, value):
@@ -11,7 +12,7 @@ class BasicValue:
         self.value = value
 
     def extract_basicvalue(self):
-        if isinstance(self.value, BasicValue):
+        if self.value is not None and isinstance(self.value, BasicValue):
             return self.value.extract_basicvalue()
 
         return self
@@ -33,7 +34,7 @@ class BasicValue:
 
         if isinstance(self.value, BasicValue):#type(self.value) == BasicValue:
             return self.value.lookup_type(global_scope)
-        elif isinstance(self.value, NodeFunctionExpression):
+        elif isinstance(self.value, NodeFunctionExpression) or isinstance(self.value, BuiltinFunction):
             return global_scope.find_variable_value('Func')
         elif type(self.value) is str:
             return global_scope.find_variable_value('Str')
@@ -44,7 +45,8 @@ class BasicValue:
         elif type(self.value) is list:
             return global_scope.find_variable_value('Array')
         else:
-            return global_scope.find_variable_value('Any')
+            raise Exception('could not get type for {}'.format(self))
+            #return global_scope.find_variable_value('Any')
 
     def clone(self):
         return BasicValue(self.value)

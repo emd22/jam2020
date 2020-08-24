@@ -5,7 +5,7 @@ from parser.node import *
 
 from interpreter.scope import *
 from interpreter.stack import Stack
-from interpreter.function import BuiltinFunction
+from interpreter.function import BuiltinFunction, BuiltinFunctionArguments
 from interpreter.typing.basic_type import BasicType
 from interpreter.basic_object import BasicObject
 from interpreter.basic_value import BasicValue
@@ -256,8 +256,6 @@ class Interpreter():
         return value
     
     def visit_Call(self, node):
-        #print("Call function '{}'".format(node.var.value))
-
         target = None
         return_value = 0 # TODO make Null-ish type -- "Unset" type ?
         # TODO make it an error if you declare the type function should return and no value provided
@@ -274,10 +272,13 @@ class Interpreter():
                 is_member_call = True
                 this_value = self.visit(node.lhs.lhs)
 
-            # if a built-in function exists, call it
             if isinstance(target, BuiltinFunction):
-                return self.call_builtin_function(target, this_value, node.argument_list.arguments, node)
-                
+                args = []
+                for arg in node.argument_list.arguments:
+                    args.append(self.visit(arg))
+                return self.call_builtin_function(target, this_value, args, node)
+
+
             # user-defined function
             elif isinstance(target, NodeFunctionExpression):
                 expected_arg_count = len(target.argument_list.arguments)
@@ -303,7 +304,35 @@ class Interpreter():
                 # the return value is pushed onto the stack at end of block or return
                 # statement. Pop it off and return as a value
 
-                return self.stack.pop()
+                result = self.stack.pop()
+
+                if not isinstance(result, BasicValue):
+                    self.error(node, ErrorType.TypeError, 'expected method to return an instance of BasicValue, got {}'.format(result))
+                    return None
+
+                return result
+            else: # objects......
+
+                member_access_call_node = NodeCall(
+                    NodeMemberExpression(
+                        node.lhs,
+                        LexerToken('__call__', TokenType.Identifier),
+                        node.token
+                    ),
+                    
+                    NodeArgumentList(
+                        [
+                            node.lhs,
+                            NodeArrayExpression(
+                                node.argument_list.arguments,
+                                node.token
+                            )
+                        ],
+                        node.token
+                    )
+                )
+
+                return self.visit(member_access_call_node)
 
         self.error(node, ErrorType.TypeError, 'invalid call: {} is not callable'.format(target))
 
@@ -358,16 +387,11 @@ class Interpreter():
             self.current_scope.set_variable(argument.name.value, value)
 
     def visit_FunctionExpression(self, node):
-        pass
+        return node
 
     def call_builtin_function(self, fun, this_object, arguments, node):
-        args = []
 
-        # built-in function
-        for arg in arguments:
-            args.append(self.visit(arg))
-
-        basic_value_result = fun.call([self, this_object, *args])
+        basic_value_result = fun.call(BuiltinFunctionArguments(interpreter=self, this_object=this_object, arguments=arguments, node=node))
 
         if not isinstance(basic_value_result, BasicValue):
             self.error(node, ErrorType.TypeError, 'expected method {} to return an instance of BasicValue, got {}'.format(fun, basic_value_result))
@@ -391,10 +415,9 @@ class Interpreter():
                 break
 
         # no return statement, push return code 0 to the stack
-        #print("last_child = {}".format(last_child))
         if type(last_child) != NodeFunctionReturn:
             self.stack.push(0)
-            
+
         # done, close scope
         self.close_scope()
 
@@ -426,6 +449,9 @@ class Interpreter():
         return BasicObject(parent=None, members=members)
 
     def basic_value_to_object(self, node, target):
+        if target is None:
+            raise Exception('target is none')
+        # if not isinstance(target)
         target = BasicValue(target).extract_basicvalue()
 
         if not isinstance(target, BasicObject):
@@ -438,7 +464,7 @@ class Interpreter():
             # for a string this would basically mean:
             # "hello ".append("world")
             # -> Str.new("hello ").append("world")
-            target = builtin_object_new([self, target_type_object, target])
+            target = builtin_object_new(BuiltinFunctionArguments(interpreter=self, this_object=target_type_object, arguments=[target], node=node))
 
         return target
 

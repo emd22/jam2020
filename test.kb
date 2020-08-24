@@ -19,5 +19,3 @@ print(a);
 let b:Bool = Bool.new(0);
 
 b = true;
-
-print(b);

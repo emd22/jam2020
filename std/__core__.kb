@@ -6,5 +6,5 @@ let varinfo = (_vname_) {
 }
 
 let exit = (_rcode_) {
-    __intern_exit__(_rcode_);
+    return __intern_exit__(_rcode_);
 }
