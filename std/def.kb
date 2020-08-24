@@ -114,6 +114,15 @@ let Array = Type.extend({
     let value = __intern_array_at__(self._value, index);
     return value;
   }
+  
+  func append(self, value) {
+    return __intern_array_append__(self._value, value);
+  }
+  
+  func __add__(self, value) {
+    return self.append(value);
+  }
+
 });
 
 let Bool = Num.extend({
@@ -165,7 +174,7 @@ let Str = Array.extend({
   func __mul__(self, value) {
       let str = "";
       while value {
-        str = __intern_str_append__(self._value, str);
+        str = self.append(str);
         value -= 1;
       }
       return str;

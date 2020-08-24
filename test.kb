@@ -1,9 +1,10 @@
 import "examples/ttt.kb";
 
-print('Fix this andrew '*5);
-
 let ex_ttt = ttt.new();
 ex_ttt.board_draw();
+
+let arr = [10, 20, 30]+[40, 60];
+print(arr);
 
 #let input_val = Console.read();
 #print(input_val);

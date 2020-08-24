@@ -1,10 +1,12 @@
-
-
-
 let ttt = Type.extend({
     name = "TicTacToe"
+    
+    EMPTY = 0
+    O_SPOT = 1
+    X_SPOT = 2
+    
     instance = {
-        moves = [0, 1, 0, 0, 0, 0, 0, 0, 0]
+        moves = [0, 0, 0, 0, 0, 0, 0, 0, 0]
     }
     __construct__ = (self){
     }
@@ -14,12 +16,13 @@ let ttt = Type.extend({
     board_draw = (self){}
     
     board_draw_top = (self){
-("+---");
     }
     get = (self, loc) {
-        print(self);
-        let ch:str = 'O';
-        if self.moves[loc] {
+        let ch:str = ' ';
+        if self.moves[loc] == self.O_SPOT {
+            ch = 'O';
+        }
+        elif self.moves[loc] == self.X_SPOT {
             ch = 'X';
         }
         return ch;
@@ -28,8 +31,6 @@ let ttt = Type.extend({
         let v0 = self.get(lc);
         let v1 = self.get(lc + 1);
         let v2 = self.get(lc + 2);
-        #let v1 = self.get(__intern_int_add__(lc, 1));
-        #let v2 = self.get(__intern_int_add__(lc, 2));
         let row = "| "+v0+" | "+v1+" | "+v2+" |";
         print(row);
         print("+---+---+---+");
@@ -37,6 +38,7 @@ let ttt = Type.extend({
     
     board_draw_values = (self) {
         let index = 0;
+        print("+---+---+---+");
         while index != 9 {
             self.board_draw_row(index);
             index += 3;
@@ -45,7 +47,5 @@ let ttt = Type.extend({
 });
 
 ttt.board_draw = (self) {
-    print("+---+---+---+");
     self.board_draw_values();
-    
 };

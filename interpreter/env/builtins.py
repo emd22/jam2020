@@ -104,6 +104,19 @@ def builtin_array_at(arguments):
     # check index is int, etc.
 
     return BasicValue(obj[index])
+    
+def builtin_array_append(arguments):
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
+    
+    value_start = arguments.arguments[0]
+    
+    value = value_start.extract_value()
+
+    if len(arguments.arguments) > 1:
+        for arg in arguments.arguments[1:]:
+            value = value + arg.extract_value()
+    return BasicValue(value)
 
 def builtin_str_append(arguments):
     interpreter = arguments.interpreter

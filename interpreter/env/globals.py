@@ -54,6 +54,8 @@ class Globals:
             ('__intern_str_append__', VariableType.Function, BuiltinFunction("__intern_str_append__", None, builtin_str_append)),
             ('__intern_array_len__', VariableType.Function, BuiltinFunction("__intern_array_len__", None, builtin_array_len)),
             ('__intern_array_at__', VariableType.Function, BuiltinFunction("__intern_array_at__", None, builtin_array_at)),
+            ('__intern_array_append__', VariableType.Function, BuiltinFunction("__intern_array_append__", None, builtin_array_append)),
+            
             ('__intern_console_input__', VariableType.Function, BuiltinFunction("__intern_console_input__", None, builtin_console_input)),
             ('__intern_file_read__', VariableType.Function, BuiltinFunction("__intern_file_read__", None, builtin_file_read)),
             ('__intern_file_write__', VariableType.Function, BuiltinFunction("__intern_file_write__", None, builtin_file_write)),
