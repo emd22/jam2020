@@ -1,3 +1,40 @@
+__intern_object_patch__(Object, {
+  func patch(self, _patch) {
+    return __intern_object_patch__(self, _patch);
+  }
+});
+
+Object.patch({
+  func __lt__(self, other) {
+    return self.__compare__(other) == -1;
+  }
+
+  func __gt__(self, other) {
+    return self.__compare__(other) == 1;
+  }
+
+  func __lte__(self, other) {
+    return self.__compare__(other) != 1;
+  }
+
+  func __gte__(self, other) {
+    return self.__compare__(other) != -1;
+  }
+});
+
+
+Func.patch({
+  instance = {
+    _method: Func = (self) {}
+  }
+
+  func __construct__(self, method) {
+    self._method = method;
+  }
+});
+
+
+
 let Num = Type.extend({
   name = 'Num'
   

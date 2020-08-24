@@ -5,12 +5,8 @@ from interpreter.function import BuiltinFunction
 class BasicType(BasicObject):
     REPR_FUNCTION_NAME = 'to_str'
 
-    DEFAULT_TYPE_MEMBERS = {
-        # REPR_FUNCTION_NAME: BuiltinFunction('__intern_type_repr__', None, builtin_type_repr)
-    }
-
     def __init__(self, parent=None, members={}, nominative=True):
-        BasicObject.__init__(self, parent, {**members, **BasicType.DEFAULT_TYPE_MEMBERS})
+        BasicObject.__init__(self, parent, members)
         self.nominative = nominative
 
     @property
@@ -40,53 +36,6 @@ class BasicType(BasicObject):
             return self.compare_type(other_type.parent, parent_lookup=(not circular))
 
         return False
-
-    # def compare_value(self, other_type, parent_lookup=True):
-
-    #     #### TODO: 
-    #     #### for comparing type to value, look up parent chain for value,
-    #     #### comparing along the way
-
-    #     if other_type == self:
-    #         return True
-
-    #     # if (self.nominative and self.type_name is not None) and self.type_name != other_type.type_name:
-    #     #     print("name not eql: {} {}".format(self.type_name, other_type.type_name))
-    #     #     return False
-
-    #     # if self.parent is None:
-    #     #     if other_type.parent is not None:
-    #     #         return False
-    #     # elif self.parent is not None:
-    #     #     if other_type.parent is None:
-    #     #         return False
-
-    #     #     if not self.parent.compare_type(other_type.parent):
-    #     #         return False
-
-    #     for (mem_name, mem_type) in self.members.items():
-    #         if mem_name == 'name': # skip because we use `nomanative` to decide this
-    #             continue
-
-    #         object_member = other_type.lookup_member(mem_name)
-    #         print("value = {}".format(other_type))
-    #         print("name = {}".format(mem_name))
-    #         print("object_member = {}".format(object_member))
-
-    #         if object_member is None:
-    #             print("not in : {}".format(mem_name))
-    #             return False
-        
-    #         print("mem_type {} = {}".format(mem_name, mem_type))
-    #         if not mem_type.compare_value(object_member.value):
-    #             print("not   : {}    {}".format(mem_type, object_member.value))
-    #             return False
-
-    #     # if other_type.parent is not None:
-    #     #     #circular = other_type.parent.parent == other_type
-    #     #     return self.compare_type(other_type.parent)
-
-    #     return True
 
     def has_property(self, name, property_type=None, limit=False):
         if name in self.members:

@@ -3,7 +3,7 @@ from interpreter.basic_object import BasicObject
 from interpreter.basic_value import BasicValue
 from interpreter.function import BuiltinFunction
 from interpreter.env.builtin.arith import *
-from parser.node import NodeFunctionExpression, NodeCall, NodeArgumentList, NodeMemberExpression
+from parser.node import NodeFunctionExpression, NodeCall, NodeArgumentList, NodeMemberExpression, NodeNone
 from error import ErrorType
 
 def _print_object(interpreter, node, obj):
@@ -33,8 +33,8 @@ def _print_object(interpreter, node, obj):
     print(obj_str)
     
 def builtin_varinfo(arguments):
-    interpreter = arguments[0]
-    var = interpreter.current_scope.find_variable_info(arguments[2])
+    interpreter = arguments.interpreter
+    var = interpreter.current_scope.find_variable_info(arguments.arguments[0])
 
     #varinfo_str = f"Variable '{arguments[2]}'\n\t" \
     #    f"decltype: {var.decltype}\n\t" \
@@ -42,7 +42,7 @@ def builtin_varinfo(arguments):
     #    f"runtime type: {var.value_wrapper.lookup_type(interpreter.global_scope)}\n"
         
     varinfo_str = \
-    f"""Variable '{arguments[2]}'
+    f"""Variable '{arguments.arguments[0]}'
     decltype: {var.decltype}
     value: {var.value_wrapper}
     runtime type: {var.value_wrapper.lookup_type(interpreter.global_scope)}
@@ -51,28 +51,28 @@ def builtin_varinfo(arguments):
     return BasicValue(varinfo_str)
 
 def builtin_printn(arguments):
-    interpreter = arguments[0]
-    node = arguments[1]
+    interpreter = arguments.interpreter
+    node = arguments.node
 
-    for arg in arguments[2:]:
+    for arg in arguments.arguments:
         _print_object(interpreter, node, arg)
 
-    return BasicValue(None)
+    return BasicValue(len(arguments.arguments))
 
 def builtin_exit(arguments):
-    interpreter = arguments[0]
-    node        = arguments[1]
-    return_code = arguments[2]
+    interpreter = arguments.interpreter
+    node        = arguments.node
+    return_code = arguments.arguments[0]
     
     exit(return_code)
     
     return BasicValue(0)
 
 def builtin_type_compare(arguments):
-    interpreter = arguments[0]
-    node = arguments[1]
-    target = arguments[2]
-    type_obj = arguments[3]
+    interpreter = arguments.interpreter
+    node = arguments.node
+    target = arguments.arguments[0]
+    type_obj = arguments.arguments[1]
 
     if not isinstance(target, BasicObject):
         interpreter.error(node, ErrorType.TypeError, 'argument 1 ({}) is not a BasicObject, cannot perform typecheck'.format(target))
@@ -88,17 +88,17 @@ def builtin_type_compare(arguments):
 
 # PLACEHOLDER
 def builtin_to_int(arguments):
-    return BasicValue(int(str(arguments[2].extract_value())))
+    return BasicValue(int(str(arguments.arguments[0].extract_value())))
 
 def builtin_str_len(arguments):
-    return BasicValue(len(str(arguments[2].extract_value())))
+    return BasicValue(len(str(arguments.arguments[0].extract_value())))
 
 def builtin_array_len(arguments):
-    return BasicValue(len(arguments[2].extract_value()))
+    return BasicValue(len(arguments.arguments[0].extract_value()))
 
 def builtin_array_at(arguments):
-    obj = arguments[2].extract_value()
-    index = arguments[3].extract_value()
+    obj = arguments.arguments[0].extract_value()
+    index = arguments.arguments[1].extract_value()
 
     # TODO: exception for out of range,
     # check index is int, etc.
@@ -106,22 +106,22 @@ def builtin_array_at(arguments):
     return BasicValue(obj[index])
 
 def builtin_str_append(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
 
-    str_value_start = arguments[2]
+    str_value_start = arguments.arguments[0]
 
     str_value = str(str_value_start.extract_value())
 
-    if len(arguments) > 3:
-        for arg in arguments[3:]:
+    if len(arguments.arguments) > 1:
+        for arg in arguments.arguments[1:]:
             str_value = str_value + str(arg.extract_value())
 
     return BasicValue(str_value)
 
 def builtin_object_new(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
 
     new_instance = None
 
@@ -143,13 +143,11 @@ def builtin_object_new(arguments):
             # push this object + any arguments passed here to the function
             interpreter.stack.push(new_instance)
 
-            sliced = arguments[2:]
-
             for i in range(0, len(constructor_method.argument_list.arguments) - 1):
-                if i >= len(sliced):
+                if i >= len(arguments.arguments):
                     interpreter.stack.push(BasicValue(None))
                 else:
-                    interpreter.stack.push(sliced[i])
+                    interpreter.stack.push(arguments.arguments[i])
 
             interpreter.call_function_expression(constructor_method)
         else:
@@ -158,8 +156,8 @@ def builtin_object_new(arguments):
     return new_instance
 
 def builtin_object_type(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
 
     if not isinstance(this_object, BasicValue):
         interpreter.error(None, ErrorType.TypeError, 'object {} is not an instance of BasicValue'.format(this_object))
@@ -168,16 +166,36 @@ def builtin_object_type(arguments):
     return this_object.lookup_type(interpreter.global_scope)
 
 def builtin_object_to_str(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
 
     return BasicValue('Object')
 
+def builtin_object_patch(arguments):
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
+    target = arguments.arguments[0].extract_value()
+    patch = arguments.arguments[1].extract_value()
+
+    if not isinstance(target, BasicObject):
+        interpreter.error(this_object, ErrorType.TypeError, 'Cannot patch non-BasicObject value: {}'.format(target))
+        return None
+
+    if not isinstance(target, BasicObject):
+        interpreter.error(this_object, ErrorType.TypeError, 'Cannot patch object with non-BasicObject value: {}'.format(patch))
+        return None
+
+    # TODO: types of objects
+    for (member_name, member_value) in patch.members.items():
+        target.assign_member(member_name, member_value)
+
+    return target
+
 def builtin_value_to_str(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
     
-    passed_arg = arguments[2].extract_value()
+    passed_arg = arguments.arguments[0].extract_value()
 
     return BasicValue(str(passed_arg))
 
@@ -188,11 +206,11 @@ def builtin_str_to_str(arguments):
     return builtin_value_to_str(arguments)
 
 def builtin_type_extend(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
 
-    if len(arguments) > 2:
-        provided_args = arguments[2]
+    if len(arguments.arguments) > 0:
+        provided_args = arguments.arguments[0]
 
         if not isinstance(provided_args, BasicObject):
             interpreter.error('provided args to Type.extend must be an instance of BasicObject, got {}'.format(provided_args))
@@ -214,8 +232,8 @@ def builtin_type_extend(arguments):
     return BasicType(this_object, instance_members)
 
 def builtin_type_type(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
 
     if this_object.parent is not None:
         return this_object.parent
@@ -223,8 +241,8 @@ def builtin_type_type(arguments):
     return this_object.lookup_type(interpreter.global_scope)
 
 def builtin_type_to_str(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
 
     return BasicValue(repr(this_object))
 
@@ -234,12 +252,10 @@ def builtin_console_input(arguments):
     return BasicValue(input_result)
 
 def builtin_file_read(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
 
-    file_path = arguments[2]
-
-    print("file_path = {}".format(file_path))
+    file_path = arguments.arguments[0]
 
     # TODO some kind of exception checking system
     f = open(file_path.extract_value(), 'r')
@@ -248,14 +264,36 @@ def builtin_file_read(arguments):
     return BasicValue(s)
 
 def builtin_file_write(arguments):
-    interpreter = arguments[0]
-    this_object = arguments[1]
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
 
-    file_path = arguments[2]
-    write_value = arguments[3]
+    file_path = arguments.arguments[0]
+    write_value = arguments.arguments[1]
 
     f = open(file_path.extract_value(), 'w')
     f.write(str(write_value.extract_value()))
     f.close()
 
     return BasicValue(file_path)
+
+def builtin_func_call(arguments):
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
+    node = arguments.node
+
+    meth = arguments.arguments[0]
+    arg_array = arguments.arguments[1].extract_value()
+
+    if not isinstance(arg_array, list):
+        interpreter.error(node, ErrorType.TypeError, '__intern_func_call__ expects arguments to be passed as an array but got {}'.format(arg_array))
+        return None
+
+    if isinstance(meth, BuiltinFunction):
+        basic_value_resp = interpreter.call_builtin_function(meth, this_object, arg_array, node)
+    else:
+        for arg in arg_array:
+            interpreter.stack.push(arg)
+        interpreter.call_function_expression(meth)
+        basic_value_resp = interpreter.stack.pop()
+
+    return basic_value_resp

@@ -233,8 +233,19 @@ class Parser():
         # function definition with arguments
         else:
             arguments = []
+            has_vargs = False
 
             while True:
+                if has_vargs:
+                    self.error('Arguments provided after variadic arguments')
+                    break
+
+                is_vargs = False
+
+                if self.peek_token(0, TokenType.Multiply):
+                    is_vargs = True
+                    has_vargs = True
+
                 if self.expect_token(TokenType.Identifier) is None:
                     self.error('invalid argument format')
                     break
@@ -422,7 +433,7 @@ class Parser():
         
         # eat closing paren
         self.eat(TokenType.RParen)
-    
+
         args = NodeArgumentList(argnames, self.current_token)
         
         return NodeCall(node, args)

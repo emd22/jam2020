@@ -177,6 +177,10 @@ class Repl:
 
         'arrays': ('', ''),
 
+        'operators': ('Builtin operators + operator overloading', ''),
+
+        'functors': ('Callable objects', ''),
+
         'modules': ('Using code from other files + using the `io` module', """
   Sometimes, especially in large projects,
   you will want to pull in code from other files.

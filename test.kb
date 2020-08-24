@@ -4,3 +4,16 @@ print('Fix this andrew '*5);
 
 let ex_ttt = ttt.new();
 ex_ttt.board_draw();
+
+#let input_val = Console.read();
+#print(input_val);
+
+# let file = File.open('test.kb');
+# print(file);
+
+let a:str = "hello"+" world";
+print(a);
+
+let b:Bool = Bool.new(0);
+
+b = true;

@@ -32,9 +32,10 @@ class Globals:
         self.basic_type.parent = self.basic_object # circular
 
         self.func_type = BasicType(
-            self.basic_object,
+            self.basic_type,
             {
-                'name': BasicValue('Func')
+                'name': BasicValue('Func'),
+                'instance': BasicObject(members={})
             }
         )
 
@@ -42,6 +43,7 @@ class Globals:
             ('Type', VariableType.Object, self.basic_type),
             ('Object', VariableType.Type, self.basic_object),
             ('Func', VariableType.Type, self.func_type),
+            ('__intern_object_patch__', VariableType.Function, BuiltinFunction("__intern_object_patch__", None, builtin_object_patch)),
             ('__intern_print__', VariableType.Function, BuiltinFunction("__intern_print__", None, builtin_printn)),
             ('__intern_type_compare__', VariableType.Function, BuiltinFunction("__intern_type_compare__", None, builtin_type_compare)),
             ('__intern_varinfo__', VariableType.Function, BuiltinFunction("__intern_varinfo__", None, builtin_varinfo)),
@@ -55,7 +57,7 @@ class Globals:
             ('__intern_console_input__', VariableType.Function, BuiltinFunction("__intern_console_input__", None, builtin_console_input)),
             ('__intern_file_read__', VariableType.Function, BuiltinFunction("__intern_file_read__", None, builtin_file_read)),
             ('__intern_file_write__', VariableType.Function, BuiltinFunction("__intern_file_write__", None, builtin_file_write)),
-            
+
             ('__intern_int_add__', VariableType.Function, BuiltinFunction("__intern_int_add__", None, builtin_int_add)),
             ('__intern_int_sub__', VariableType.Function, BuiltinFunction("__intern_int_sub__", None, builtin_int_sub)),
             ('__intern_int_mul__', VariableType.Function, BuiltinFunction("__intern_int_mul__", None, builtin_int_mul)),
@@ -82,5 +84,3 @@ class Globals:
 
             var = scope.find_variable_value(name)
             var.assign_value(value)
-
-        #print(scope)
