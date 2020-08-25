@@ -1,0 +1,32 @@
+let Str = Array.extend({
+  name = 'Str'
+
+  instance = {
+    _value = ''
+  }
+
+  func __construct__(self, value) {
+    self._value = value;
+  }
+  
+  func append(self, value) {
+    return __intern_str_append__(self._value, value);
+  }
+  
+  func __add__(self, value) {
+      return self.append(value);
+  }
+
+  func __mul__(self, value) {
+      let str = "";
+      while value {
+        str = self.append(str);
+        value -= 1;
+      }
+      return str;
+  }
+
+  func to_str(self) {
+    return self._value;
+  }
+});

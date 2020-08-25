@@ -1,0 +1,13 @@
+let Float = Num.extend({
+  name = 'Float'
+
+  instance = {
+    _value = 0.0
+  }
+  func __construct__(self, value) {
+      self._value = value;
+
+      return self;
+  }
+  
+});

@@ -1,0 +1,27 @@
+
+### Patch `Object` to define `patch` method as well as default compare operator
+__intern_object_patch__(Object, {
+  func patch(self, _patch) {
+    return __intern_object_patch__(self, _patch);
+  }
+  func __eql__(self, other) {
+    return __intern_default_compare__(self, other);
+  }
+});
+
+import "std/types/num.peach";
+import "std/types/float.peach";
+import "std/types/int.peach";
+import "std/types/bool.peach";
+import "std/types/object.peach";
+import "std/types/func.peach";
+import "std/types/array.peach";
+import "std/types/str.peach";
+
+# Type aliases
+let int = Int;
+let str = Str;
+let num = Num;
+let float = Float;
+let type = Type;
+

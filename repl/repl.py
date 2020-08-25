@@ -285,8 +285,8 @@ class Repl:
     def repl_import_defaults(self):
         # generate import nodes
         repl_import_nodes = [
-            Parser.import_file(Parser, 'std/__core__.kb'),
-            Parser.import_file(Parser, 'std/__repl__.kb')
+            Parser.import_file(Parser, 'std/__core__.peach'),
+            Parser.import_file(Parser, 'std/__repl__.peach')
         ]
         # eval asts
         self.eval_line_ast(repl_import_nodes)

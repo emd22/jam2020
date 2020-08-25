@@ -37,6 +37,7 @@ class TokenType(Enum):
     
     BitwiseOr = '|'
     BitwiseAnd = '&'
+    BitwiseXor = '^'
     BitwiseNot = '~'
     
     Compare = '=='

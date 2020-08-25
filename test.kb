@@ -1,4 +1,4 @@
-import "examples/ttt.kb";
+import "examples/ttt.peach";
 
 func test() {
     if 1 {
@@ -11,6 +11,15 @@ func test() {
 }
 
 print(test());
+
+
+
+
+let ex_ttt = ttt.new();
+ex_ttt.board_draw();
+# print([1,2,3].contains(1));
+let arr = [10, 20, 30]+[40, 60];
+print(arr);
 
 #let ex_ttt = ttt.new();
 #ex_ttt.play();

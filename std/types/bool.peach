@@ -1,0 +1,41 @@
+let Bool = Num.extend({
+    name = 'Bool'
+    
+    true
+    false
+    
+    instance = {
+        _value = 0
+    }
+
+    func _invert(self, value) {
+      return value.__not__();
+    }
+
+    func __bool__(self) {
+      return self._value;
+    }
+
+    func __not__(self) {
+      return self._value.__not__();
+    }
+    
+    func __construct__(self, value) {
+        self._value = self._invert(self._invert(value));
+    }
+    
+    func to_str(self) {
+        let rval = "false";
+        if self._value {
+            rval = "true";
+        }
+        return rval;
+    }
+});
+
+Bool.true = Bool.new(1);
+Bool.false = Bool.new(0);
+Bool.instance._value = Bool.false;
+
+let true = Bool.true;
+let false = Bool.false;

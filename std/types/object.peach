@@ -1,0 +1,25 @@
+Object.patch({
+  func __bool__(self) {
+    return Bool.true;
+  }
+  
+  func __noteql__(self, other) {
+    return !self.__eql__(other);
+  }
+
+  func __lt__(self, other) {
+    return self.__compare__(other) == -1;
+  }
+
+  func __gt__(self, other) {
+    return self.__compare__(other) == 1;
+  }
+
+  func __lte__(self, other) {
+    return self.__compare__(other) != 1;
+  }
+
+  func __gte__(self, other) {
+    return self.__compare__(other) != -1;
+  }
+});

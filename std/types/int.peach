@@ -1,0 +1,50 @@
+let Int = Num.extend({
+  name = 'Int'
+
+  instance = {
+    _value = 0
+  }
+  func __construct__(self, value) {
+      self._value = value;
+
+      return self;
+  }
+
+  #*func __eql__(self, other) {
+    return Bool.new(__intern_default_compare__(self._value, other._value));
+  }*#
+
+  func __not__(self) {
+    return __intern_int_negate__(self._value);
+  }
+
+  func __bool__(self) {
+    return self._value;
+  }
+  
+  func __add__(self, other) {
+      return __intern_int_add__(self._value, other._value);
+  }
+  func __sub__(self, other) {     
+      return __intern_int_sub__(self._value, other._value);
+  }
+  
+  func __mul__(self, other) {
+      return __intern_int_mul__(self._value, other._value);
+  }
+  func __div__(self, other) {     
+      return __intern_int_div__(self._value, other._value);
+  }
+
+  func __bitor__(self, other) {
+    return __intern_int_bitor__(self._value, other._value);
+  }
+
+  func __bitand__(self, other) {
+    return __intern_int_bitand__(self._value, other._value);
+  }
+
+  func __bitxor__(self, other) {
+    return __intern_int_bitxor__(self._value, other._value);
+  }
+});

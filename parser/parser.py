@@ -592,10 +592,11 @@ class Parser():
         )
         
         expected_types = (
-            TokenType.Equals, TokenType.Plus, 
-            TokenType.Minus, TokenType.BitwiseOr, 
-            TokenType.BitwiseAnd, TokenType.Compare,
-            TokenType.NotCompare, TokenType.Spaceship,
+            TokenType.Equals,
+            TokenType.Plus, TokenType.Minus,
+            TokenType.BitwiseOr, TokenType.BitwiseAnd, TokenType.BitwiseXor,
+            TokenType.Compare, TokenType.NotCompare,
+            TokenType.Spaceship,
             TokenType.LessThan, TokenType.GreaterThan,
             TokenType.LessThanEqual, TokenType.GreaterThanEqual
         ) + multiop_types

@@ -27,3 +27,24 @@ def builtin_int_div(arguments):
     rhs = arguments.arguments[1].extract_value()
     
     return BasicValue(lhs // rhs)
+
+def builtin_int_bitor(arguments):
+    interpreter = arguments.interpreter
+    lhs = arguments.arguments[0].extract_value()
+    rhs = arguments.arguments[1].extract_value()
+    
+    return BasicValue(lhs | rhs)
+
+def builtin_int_bitand(arguments):
+    interpreter = arguments.interpreter
+    lhs = arguments.arguments[0].extract_value()
+    rhs = arguments.arguments[1].extract_value()
+    
+    return BasicValue(lhs & rhs)
+
+def builtin_int_bitxor(arguments):
+    interpreter = arguments.interpreter
+    lhs = arguments.arguments[0].extract_value()
+    rhs = arguments.arguments[1].extract_value()
+    
+    return BasicValue(lhs ^ rhs)

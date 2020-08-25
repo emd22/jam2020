@@ -36,7 +36,7 @@ def main():
     parser = Parser(lexer)
     
     global_import_nodes = [
-        parser.import_file('std/__core__.kb')
+        parser.import_file('std/__core__.peach')
     ]
     
     ast = global_import_nodes+parser.parse()

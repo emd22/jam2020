@@ -46,6 +46,8 @@ class Globals:
             ('__intern_object_patch__', VariableType.Function, BuiltinFunction("__intern_object_patch__", None, builtin_object_patch)),
             ('__intern_print__', VariableType.Function, BuiltinFunction("__intern_print__", None, builtin_printn)),
             ('__intern_type_compare__', VariableType.Function, BuiltinFunction("__intern_type_compare__", None, builtin_type_compare)),
+            ('__intern_default_compare__', VariableType.Function, BuiltinFunction("__intern_default_compare__", None, builtin_default_compare)),
+            ('__intern_int_negate__', VariableType.Function, BuiltinFunction("__intern_int_negate__", None, builtin_int_negate)),
             ('__intern_varinfo__', VariableType.Function, BuiltinFunction("__intern_varinfo__", None, builtin_varinfo)),
             ('__intern_exit__', VariableType.Function, BuiltinFunction("__intern_exit__", None, builtin_exit)),
             ('__intern_to_int__', VariableType.Function, BuiltinFunction("__intern_to_int__", None, builtin_to_int)),
@@ -64,6 +66,9 @@ class Globals:
             ('__intern_int_sub__', VariableType.Function, BuiltinFunction("__intern_int_sub__", None, builtin_int_sub)),
             ('__intern_int_mul__', VariableType.Function, BuiltinFunction("__intern_int_mul__", None, builtin_int_mul)),
             ('__intern_int_div__', VariableType.Function, BuiltinFunction("__intern_int_div__", None, builtin_int_div)),
+            ('__intern_int_bitor__', VariableType.Function, BuiltinFunction("__intern_int_bitor__", None, builtin_int_bitor)),
+            ('__intern_int_bitand__', VariableType.Function, BuiltinFunction("__intern_int_bitand__", None, builtin_int_bitand)),
+            ('__intern_int_bitxor__', VariableType.Function, BuiltinFunction("__intern_int_bitxor__", None, builtin_int_bitxor)),
         ]
 
     def vartype_to_typeobject(self, vartype):

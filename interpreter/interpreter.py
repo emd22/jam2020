@@ -68,10 +68,41 @@ class Interpreter():
             raise Exception('No visitor function defined for node {}'.format(node))
 
         return caller(node)
+
+    def visit_UnaryOp(self, node):
+        funstr = '__noop__'
+        
+        if node.token.type == TokenType.Plus:
+            val = self.visit(node.expression)
+            return BasicValue(+val.value)
+        elif node.token.type == TokenType.Minus:
+            val = self.visit(node.expression)
+            return BasicValue(-val.value)
+            
+        elif node.token.type == TokenType.Not:
+            funstr = '__not__'
+            # if val is None or val.value == 0:
+            #     return BasicValue(1)
+            # else:
+            #     return BasicValue(0)
+
+        member_access_call_node = NodeCall(
+            NodeMemberExpression(
+                node.expression,
+                LexerToken(funstr, TokenType.Identifier),
+                node.token
+            ),
+            NodeArgumentList(
+                [],
+                node.token
+            )
+        )
+
+        return self.visit(member_access_call_node)
             
     def visit_BinOp(self, node):
-        left = self.visit(node.left)
-        right = self.visit(node.right)
+        # left = self.visit(node.left)
+        # right = self.visit(node.right)
         # TODO operator overloading by calling method on obj
         # Int method __add__ could just be a builtin method intern_int_add
         funstr = '__noop__'
@@ -87,9 +118,11 @@ class Interpreter():
             funstr = '__div__'
             
         elif node.token.type == TokenType.BitwiseOr:
-            return BasicValue(left.value | right.value)
+            funstr = '__bitor__'
         elif node.token.type == TokenType.BitwiseAnd:
-            return BasicValue(left.value & right.value)
+            funstr = '__bitand__'
+        elif node.token.type == TokenType.BitwiseXor:
+            funstr = '__bitxor__'
         elif node.token.type == TokenType.Spaceship:
             funstr = '__compare__'
         elif node.token.type == TokenType.LessThan:
@@ -101,9 +134,9 @@ class Interpreter():
         elif node.token.type == TokenType.GreaterThanEqual:
             funstr = '__gte__'
         elif node.token.type == TokenType.Compare:
-            return BasicValue(int(left.value == right.value))
+            funstr = '__eql__'
         elif node.token.type == TokenType.NotCompare:
-            return BasicValue(int(left.value != right.value))
+            funstr = '__noteql__'
             
         member_access_call_node = NodeCall(
             NodeMemberExpression(
@@ -165,20 +198,6 @@ class Interpreter():
     
     def visit_String(self, node):
         return BasicValue(node.value)
-    
-    def visit_UnaryOp(self, node):
-        val = self.visit(node.expression)
-        
-        if node.token.type == TokenType.Plus:
-            return BasicValue(+val.value)
-        elif node.token.type == TokenType.Minus:
-            return BasicValue(-val.value)
-            
-        elif node.token.type == TokenType.Not:
-            if val is None or val.value == 0:
-                return BasicValue(1)
-            else:
-                return BasicValue(0)
             
     def visit_Block(self, node, create_scope=True):
         if create_scope:
@@ -350,18 +369,39 @@ class Interpreter():
 
         return None
 
-    def visit_IfStatement(self, node):
-        expr_result = self.visit(node.expr)
+    def check_object_truthy(self, node):
+        member_access_call_node = NodeCall(
+            NodeMemberExpression(
+                node,
+                LexerToken('__bool__', TokenType.Identifier),
+                node.token
+            ),
+            NodeArgumentList(
+                [],
+                node.token
+            )
+        )
 
+        result = self.visit(member_access_call_node)
+
+        if result is None:
+            self.error(node, ErrorType.TypeError, 'cannot check if object {} is truthy'.format(node))
+            return None
+
+        int_result = result.extract_value()
+
+        if type(int_result) != int:
+            self.error(node, ErrorType.TypeError, 'expected __bool__ call to return an int'.format(node))
+            return None
+
+        return int_result != 0
+
+    def visit_IfStatement(self, node):
         # todo this should be changed to a general purpose 'is true' check
-        if expr_result.truthy:
-            value = None
-            try:
-                value = self.visit_Block(node.block)
-            except ReturnJump:
-                raise ReturnJump
-                return value
-            return value
+        truthy_result = self.check_object_truthy(node.expr)
+
+        if truthy_result:
+            return self.visit_Block(node.block)
         elif node.else_block is not None:
             # use visit rather than direct to visit_Block
             # since else_block can also be a NodeIfStatement in the
@@ -369,16 +409,12 @@ class Interpreter():
             return self.visit(node.else_block)
             
     def visit_While(self, node):
-        expr_result = self.visit(node.expr)
-        
-        while expr_result.truthy:
-            try:
-                self.visit_Block(node.block)
-            except ReturnJump:
-                raise ReturnJump
-                return
-                
-            expr_result = self.visit(node.expr)
+        truthy_result = self.check_object_truthy(node.expr)
+
+        while truthy_result:
+            self.visit_Block(node.block)
+
+            truthy_result = self.check_object_truthy(node.expr)
         
     def visit_ArgumentList(self, node):
         # read arguments backwards as values are popped from stack
@@ -427,6 +463,12 @@ class Interpreter():
                 self.stack.push(BasicValue(0)) # should just be null or something
                 
         except ReturnJump:
+            #!!!!!!! TODO this should not just close current scope
+            # instead it should be iterating until current scope 
+            # is equal to the SAME scope that was opened
+            # when the function first opened,
+            # so we reset scope to the same point which it was at...
+
             self.close_scope()
             return            
         # done, close scope

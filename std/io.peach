@@ -1,5 +1,5 @@
-import "std/io/console.kb";
-import "std/io/file.kb";
+import "std/io/console.peach";
+import "std/io/file.peach";
 
 let print = (_value_) {
     return __intern_print__(_value_);

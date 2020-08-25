@@ -89,6 +89,22 @@ def builtin_type_compare(arguments):
     else:
         return BasicValue(0)
 
+# simple == compare
+def builtin_default_compare(arguments):
+    interpreter = arguments.interpreter
+    node = arguments.node
+    target = arguments.arguments[0].extract_value()
+    other = arguments.arguments[1].extract_value()
+
+    return BasicValue(int(target == other))
+
+def builtin_int_negate(arguments):
+    interpreter = arguments.interpreter
+    node = arguments.node
+    target = arguments.arguments[0].extract_value()
+
+    return BasicValue(int(not target))
+
 # PLACEHOLDER
 def builtin_to_int(arguments):
     return BasicValue(int(str(arguments.arguments[0].extract_value())))

@@ -22,12 +22,6 @@ class BasicValue:
             return self.value.extract_value()
 
         return self.value
-        
-    @property
-    def truthy(self):
-        value = self.extract_value()
-
-        return value != 0
 
     def lookup_type(self, global_scope):
         from interpreter.basic_object import BasicObject
@@ -44,6 +38,8 @@ class BasicValue:
             return global_scope.find_variable_value('Float')
         elif type(self.value) is list:
             return global_scope.find_variable_value('Array')
+        # elif type(self.value) is bool:
+        #     return global_scope.find_variable_value('Bool')
         else:
             raise Exception('could not get type for {}'.format(self))
             #return global_scope.find_variable_value('Any')
