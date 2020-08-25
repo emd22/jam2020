@@ -59,7 +59,7 @@ def main():
             interpreter.visit(node)
     except InterpreterError:
         # errors printed
-        pass
+        interpreter.error_list.clear_errors()
 
 if __name__ == '__main__':
     main()

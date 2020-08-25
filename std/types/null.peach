@@ -1,0 +1,30 @@
+let Null = Type.extend({
+  name = 'Null'
+
+  instance = {}
+
+  func __construct__(self, val) {
+    # do nothing
+  }
+});
+
+# Null singleton instance
+Null.instance = Null.extend({
+  func __eql__(self, other) {
+    return other.type() == Null;
+  }
+
+  func __bool__(self) {
+    return 0;
+  }
+
+  func __not__(self) {
+    return 1;
+  }
+
+  func to_str(self) {
+    return 'null';
+  }
+});
+
+let null = Null.instance;

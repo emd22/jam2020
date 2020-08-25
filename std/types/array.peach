@@ -3,6 +3,54 @@ let Array = Type.extend({
 
   instance = {
     _value = []
+
+    func __at__(self, index) {
+      let value = __intern_array_at__(self._value, index);
+      return value;
+    }
+
+    func __add__(self, value) {
+      return self.append(value);
+    }
+
+    func __bitor__(self, value) {
+      # TODO union
+    }
+
+    func __bitand__(self, value) {
+      # TODO intersection
+    }
+
+    func __iterate__(self, cb) {
+      let remaining = self.len();
+      let len = self.len();
+
+      while remaining != 0 {
+        let index = len - remaining;
+
+        cb(self[index]);
+
+        remaining -= 1;
+      }
+    }
+
+    func to_str(self) {
+      let str_result = '[';
+
+      for index in Range.new(0, self.len()) {
+        let item = self[index];
+
+        str_result += item.to_str();
+
+        if index != (self.len() - 1) { # precendence is whack
+          str_result += ', ';
+        }
+      }
+
+      str_result += ']';
+
+      return str_result;
+    }
   }
 
   func __construct__(self, value) {
@@ -15,22 +63,14 @@ let Array = Type.extend({
 
     while index != 0 {
       index -= 1;
-      print(index);
-      let a_val = self.__at__(index);
-
-      print("a_val = ");
-      print(a_val);
-      print(value);
+      let a_val = self[index];
 
       if a_val == value {
-        print("eql");
         has_value = true;
       }
 
       # TODO add break
-      if has_value == true {
-        print("has_value is true");
-        print(has_value);
+      if has_value {
         index = 0;
       }
     }
@@ -42,26 +82,9 @@ let Array = Type.extend({
     let _rval = __intern_array_len__(self._value);
     return _rval;
   }
-
-  func __at__(self, index) {
-    let value = __intern_array_at__(self._value, index);
-    return value;
-  }
   
   func append(self, value) {
     return __intern_array_append__(self._value, value);
-  }
-  
-  func __add__(self, value) {
-    return self.append(value);
-  }
-
-  func __bitor__(self, value) {
-    # TODO union
-  }
-
-  func __bitand__(self, value) {
-    # TODO intersection
   }
 
 });

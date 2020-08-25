@@ -3,28 +3,38 @@ let Int = Num.extend({
 
   instance = {
     _value = 0
+
+    func __not__(self) {
+      return __intern_int_negate__(self._value);
+    }
+
+    func __bool__(self) {
+      return !!self._value;
+    }
+
+    func __eql__(self, other) {
+      if other.type() != self.type() {
+        return 0;
+      }
+
+      return __intern_default_compare__(self._value, other._value);
+    }
+
+    func to_str(self) {
+      return __intern_num_to_str__(self._value);
+    }
   }
+
   func __construct__(self, value) {
-      self._value = value;
+      self._value = __intern_to_int__(value);
 
       return self;
-  }
-
-  #*func __eql__(self, other) {
-    return Bool.new(__intern_default_compare__(self._value, other._value));
-  }*#
-
-  func __not__(self) {
-    return __intern_int_negate__(self._value);
-  }
-
-  func __bool__(self) {
-    return self._value;
   }
   
   func __add__(self, other) {
       return __intern_int_add__(self._value, other._value);
   }
+
   func __sub__(self, other) {     
       return __intern_int_sub__(self._value, other._value);
   }
@@ -32,6 +42,7 @@ let Int = Num.extend({
   func __mul__(self, other) {
       return __intern_int_mul__(self._value, other._value);
   }
+
   func __div__(self, other) {     
       return __intern_int_div__(self._value, other._value);
   }

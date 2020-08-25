@@ -9,6 +9,14 @@ __intern_object_patch__(Object, {
   }
 });
 
+Type.patch({
+  func to_str(self) {
+    return self.name;
+  }
+});
+
+
+import "std/types/null.peach";
 import "std/types/num.peach";
 import "std/types/float.peach";
 import "std/types/int.peach";
@@ -17,6 +25,7 @@ import "std/types/object.peach";
 import "std/types/func.peach";
 import "std/types/array.peach";
 import "std/types/str.peach";
+import "std/types/range.peach";
 
 # Type aliases
 let int = Int;

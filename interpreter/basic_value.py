@@ -38,8 +38,10 @@ class BasicValue:
             return global_scope.find_variable_value('Float')
         elif type(self.value) is list:
             return global_scope.find_variable_value('Array')
-        # elif type(self.value) is bool:
-        #     return global_scope.find_variable_value('Bool')
+        elif type(self.value) is bool:
+            return global_scope.find_variable_value('Bool')
+        elif self.value is None:
+            return global_scope.find_variable_value('Null')
         else:
             raise Exception('could not get type for {}'.format(self))
             #return global_scope.find_variable_value('Any')

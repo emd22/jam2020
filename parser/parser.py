@@ -21,6 +21,7 @@ class Parser():
             'import': self.parse_import,
             'return': self.parse_return,
             'while': self.parse_while,
+            'for': self.parse_for
         }
 
     @property
@@ -80,7 +81,8 @@ class Parser():
     # read next token and error if token.type != passed in token type
     def eat(self, token_type=None):
         if token_type is not None:
-            token = self.expect_token(token_type)
+            if self.expect_token(token_type) is None:
+                return None
 
         self._current_token = self.next_token()
 
@@ -161,7 +163,7 @@ class Parser():
         return node
         
     def parse_while(self):
-        # eat while statement
+        # eat while keyword
         token = self.current_token
         if not self.eat(TokenType.Keyword):
             return None
@@ -177,6 +179,36 @@ class Parser():
             return None
         
         return NodeWhile(expression, block, token)
+
+    def parse_for(self):
+        # eat for keyword
+        token = self.current_token
+        if not self.eat(TokenType.Keyword):
+            return None
+
+        # get var name of iter
+        var_token = self.current_token
+        self.eat(TokenType.Identifier)
+        if var_token is None:
+            return None
+
+        # eat in keyword
+        in_keyword = self.current_token
+        self.eat(TokenType.Keyword)
+        if in_keyword is None or in_keyword.value != 'in':
+            self.error('for loop expects syntax `for <var> in <expr> { ... }`')
+            return None
+
+        expression = self.parse_expression()
+        if expression == None:
+            return None
+
+        block = self.parse_block_statement()
+
+        if block == None:
+            return None
+
+        return NodeFor(var_token, expression, block, token)
         
     def parse_import(self):
         self.eat(TokenType.Keyword)
@@ -296,7 +328,7 @@ class Parser():
                 if rhs.type == NodeType.FunctionExpression:
                     return node
             
-            if node.type in (NodeType.IfStatement, NodeType.While):
+            if node.type in (NodeType.IfStatement, NodeType.While, NodeType.For):
                 return node
         else:
             node = self.parse_expression()
@@ -327,7 +359,7 @@ class Parser():
             statement = self.parse_statement()
             # parse statement and skip to next semicolon
             statements.append(statement)
-        
+
         return statements
 
     def parse_keyword(self):
@@ -442,7 +474,6 @@ class Parser():
         if argument_list is None:
             argument_list = self.parse_parenthesis()
         block = self.parse_block_statement()
-        
         return NodeFunctionExpression(argument_list, block)
     
     def parse_func_declaration(self):
@@ -453,7 +484,8 @@ class Parser():
         self.eat(TokenType.Keyword)
         # eat function name
         name = self.current_token
-        self.eat(TokenType.Identifier)
+        if self.eat(TokenType.Identifier) is None:
+            return None
         
         # parse assignment, parenthesis, etc.
         val_node = self.parse_assignment_statement(NodeVariable(name), require_operator=False)
@@ -467,12 +499,15 @@ class Parser():
         
         if require_keyword:
             # eat let keyword
-            self.eat(TokenType.Keyword)
+            if self.eat(TokenType.Keyword) is None:
+                return None
         elif self.peek_token(0, expected_type=TokenType.Keyword) and self.peek_token(0).value == 'func':
             return self.parse_func_declaration()
             
         name = self.current_token
-        self.eat(TokenType.Identifier)
+        if self.eat(TokenType.Identifier) is None:
+            return None
+
         type_node = None
         
         # manual type set

@@ -51,6 +51,7 @@ class Globals:
             ('__intern_varinfo__', VariableType.Function, BuiltinFunction("__intern_varinfo__", None, builtin_varinfo)),
             ('__intern_exit__', VariableType.Function, BuiltinFunction("__intern_exit__", None, builtin_exit)),
             ('__intern_to_int__', VariableType.Function, BuiltinFunction("__intern_to_int__", None, builtin_to_int)),
+            ('__intern_to_float__', VariableType.Function, BuiltinFunction("__intern_to_float__", None, builtin_to_float)),
             ('__intern_num_to_str__', VariableType.Function, BuiltinFunction("__intern_num_to_str__", None, builtin_num_to_str)),
             ('__intern_str_len__', VariableType.Function, BuiltinFunction("__intern_str_len__", None, builtin_str_len)),
             ('__intern_str_append__', VariableType.Function, BuiltinFunction("__intern_str_append__", None, builtin_str_append)),
@@ -69,6 +70,11 @@ class Globals:
             ('__intern_int_bitor__', VariableType.Function, BuiltinFunction("__intern_int_bitor__", None, builtin_int_bitor)),
             ('__intern_int_bitand__', VariableType.Function, BuiltinFunction("__intern_int_bitand__", None, builtin_int_bitand)),
             ('__intern_int_bitxor__', VariableType.Function, BuiltinFunction("__intern_int_bitxor__", None, builtin_int_bitxor)),
+
+            ('__intern_float_add__', VariableType.Function, BuiltinFunction("__intern_float_add__", None, builtin_float_add)),
+            ('__intern_float_sub__', VariableType.Function, BuiltinFunction("__intern_float_sub__", None, builtin_float_sub)),
+            ('__intern_float_mul__', VariableType.Function, BuiltinFunction("__intern_float_mul__", None, builtin_float_mul)),
+            ('__intern_float_div__', VariableType.Function, BuiltinFunction("__intern_float_div__", None, builtin_float_div)),
         ]
 
     def vartype_to_typeobject(self, vartype):

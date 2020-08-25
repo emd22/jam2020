@@ -11,14 +11,13 @@ from interpreter.basic_object import BasicObject
 from interpreter.basic_value import BasicValue
 from interpreter.env.globals import Globals
 from interpreter.variable import VariableType
-from interpreter.env.builtins import builtin_object_new
+from interpreter.env.builtins import builtin_object_new, obj_to_string
 from lexer import TokenType, LexerToken
 
 from error import InterpreterError, ErrorList, ErrorType, Error
 
 class ReturnJump(Exception):
     pass
-
 
 class Interpreter():
     def __init__(self, source_location):
@@ -415,6 +414,33 @@ class Interpreter():
             self.visit_Block(node.block)
 
             truthy_result = self.check_object_truthy(node.expr)
+
+    def visit_For(self, node):
+        # call __iterate__ passing in a function expression
+        # as a callback for each item in the iterable.
+
+        # create an argument list with a single argument, the target.
+        # it will be named whatever the var is in the for loop statement
+        argument_list = NodeArgumentList(
+            [NodeDeclare(None, node.var_token, NodeNone(node.token))],
+            node.token
+        )
+        
+        fnexpr_node = NodeFunctionExpression(argument_list, node.block)
+
+        member_access_call_node = NodeCall(
+            NodeMemberExpression(
+                node.expr,
+                LexerToken('__iterate__', TokenType.Identifier),
+                node.token
+            ),
+            NodeArgumentList(
+                [fnexpr_node],
+                node.token
+            )
+        )
+
+        self.visit(member_access_call_node)
         
     def visit_ArgumentList(self, node):
         # read arguments backwards as values are popped from stack
@@ -446,6 +472,7 @@ class Interpreter():
     def call_function_expression(self, node):
         # create our scope before block so argument variables are contained
         self.open_scope()
+        function_scope = self.current_scope
         # visit our arguments
         self.visit(node.argument_list)
         # self.visit would normally be used here, but we need create_scope
@@ -463,14 +490,11 @@ class Interpreter():
                 self.stack.push(BasicValue(0)) # should just be null or something
                 
         except ReturnJump:
-            #!!!!!!! TODO this should not just close current scope
-            # instead it should be iterating until current scope 
-            # is equal to the SAME scope that was opened
-            # when the function first opened,
-            # so we reset scope to the same point which it was at...
+            # exit all enclosed scopes until the current scope
+            # is equal to the same one we opened at the start of the function
+            while self.current_scope != function_scope:
+                self.close_scope()
 
-            self.close_scope()
-            return            
         # done, close scope
         self.close_scope()
 
@@ -502,8 +526,6 @@ class Interpreter():
         return BasicObject(parent=None, members=members)
 
     def basic_value_to_object(self, node, target):
-        if target is None:
-            raise Exception('target is none')
         # if not isinstance(target)
         target = BasicValue(target).extract_basicvalue()
 
@@ -524,16 +546,16 @@ class Interpreter():
     def walk_member_expression(self, node):
         target = self.visit(node.lhs)
 
-        if target is None:
-            self.error(node, ErrorType.TypeError, 'invalid member access: {} has no member {}'.format(target, node.identifier))
-            return None
+        # if target is None:
+        #     self.error(node, ErrorType.TypeError, 'invalid member access: {} has no member {}'.format(target, node.identifier))
+        #     return None
 
         target = self.basic_value_to_object(node, target)
 
         member = target.lookup_member(node.identifier.value)
 
         if member is None:
-            self.error(node, ErrorType.TypeError, 'object {} has no direct or inherited member `{}`'.format(target, node.identifier.value))
+            self.error(node, ErrorType.TypeError, '{} has no direct or inherited member `{}`'.format(obj_to_string(self, node, target), node.identifier.value))
 
         return (target, member)
 

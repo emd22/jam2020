@@ -10,6 +10,8 @@ class Keywords(Enum):
     Import = 'import'
     Return = 'return'
     While = 'while'
+    For = 'for'
+    In = 'in'
 
 class TokenType(Enum):
     NoneToken = auto()
@@ -63,9 +65,9 @@ class TokenType(Enum):
             
         if (value in self._value2member_map_):
             return TokenType(value)
-            
-        # TODO: add octal, hexadecimal and decimal numbers
+
         if value[0].isdigit() or value[0] == '.':
+            # what?
             if len(value) > 1:
                 if value[1] == 'x' or value[1] == 'X':
                     return TokenType.Number
@@ -159,7 +161,7 @@ class Lexer():
         
         string_type = None
         
-        while self.peek_char(0) != '':            
+        while self.peek_char(0) != '':    
             # multiline comments
             if self.peek_char(0) == '#':
                 self.read_char()
@@ -189,29 +191,49 @@ class Lexer():
                 self.push_token()
                 continue
                   
-            elif self.peek_char(0) in splitables and string_type == None:
-                continue_me_baybeh = False
+            elif self.peek_char(0) in splitables and string_type == None:                    
+                if not self.peek_char(-1).isspace() and self.peek_char(-1) not in splitables and len(self.token_data) > 0:
+                    self.push_token()
+
+                multichar = False
+
                 for tok in multichar_splitables:
                     idx = self.data.find(tok, self.index, self.index+len(tok))
                     if idx != -1:
                         for i in range(len(tok)):
                             self.token_data += self.read_char()
-                        continue_me_baybeh = True
 
-                if continue_me_baybeh:
-                    continue
+                        multichar = True
                 
-                if self.peek_char(-1).isdigit() and self.peek_char(0) == '.':
-                    self.token_data += self.read_char()
-                    continue
+                # if self.peek_char(-1).isdigit() and self.peek_char(0) == '.':
+                #     self.token_data += self.read_char()
+                #     continue
                     
-                if not self.peek_char(-1).isspace() and self.peek_char(-1) not in splitables:
-                    self.push_token()
-                    
-                self.token_data = self.read_char()
+                if not multichar:
+                    self.token_data = self.read_char()
+
                 self.push_token()
                 self.skip_whitespace()
-                continue                
+                continue
+            elif self.peek_char(0).isdigit() and string_type == None:
+                is_float = False
+
+                while self.peek_char(0).isdigit():
+                    self.token_data += self.read_char()
+
+                    if not is_float and self.peek_char(0) == '.':
+                        # if next char is identifier, its not float,
+                        # rather it could be something like
+                        # `1.to_str()`
+                        if not self.peek_char(1).isdigit():
+                            break
+
+                        self.token_data += self.read_char()
+                        is_float = True
+
+                self.push_token()
+                self.skip_whitespace()
+                continue           
   
             # check if string character
             if (self.peek_char(0) == '"'):
@@ -228,7 +250,8 @@ class Lexer():
                     string_type = None
                 elif string_type == None:
                     string_type = '\''
-                    
+
+            
             self.token_data += self.read_char()
         # still some data left in token_data, push to end
         if self.token_data != '':

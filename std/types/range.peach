@@ -1,0 +1,41 @@
+let Range = Type.extend({
+  instance = {
+    start
+    end
+    step
+
+    func __iterate__(__range, cb) {
+      let index = __range.start;
+      let res = null;
+
+      while index != __range.end {
+        res = cb(index);
+
+        index += __range.step;
+      }
+
+      return res;
+    }
+
+    func to_str(self) {
+      return "Range(" + self.start + ", " + self.end + ", " + self.step + ")";
+    }
+  }
+
+  func __construct__(self, start, end, step) {
+    self.start = start;
+    self.end = end;
+    self.step = step;
+
+    if end == null {
+      self.start = 0;
+      self.end = 1;
+    }
+
+    if step == null {
+      self.step = 1;
+    }
+
+    return self;
+  }
+});

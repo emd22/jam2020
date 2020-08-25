@@ -10,7 +10,7 @@ let Str = Array.extend({
   }
   
   func append(self, value) {
-    return __intern_str_append__(self._value, value);
+    return __intern_str_append__(self._value, value.to_str());
   }
   
   func __add__(self, value) {

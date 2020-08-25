@@ -47,6 +47,9 @@ class Error():
 class ErrorList():
     def __init__(self):
         self.errors = []
+
+    def clear_errors(self):
+        self.errors = []
     
     def push_error(self, error):
         self.errors.append(error)

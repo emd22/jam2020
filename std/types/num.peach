@@ -1,17 +1,17 @@
 let Num = Type.extend({
   name = 'Num'
+
   func __construct__(self, value) {
       self._value = value;
 
       return self;
   }
-  
 
   func to_int(self) {
-    return __intern_to_int__(self._value);
+    return Int.new(self._value);
   }
 
-  func to_str(self) {
-    return __intern_num_to_str__(self._value);
+  func to_float(self) {
+    return Float.new(self._value);
   }
 });

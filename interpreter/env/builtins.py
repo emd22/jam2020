@@ -6,7 +6,7 @@ from interpreter.env.builtin.arith import *
 from parser.node import NodeFunctionExpression, NodeCall, NodeArgumentList, NodeMemberExpression, NodeNone
 from error import ErrorType
 
-def _print_object(interpreter, node, obj):
+def obj_to_string(interpreter, node, obj):
     obj_str = str(obj)
 
     obj = interpreter.basic_value_to_object(node, obj)
@@ -30,7 +30,10 @@ def _print_object(interpreter, node, obj):
 
             obj_str = basic_value_repr.value
 
-    print(obj_str)
+    return obj_str
+
+def _print_object(interpreter, node, obj):
+    print(obj_to_string(interpreter, node, obj))
     
 def builtin_varinfo(arguments):
     interpreter = arguments.interpreter
@@ -105,9 +108,11 @@ def builtin_int_negate(arguments):
 
     return BasicValue(int(not target))
 
-# PLACEHOLDER
 def builtin_to_int(arguments):
-    return BasicValue(int(str(arguments.arguments[0].extract_value())))
+    return BasicValue(int(arguments.arguments[0].extract_value()))
+
+def builtin_to_float(arguments):
+    return BasicValue(float(arguments.arguments[0].extract_value()))
 
 def builtin_str_len(arguments):
     return BasicValue(len(str(arguments.arguments[0].extract_value())))

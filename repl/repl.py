@@ -3,6 +3,7 @@ from parser.parser import Parser
 from parser.node import AstNode, NodeType
 from parser.source_location import SourceLocation
 from interpreter.interpreter import Interpreter
+from interpreter.env.builtins import obj_to_string
 from error import InterpreterError
 from ast_printer import AstPrinter
 from util import LogColour
@@ -175,11 +176,156 @@ class Repl:
   That's the power that inheritance has to offer.
         """),
 
-        'arrays': ('', ''),
 
-        'operators': ('Builtin operators + operator overloading', ''),
 
-        'functors': ('Callable objects', ''),
+        'arrays': ('Using arrays', """
+  In your code, you may want to store multiple
+  contiguous objects together, such as a list
+  of names, products, etc. Arrays let you do this
+  in a way that won't clutter up your code with
+  lots of related variable names.
+
+  Arrays are also dynamically expandable, meaning
+  you can add and remove data from them as you please.
+  They can be manipulated in several ways, such as 
+  mapping each item in an array to a new item by means
+  of transforming it via a function.
+
+  Arrays can be iterated over one-by-one by using the
+  `for` loop -- more info on that in the `loops` section.
+
+  Here's an example of how to create an array and assign
+  it to a variable.
+
+  `let names = ['Jeffrey', 'Sam', 'Buddy'];`
+
+  The `names` array holds three strings, each
+  representing a name.
+
+  If you want to loop over these names, you can use `for`.
+
+  ```
+  for name in names {
+      print(name);
+  }
+  ```
+
+  Prints:
+  ```
+  Jeffrey
+  Sam
+  Buddy
+
+
+  To access a specific item in an array by index, use the
+  access operator (square brackets)
+
+  `print(names[1]); # prints 'Sam'`
+  ```
+
+  Arrays have multiple methods, including ways of checking whether
+  an object is contained by the array, appending new items to
+  an array, and creating unions or intersections with other arrays.
+
+  ```
+  names.contains('Buddy'); # true
+  names.append('Tiffany'); # names is now ['Jeffrey', 'Sam', 'Buddy', 'Tiffany']
+
+  names.union(['Sam', 'Tyler']) # returns ['Jeffrey', 'Sam', 'Buddy', 'Tyler']
+  names | ['Sam', 'Tyler'] # returns ['Jeffrey', 'Sam', 'Buddy', 'Tyler']
+  
+  names.intersection(['Sam', 'Tyler']) # returns ['Sam']
+  names & ['Sam', 'Tyler'] # returns ['Sam']
+  ```
+        """),
+
+        'loops': ('Loops and iterators', """
+  If you looked at the `arrays` walkthrough,
+  you learned how you can use `for` loops to walk
+  over the contents of an array.
+
+  While the `for` loop is powerful, in some instances
+  other types of loops may be called for. 
+
+  The `while` loop allows us to execute a block _until_
+  a condition we give it has been reached. Here's an example.
+
+  ```
+  let value = 10;
+  while value != 5 {
+      print(value);
+      value -= 1;
+  }
+  ```
+
+  Prints:
+  ```
+  10
+  9
+  8
+  7
+  6
+  ```
+
+  Easy peasy!
+
+  Did you know you can create your own iteratable objects, much
+  like how array works in the `for` loop?
+
+  Simply add a method to your object called `__iterate__`, taking
+  a single argument (along with the `self` argument). This argument
+  represents a callback that you will feed the current value of your
+  iterator into. Take a look in `std/types/array` to see for yourself!
+        """),
+
+        'operators': ('Builtin operators, operator overloading', """
+  In the `loops` section, we briefly spoke about how you can create
+  your own iteratable objects by means of adding a method named
+  `__iterate__` to your objects.
+
+  You'll be pleased to know that there are many more methods like this!
+  Every operator in the language (like '+', '-', '*', '!=', etc...) is
+  evaluated at runtime by calling a corresponding method.
+
+  Some examples of what method names operators are paired with are:
+  '+' - '__add__'
+  '-' - '__sub__'
+  '*' - '__mul__'
+  '/' - '__div__'
+
+  If you add these methods to your objects, you can actually use common
+  operators on them just like you would with numbers or other built-in
+  standard objects.
+
+  Here's an example of how you can use (and abuse) operator overloading
+
+  ```
+  let Person = Type.extend({
+      instance = {
+          name
+      }
+
+      func __construct__(self, name) {
+          self.name = name;
+      }
+
+      func __add__(self, other) {
+          return Person.new(self.name + ' ' + other.name);
+      }
+  })
+
+  let person1 = Person.new('Johnny');
+  let person2 = Person.new('Storm');
+
+  print(person1 + person2); # prints 'Johnny Storm'
+  ```
+
+  If you look at some of the built in types such as `std/types/int`,
+  you'll see how these methods work in action!
+        """),
+
+
+        'ranges': ('Ranges', ''),
 
         'modules': ('Using code from other files + using the `io` module', """
   Sometimes, especially in large projects,
@@ -283,11 +429,17 @@ class Repl:
         exit(0)
         
     def repl_import_defaults(self):
+        # tmp_lexer = Lexer(0, SourceLocation(Repl.REPL_FILENAME))
+        # tmp_parser = Parser(tmp_lexer)
         # generate import nodes
         repl_import_nodes = [
             Parser.import_file(Parser, 'std/__core__.peach'),
             Parser.import_file(Parser, 'std/__repl__.peach')
         ]
+
+        # if len(tmp_parser.error_list.errors) > 0:
+        #     tmp_parser.error_list.print_errors()
+        # else:
         # eval asts
         self.eval_line_ast(repl_import_nodes)
         
@@ -328,15 +480,19 @@ class Repl:
 
     def eval_line_ast(self, line_ast):
         last_value = None
+        last_node = None
 
         for node in line_ast:
+            last_node = node
             try:
                 last_value = self.interpreter.visit(node)
             except InterpreterError:
+                self.interpreter.error_list.clear_errors()
                 continue
 
         if last_value is not None:
-            print(f"{LogColour.Info}{repr(last_value)}{LogColour.Default}")
+            obj_str = obj_to_string(self.interpreter, last_node, last_value)
+            print(f"{LogColour.Info}{obj_str}{LogColour.Default}")
 
     def parse_line(self, line):
         lexer = Lexer(line, SourceLocation(Repl.REPL_FILENAME))

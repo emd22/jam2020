@@ -1,0 +1,13 @@
+func singleton(name, methods, instance) {
+  let obj = Type.extend({
+    name
+    _instance
+  });
+
+  obj.name = name;
+
+  obj.patch(methods);
+  obj._instance = obj.extend(instance);
+
+  return obj;
+}
