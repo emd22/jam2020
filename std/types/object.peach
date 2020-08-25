@@ -1,6 +1,6 @@
 Object.patch({
   func __bool__(self) {
-    return Bool.true;
+    return 1;
   }
   
   func __noteql__(self, other) {
