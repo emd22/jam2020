@@ -1,20 +1,16 @@
 import "examples/ttt.kb";
 
-let ex_ttt = ttt.new();
-ex_ttt.board_draw();
+func test() {
+    if 1 {
+        if 1 {
+            return 10;
+        }
+        return 1;
+    }
+    return 0;
+}
 
-let arr = [10, 20, 30]+[40, 60];
-print(arr);
+print(test());
 
-#let input_val = Console.read();
-#print(input_val);
-
-# let file = File.open('test.kb');
-# print(file);
-
-let a:str = "hello"+" world";
-print(a);
-
-let b:Bool = Bool.new(0);
-
-b = true;
+#let ex_ttt = ttt.new();
+#ex_ttt.play();

@@ -6,23 +6,23 @@ let ttt = Type.extend({
     X_SPOT = 2
     
     instance = {
-        moves = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        moves = [0, O_SPOT, 2, 0, 0, 0, 0, 0, 0]
     }
     __construct__ = (self){
     }
     
-    # Defined extrernally
+    play = (self){}
     board_gen = (self){}
-    board_draw = (self){}
     
     board_draw_top = (self){
     }
     get = (self, loc) {
         let ch:str = ' ';
-        if self.moves[loc] == self.O_SPOT {
+        let move = self.moves[loc].to_int();
+        if  move == self.O_SPOT {
             ch = 'O';
         }
-        elif self.moves[loc] == self.X_SPOT {
+        elif move == self.X_SPOT {
             ch = 'X';
         }
         return ch;
@@ -36,7 +36,7 @@ let ttt = Type.extend({
         print("+---+---+---+");
     }
     
-    board_draw_values = (self) {
+    board_draw = (self) {
         let index = 0;
         print("+---+---+---+");
         while index != 9 {
@@ -46,6 +46,17 @@ let ttt = Type.extend({
     }
 });
 
-ttt.board_draw = (self) {
-    self.board_draw_values();
+ttt.play = (self) {
+    let command = "";
+    
+    #let input_val = Console.read();
+    #print(input_val);
+    
+    print("=== TICTACTOE ===");
+    print("Input 'q' to exit");
+    
+    while command != "q" {
+        command = Console.read();
+        self.board_draw();
+    }
 };

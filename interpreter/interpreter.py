@@ -16,6 +16,10 @@ from lexer import TokenType, LexerToken
 
 from error import InterpreterError, ErrorList, ErrorType, Error
 
+class ReturnJump(Exception):
+    pass
+
+
 class Interpreter():
     def __init__(self, source_location):
         self.source_location = source_location
@@ -154,6 +158,7 @@ class Interpreter():
     def visit_FunctionReturn(self, node):
         value = self.visit(node.value_node)
         self.stack.push(value)
+        raise ReturnJump()
     
     def visit_Number(self, node):
         return BasicValue(node.value)
@@ -182,8 +187,6 @@ class Interpreter():
         # visit each statement in block
         for child in node.children:
             self.visit(child)
-            if type(child) == NodeFunctionReturn:
-                break
             
         if create_scope:
             self.close_scope()
@@ -269,7 +272,6 @@ class Interpreter():
             if isinstance(node.lhs, NodeMemberExpression):
                 is_member_call = True
                 this_value = self.visit(node.lhs.lhs)
-                #print('SPINAL {}'.format(this_value))
 
             if isinstance(target, BuiltinFunction):
                 args = []
@@ -353,7 +355,13 @@ class Interpreter():
 
         # todo this should be changed to a general purpose 'is true' check
         if expr_result.truthy:
-            return self.visit_Block(node.block)
+            value = None
+            try:
+                value = self.visit_Block(node.block)
+            except ReturnJump:
+                raise ReturnJump
+                return value
+            return value
         elif node.else_block is not None:
             # use visit rather than direct to visit_Block
             # since else_block can also be a NodeIfStatement in the
@@ -364,7 +372,12 @@ class Interpreter():
         expr_result = self.visit(node.expr)
         
         while expr_result.truthy:
-            self.visit_Block(node.block)
+            try:
+                self.visit_Block(node.block)
+            except ReturnJump:
+                raise ReturnJump
+                return
+                
             expr_result = self.visit(node.expr)
         
     def visit_ArgumentList(self, node):
@@ -400,19 +413,22 @@ class Interpreter():
         # visit our arguments
         self.visit(node.argument_list)
         # self.visit would normally be used here, but we need create_scope
-        self.visit_Block(node.block, create_scope=False)
-        
-        # check if block contains a return statement
-        last_child = None
-        for child in node.block.children:
-            last_child = child
-            if type(child) == NodeFunctionReturn:
-                break
+        try:
+            self.visit_Block(node.block, create_scope=False)
+            # check if block contains a return statement
+            last_child = None
+            for child in node.block.children:
+                last_child = child
+                if type(child) == NodeFunctionReturn:
+                    break
 
-        # no return statement, push return code 0 to the stack
-        if type(last_child) != NodeFunctionReturn:
-            self.stack.push(BasicValue(0)) # should just be null or something
-
+            # no return statement, push return code 0 to the stack
+            if type(last_child) != NodeFunctionReturn:
+                self.stack.push(BasicValue(0)) # should just be null or something
+                
+        except ReturnJump:
+            self.close_scope()
+            return            
         # done, close scope
         self.close_scope()
 

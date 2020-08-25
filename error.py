@@ -3,9 +3,6 @@ from util import LogColour
 
 class InterpreterError(Exception):
     pass
-    
-class ReturnException(Exception):
-    pass
 
 class ErrorType(Enum):
     Syntax = auto()

@@ -190,7 +190,8 @@ let str = Str;
 let num = Num;
 let float = Float;
 let type = Type;
+let bool = Bool;
 
-let true: Bool = Bool.true;
-let false: Bool = Bool.false;
+let true: bool = bool.true;
+let false: bool = bool.false;
 

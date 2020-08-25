@@ -306,7 +306,7 @@ class Parser():
                 node = None
         
         if self.current_token.type != TokenType.Semicolon:
-            self.error('Missing semicolon')
+            self.error('Missing semicolon (found {})'.format(self.current_token.type.name))
         # eat semicolon at end of statement
         self.eat(TokenType.Semicolon)
             

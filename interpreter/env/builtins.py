@@ -34,19 +34,22 @@ def _print_object(interpreter, node, obj):
     
 def builtin_varinfo(arguments):
     interpreter = arguments.interpreter
-    var = interpreter.current_scope.find_variable_info(arguments.arguments[0])
+    var = interpreter.current_scope.find_variable_info(arguments.arguments[0].value)
+    # TODO: replace with none value?
+    if var == None:
+        return BasicValue("")
 
-    #varinfo_str = f"Variable '{arguments[2]}'\n\t" \
-    #    f"decltype: {var.decltype}\n\t" \
-    #    f"value: {var.value_wrapper}\n\t" \
-    #    f"runtime type: {var.value_wrapper.lookup_type(interpreter.global_scope)}\n"
-        
-    varinfo_str = \
-    f"""Variable '{arguments.arguments[0]}'
-    decltype: {var.decltype}
-    value: {var.value_wrapper}
-    runtime type: {var.value_wrapper.lookup_type(interpreter.global_scope)}
-    """
+    #varinfo_str = \
+    #f"""Variable '{arguments.arguments[0]}'
+    #decltype: {var.decltype}
+    #value: {var.value_wrapper}
+    #runtime type: {var.value_wrapper.lookup_type(interpreter.global_scope)}
+    #"""
+    varinfo_str = f"Variable '{arguments.arguments[0]}'\n\t" \
+        f"decltype: {var.decltype}\n\t" \
+        f"value: {var.value_wrapper}\n\t" \
+        f"runtime type: {var.value_wrapper.lookup_type(interpreter.global_scope)}\n"
+    
 
     return BasicValue(varinfo_str)
 
