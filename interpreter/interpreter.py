@@ -157,14 +157,7 @@ class Interpreter():
         pass
     
     def visit_Declare(self, node):
-
-        # if node.type_node != None:
-        #     # set type to VariableType(type_node)
-        #     vtype = VariableType(node.type_node.token.value)
-        # else:
-        #     # no type node attached, default to VariableType.any
-        #     vtype = VariableType.Any
-        type_node_value = None # TODO default to Any or type of assignment
+        type_node_value = None
 
         if node.type_node is not None:
             type_node_value = self.visit(node.type_node)
@@ -213,10 +206,10 @@ class Interpreter():
 
     def assignment_typecheck(self, node, type_object, assignment_value):
         if type_object is None:
-            self.error(node.lhs, ErrorType.TypeError, 'Set with decltype but decltype resolved to None')
+            self.error(node, ErrorType.TypeError, 'Set with decltype but decltype resolved to None')
             return False
         elif not isinstance(type_object, BasicType):
-            self.error(node.lhs, ErrorType.TypeError, '{} is not a valid type object and cannot be used as a declaration type'.format(type_object))
+            self.error(node, ErrorType.TypeError, '{} is not a valid type object and cannot be used as a declaration type'.format(type_object))
             return False
         else:
             assignment_type = BasicValue(assignment_value).lookup_type(self.global_scope)
@@ -225,17 +218,17 @@ class Interpreter():
                 assignment_type = assignment_value.parent
 
             if assignment_type is None:
-                self.error(node.value, ErrorType.TypeError, 'Assignment requires type {} but could not resolve a runtime type of assignment value'.format(type_object))
+                self.error(node, ErrorType.TypeError, 'Assignment requires type {} but could not resolve a runtime type of assignment value'.format(type_object))
                 return None
             if isinstance(assignment_type, BasicValue):
                 assignment_type = assignment_type.extract_value()
 
             if not isinstance(assignment_type, BasicType):
-                self.error(node.value, ErrorType.TypeError, '{} is not a valid runtime type object'.format(assignment_type))
+                self.error(node, ErrorType.TypeError, '{} is not a valid runtime type object'.format(assignment_type))
                 return False
     
             if not type_object.compare_type(assignment_type):
-                self.error(node.value, ErrorType.TypeError, 'Attempted to assign <{}> to a value of type <{}>'.format(type_object.friendly_typename, assignment_type.friendly_typename))
+                self.error(node, ErrorType.TypeError, 'Attempted to assign <{}> to a value of type <{}>'.format(type_object.friendly_typename, assignment_type.friendly_typename))
                 return False
 
         return True
@@ -248,7 +241,7 @@ class Interpreter():
             value = self.visit(node.value)
             # TYPE CHECK
             if target_info.decltype is not None:
-                typecheck_value = self.assignment_typecheck(node, target_info.decltype, value)
+                typecheck_value = self.assignment_typecheck(node.lhs, target_info.decltype, value)
 
                 if typecheck_value is not True:
                     return None
@@ -306,35 +299,41 @@ class Interpreter():
                 is_member_call = True
                 this_value = self.visit(node.lhs.lhs)
 
+            collected_args = []
+
+            for arg in node.argument_list.arguments:
+                arg_visited = self.visit(arg)
+
+                if type(arg_visited) == list:
+                    [collected_args.append(arg) for arg in arg_visited]
+                else:
+                    collected_args.append(arg_visited)
+
             if isinstance(target, BuiltinFunction):
-                args = []
-                for arg in node.argument_list.arguments:
-                    args.append(self.visit(arg))
-                return self.call_builtin_function(target, this_value, args, node)
+                return self.call_builtin_function(target, this_value, collected_args, node)
             # user-defined function
             elif isinstance(target, NodeFunctionExpression):
-                collected_args = []
-
-                for arg in node.argument_list.arguments:
-                    arg_visited = self.visit(arg)
-
-                    if type(arg_visited) == list:
-                        [collected_args.append(arg) for arg in arg_visited]
-                    else:
-                        collected_args.append(arg_visited)
+                if is_member_call: # a.b('test') -> pass 'a' in as first argument
+                    collected_args.insert(0, this_value)
 
                 expected_arg_count = len(target.argument_list.arguments)
                 given_arg_count = len(collected_args)
-
-                if is_member_call: # a.b('test') -> pass 'a' in as first argument
-                    self.stack.push(this_value)
-                    given_arg_count += 1
 
                 if expected_arg_count != given_arg_count:
                     self.error(node, ErrorType.ArgumentError, 'method expected {} arguments, {} given'.format(expected_arg_count, given_arg_count))
                     return None
 
-                #TODO assert argument size is declared arg size - 1
+                # typecheck args
+                for i in range(0, expected_arg_count):
+                    target_arg = target.argument_list.arguments[i]
+                    call_arg = collected_args[i]
+
+                    type_node = target_arg.type_node
+
+                    if type_node is not None:
+                        decltype = self.visit(type_node)
+
+                        self.assignment_typecheck(target_arg, decltype, call_arg)
                 
                 # push arguments to stack
                 for arg in collected_args:

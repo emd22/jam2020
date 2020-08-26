@@ -28,6 +28,7 @@ import "std/types/str.peach";
 import "std/types/range.peach";
 
 # Type aliases
+let object = Object;
 let int = Int;
 let str = Str;
 let num = Num;
