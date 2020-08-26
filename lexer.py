@@ -32,6 +32,7 @@ class TokenType(Enum):
     Dot = '.'
     Comma = ','
     Not = '!'
+    Modulus = '%'
     LessThan = '<'
     LessThanEqual = '<='
     GreaterThan = '>'
@@ -150,7 +151,7 @@ class Lexer():
         return False
     
     def lex(self):
-        splitables = "(){}[];:+-*/=.,!|&~<>^"
+        splitables = "(){}[];:+-*/=.,!|&~<>^%"
         multichar_splitables = [
             '==', '!=', '<=', '>=',
             '+=', '-=', '*=', '/=',

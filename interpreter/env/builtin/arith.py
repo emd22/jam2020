@@ -49,6 +49,11 @@ def builtin_int_bitxor(arguments):
     
     return BasicValue(int(lhs ^ rhs))
 
+def builtin_int_mod(arguments):
+    lhs = arguments.arguments[0].extract_value()
+    rhs = arguments.arguments[1].extract_value()
+    
+    return BasicValue(int(lhs % rhs))
 
 from interpreter.basic_value import BasicValue
 
@@ -79,3 +84,9 @@ def builtin_float_div(arguments):
     rhs = arguments.arguments[1].extract_value()
     
     return BasicValue(float(lhs / rhs))
+    
+def builtin_float_mod(arguments):
+    lhs = arguments.arguments[0].extract_value()
+    rhs = arguments.arguments[1].extract_value()
+    
+    return BasicValue(float(lhs % rhs))

@@ -115,6 +115,8 @@ class Interpreter():
             funstr = '__mul__'
         elif node.token.type == TokenType.Divide:
             funstr = '__div__'
+        elif node.token.type == TokenType.Modulus:
+            funstr = '__mod__'
             
         elif node.token.type == TokenType.BitwiseOr:
             funstr = '__bitor__'

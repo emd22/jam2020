@@ -6,7 +6,7 @@ let ttt = Type.extend({
     X_SPOT = 2
     
     instance = {
-        moves = [0, O_SPOT, 2, 0, 0, 0, 0, 0, 0]
+        moves = [0, 0, 0, 0, 0, 0, 0, 0, 0]
     }
     __construct__ = (self){
     }
@@ -16,8 +16,10 @@ let ttt = Type.extend({
     
     board_draw_top = (self){
     }
+    
     get = (self, loc) {
-        let ch:str = ' ';
+        let strn = loc+1;
+        let ch:str = strn.to_str();
         let move = self.moves[loc].to_int();
         if  move == self.O_SPOT {
             ch = 'O';
@@ -26,6 +28,112 @@ let ttt = Type.extend({
             ch = 'X';
         }
         return ch;
+    }
+    
+    func clear_board(self) {
+        self.moves = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    }
+    
+    ai_find_next_spot = (self) {
+        import "std/time.peach";
+        import "std/math/random.peach";
+        
+        let available_spaces = [];
+        let index = 0;
+        for move in self.moves {
+            if move == 0 {
+                available_spaces += [index];
+            }
+            index += 1;
+        }
+        if available_spaces == [] {
+            print("Tied!");
+            self.clear_board();
+            self.ai_find_next_spot();
+            return 0;
+        }
+        
+        let rand = Random.range(Time.now(), available_spaces.len()-1, 0);
+        self.moves[available_spaces[rand]] = self.O_SPOT;
+        
+    }
+    
+    ai_move = (self) {
+        return self.ai_find_next_spot();
+    }
+    
+    check_index = (self, player, center_index, offset, check_offset) {
+        let index = 0;
+        
+        while index != 2 {
+            if self.moves[center_index-check_offset] == player {
+                if self.moves[center_index+check_offset] == player {
+                    if self.moves[center_index] == player {
+                        return player;                    
+                    }
+                }
+            }
+            center_index += offset;
+            index += 1;
+        }
+        return self.EMPTY;
+    }
+    
+    func check_diag_corner(self, player, top, bottom) {
+        if self.moves[top] == player {
+            if self.moves[bottom] == player {
+                return player;
+            }
+        }
+        return self.EMPTY;
+    }
+    
+    func check_diagonal(self, player) {
+        let tl = self.check_diag_corner(player, 0, 8);
+        let bl = self.check_diag_corner(player, 6, 3);
+        if tl {
+            return tl;
+        }
+        if bl {
+            return bl;
+        }
+        return self.EMPTY;
+    }
+    
+    func print_winner(self, player) {
+        if player == self.O_SPOT {
+            print("");
+            print("=== YOU LOSE! ==="); 
+            print("");
+        }
+        elif player == self.X_SPOT {
+            print("");
+            print("=== YOU WIN! ===");
+            print("");
+        }
+    }
+    
+    check_winner = (self, player) {
+        let colcheck = self.check_index(player, 3, 1, 3);
+        let rowcheck = self.check_index(player, 1, 3, 1);
+        let diagcheck = self.check_diagonal(player);
+        
+        if colcheck {
+            self.print_winner(player);
+            self.clear_board();
+            return true;
+        }
+        elif rowcheck {
+            self.print_winner(player);
+            self.clear_board();
+            return true;
+        }
+        elif diagcheck {
+            self.print_winner(player);
+            self.clear_board();
+            return true;
+        }
+        return false;
     }
     board_draw_row = (self, lc) {
         let v0 = self.get(lc);
@@ -48,16 +156,31 @@ let ttt = Type.extend({
 
 ttt.play = (self) {
     let command = "";
-
-    #let input_val = Console.read();
-    #print(input_val);
     
     print("=== TICTACTOE ===");
     print("Input 'q' to exit");
+    print("Input a number play a spot");
+    self.board_draw();
+    
+    let int_cmd = 0;
     
     while command != "q" {
         command = Console.read();
-        self.moves[command.to_int()] = self.X_SPOT;
-        self.board_draw();
+        if command == 'q' {
+            return 0;
+        }
+        int_cmd = command.to_int()-1;
+        if self.moves[int_cmd] == 0 {
+            self.moves[int_cmd] = self.X_SPOT;            
+            self.check_winner(self.X_SPOT);
+            self.ai_move();
+            if !self.check_winner(self.O_SPOT) {
+                self.board_draw();
+            }
+        }
+        else {
+            print("Space already taken!");
+            self.board_draw();
+        }
     }
 };

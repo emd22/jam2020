@@ -3,6 +3,7 @@ from interpreter.basic_object import BasicObject
 from interpreter.basic_value import BasicValue
 from interpreter.function import BuiltinFunction
 from interpreter.env.builtin.arith import *
+from interpreter.env.builtin.time import *
 from parser.node import NodeFunctionExpression, NodeCall, NodeArgumentList, NodeMemberExpression, NodeNone
 from error import ErrorType
 

@@ -313,7 +313,7 @@ class Parser():
                     break
                     
             argument_list = NodeArgumentList(arguments, self.current_token)
-            print("arguments = {}".format(arguments))
+            #print("arguments = {}".format(arguments))
         
         if argument_list is None:
             self.error('invalid argument list')
@@ -658,7 +658,7 @@ class Parser():
         
         expected_types = (
             TokenType.Equals,
-            TokenType.Plus, TokenType.Minus,
+            TokenType.Plus, TokenType.Minus, TokenType.Modulus,
             TokenType.BitwiseOr, TokenType.BitwiseAnd, TokenType.BitwiseXor,
             TokenType.Compare, TokenType.NotCompare,
             TokenType.Spaceship,

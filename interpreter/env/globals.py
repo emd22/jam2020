@@ -70,6 +70,7 @@ class Globals:
             ('__intern_int_sub__', VariableType.Function, BuiltinFunction("__intern_int_sub__", None, builtin_int_sub)),
             ('__intern_int_mul__', VariableType.Function, BuiltinFunction("__intern_int_mul__", None, builtin_int_mul)),
             ('__intern_int_div__', VariableType.Function, BuiltinFunction("__intern_int_div__", None, builtin_int_div)),
+            ('__intern_int_mod__', VariableType.Function, BuiltinFunction("__intern_int_mod__", None, builtin_int_mod)),
             ('__intern_int_bitor__', VariableType.Function, BuiltinFunction("__intern_int_bitor__", None, builtin_int_bitor)),
             ('__intern_int_bitand__', VariableType.Function, BuiltinFunction("__intern_int_bitand__", None, builtin_int_bitand)),
             ('__intern_int_bitxor__', VariableType.Function, BuiltinFunction("__intern_int_bitxor__", None, builtin_int_bitxor)),
@@ -78,6 +79,10 @@ class Globals:
             ('__intern_float_sub__', VariableType.Function, BuiltinFunction("__intern_float_sub__", None, builtin_float_sub)),
             ('__intern_float_mul__', VariableType.Function, BuiltinFunction("__intern_float_mul__", None, builtin_float_mul)),
             ('__intern_float_div__', VariableType.Function, BuiltinFunction("__intern_float_div__", None, builtin_float_div)),
+            ('__intern_float_mod__', VariableType.Function, BuiltinFunction("__intern_float_mod__", None, builtin_float_mod)),
+            
+            ('__intern_time_sleep__', VariableType.Function, BuiltinFunction("__intern_time_sleep__", None, builtin_time_sleep)),
+            ('__intern_time_now__',   VariableType.Function, BuiltinFunction("__intern_time_now__", None, builtin_time_now)),
         ]
 
     def vartype_to_typeobject(self, vartype):

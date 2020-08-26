@@ -44,4 +44,8 @@ let Float = Num.extend({
   func __div__(self, other) {     
       return __intern_float_div__(self._value, other._value);
   }
+  
+  func __mod__(self, other) {
+      return __intern_float_mod__(self._value, other._value);
+  }
 });

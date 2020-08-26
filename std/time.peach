@@ -1,0 +1,8 @@
+let Time = {
+    func now(self) {
+        return __intern_time_now__();
+    }
+    #func sleep(self, seconds) {
+    #    return __intern_time_sleep__(seconds);
+    #}
+};
