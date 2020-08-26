@@ -18,6 +18,7 @@ class NodeType(Enum):
     For      = auto()
     IfStatement  = auto()
     ArgumentList = auto()
+    SplatArgument = auto()
     FunctionReturn     = auto()
     FunctionExpression = auto()
     ArrayExpression   = auto()
@@ -152,6 +153,11 @@ class NodeArgumentList(AstNode):
     def __init__(self, arguments, token):
         AstNode.__init__(self, NodeType.ArgumentList, token)
         self.arguments = arguments
+
+class NodeSplatArgument(AstNode):
+    def __init__(self, expr, token):
+        AstNode.__init__(self, NodeType.SplatArgument, token)
+        self.expr = expr
 
 class NodeFunctionExpression(AstNode):
     def __init__(self, argument_list, block):

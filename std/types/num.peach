@@ -16,6 +16,6 @@ let Num = Type.extend({
   }
 
   func __call__(self, args) {
-    return self._value*(args[0]);
+    return self.__mul__(*args);
   }
 });

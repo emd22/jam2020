@@ -6,4 +6,9 @@ Func.patch({
   func __construct__(self, method) {
     self._method = method;
   }
+
+  func __call__(self, args) {
+    self._method(*args);
+  }
+
 });

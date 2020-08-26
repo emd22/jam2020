@@ -253,11 +253,11 @@ class Parser():
 
         argument_list = None
 
-        if self.current_token in (TokenType.RParen, TokenType.Identifier):
+        if not self.current_token.type in (TokenType.RParen, TokenType.Identifier, TokenType.Multiply):
             expr = self.parse_expression()
             self.expect_token(TokenType.RParen)
             return expr
-        
+
         # function declaration with no arguments, skip all argument checks and create empty arg list
         elif self.peek_token(0, expected_type=TokenType.RParen):
             argument_list = NodeArgumentList([], self.current_token)
@@ -278,13 +278,28 @@ class Parser():
                     is_vargs = True
                     has_vargs = True
 
-                if self.expect_token(TokenType.Identifier) is None:
-                    self.error('invalid argument format')
-                    break
+                argument = None
 
-                # parse declaration(vname:type) without let keyword
-                argument = self.parse_variable_declaration(require_keyword=False)
-                
+                if is_vargs:
+                    # eat *
+                    if self.eat(TokenType.Multiply) is None:
+                        return None
+
+                    token = self.current_token
+                    var = self.parse_variable()
+
+                    if var is None:
+                        return None
+
+                    argument = NodeSplatArgument(var, token)
+                else:
+                    if self.expect_token(TokenType.Identifier) is None:
+                        self.error('invalid argument format')
+                        break
+
+                    # parse declaration(vname:type) without let keyword
+                    argument = self.parse_variable_declaration(require_keyword=False)
+
                 if argument is None:
                     self.error('invalid argument')
                     break
@@ -298,6 +313,7 @@ class Parser():
                     break
                     
             argument_list = NodeArgumentList(arguments, self.current_token)
+            print("arguments = {}".format(arguments))
         
         if argument_list is None:
             self.error('invalid argument list')
@@ -456,10 +472,24 @@ class Parser():
             # skip until RParen
             while self.current_token.type != TokenType.RParen:
                 # append argument to ArgumentList node
-                argnames.append(self.parse_expression())
+                if self.peek_token(0, expected_type=TokenType.Multiply):
+                    # splat args
+                    vargs_token = self.current_token
+                    self.eat(TokenType.Multiply)
+                    splat_expr = self.parse_expression()
+
+                    if splat_expr is None:
+                        return None
+
+                    argnames.append(NodeSplatArgument(splat_expr, vargs_token))
+                else:
+                    argnames.append(self.parse_expression())
+
                 if self.current_token.type == TokenType.RParen:
                     break
+
                 self.eat()
+
                 if self.current_token.type == TokenType.NoneToken:
                     return NodeNone(last)
         

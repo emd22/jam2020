@@ -311,8 +311,18 @@ class Interpreter():
                 return self.call_builtin_function(target, this_value, args, node)
             # user-defined function
             elif isinstance(target, NodeFunctionExpression):
+                collected_args = []
+
+                for arg in node.argument_list.arguments:
+                    arg_visited = self.visit(arg)
+
+                    if type(arg_visited) == list:
+                        [collected_args.append(arg) for arg in arg_visited]
+                    else:
+                        collected_args.append(arg_visited)
+
                 expected_arg_count = len(target.argument_list.arguments)
-                given_arg_count = len(node.argument_list.arguments)
+                given_arg_count = len(collected_args)
 
                 if is_member_call: # a.b('test') -> pass 'a' in as first argument
                     self.stack.push(this_value)
@@ -325,8 +335,8 @@ class Interpreter():
                 #TODO assert argument size is declared arg size - 1
                 
                 # push arguments to stack
-                for arg in node.argument_list.arguments:
-                    self.stack.push(self.visit(arg))
+                for arg in collected_args:
+                    self.stack.push(arg)
                 
                 self.call_function_expression(target)
                 # the return value is pushed onto the stack at end of block or return
@@ -452,7 +462,33 @@ class Interpreter():
         )
 
         self.visit(member_access_call_node)
-        
+
+    def visit_SplatArgument(self, node):
+        # get variable
+        value = self.visit(node.expr)
+
+        if value is None:
+            self.error(node, ErrorType.TypeError, 'cannot perform splat operation: value is null')
+            return None
+
+        if not isinstance(value, BasicValue):
+            self.error(node, ErrorType.TypeError, 'cannot perform splat operation: value is not a BasicValue')
+            return None
+
+        extracted_value = value.extract_value()
+
+        if not isinstance(extracted_value, list):
+            self.error(node, ErrorType.TypeError, 'cannot perform splat operation: value must be an array')
+            return None
+
+        args = []
+
+        # loop over each item in array and push to stack
+        for item in extracted_value:
+            args.append(BasicValue(item).extract_basicvalue())
+
+        return args
+
     def visit_ArgumentList(self, node):
         # read arguments backwards as values are popped from stack
         for argument in reversed(node.arguments):
