@@ -120,6 +120,20 @@ def builtin_str_len(arguments):
 def builtin_array_len(arguments):
     return BasicValue(len(arguments.arguments[0].extract_value()))
 
+def builtin_array_set(arguments):
+    array = arguments.arguments[0].extract_value()
+    index = arguments.arguments[1].extract_value()
+    value = arguments.arguments[2].extract_value()
+
+    array[index] = value
+
+    return BasicValue(array)
+
+def builtin_array_clone(arguments):
+    array = arguments.arguments[0].extract_value()
+    new_array = array.copy()
+    return BasicValue(new_array)
+
 def builtin_array_at(arguments):
     obj = arguments.arguments[0].extract_value()
     index = arguments.arguments[1].extract_value()

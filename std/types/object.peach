@@ -2,7 +2,7 @@ Object.patch({
   func __bool__(self) {
     return 1;
   }
-  
+
   func __noteql__(self, other) {
     return !self.__eql__(other);
   }

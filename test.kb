@@ -1,25 +1,4 @@
 import "examples/ttt.peach";
 
-func test() {
-    if 1 {
-        if 1 {
-            return 10;
-        }
-        return 1;
-    }
-    return 0;
-}
-
-print(test());
-
-
-
-
 let ex_ttt = ttt.new();
-ex_ttt.board_draw();
-# print([1,2,3].contains(1));
-let arr = [10, 20, 30]+[40, 60];
-print(arr);
-
-#let ex_ttt = ttt.new();
-#ex_ttt.play();
+ex_ttt.play();

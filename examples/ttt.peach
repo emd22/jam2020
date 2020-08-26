@@ -48,7 +48,7 @@ let ttt = Type.extend({
 
 ttt.play = (self) {
     let command = "";
-    
+
     #let input_val = Console.read();
     #print(input_val);
     
@@ -57,6 +57,7 @@ ttt.play = (self) {
     
     while command != "q" {
         command = Console.read();
+        self.moves[command.to_int()] = self.X_SPOT;
         self.board_draw();
     }
 };

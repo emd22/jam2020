@@ -239,15 +239,11 @@ class Interpreter():
         return True
 
     def visit_Assign(self, node):
-        if node.value.type == NodeType.FunctionExpression:
-            value = node.value
-        else:
-            value = self.visit(node.value)
-
         if isinstance(node.lhs, NodeVariable):
             target_info = self.walk_variable(node.lhs)
             target_value = target_info.value_wrapper
 
+            value = self.visit(node.value)
             # TYPE CHECK
             if target_info.decltype is not None:
                 typecheck_value = self.assignment_typecheck(node, target_info.decltype, value)
@@ -256,6 +252,7 @@ class Interpreter():
                     return None
 
             target_value.assign_value(value)
+            return value
 
         elif isinstance(node.lhs, NodeMemberExpression):
             (target, member) = self.walk_member_expression(node.lhs)
@@ -269,13 +266,29 @@ class Interpreter():
             # TODO: type contract checking?
             # objects that have a type tagged on require undergoing validation of the property type
             # before assigning will work successfully?
+            value = self.visit(node.value)
             target.assign_member(member.name, value)
+            return value
+        elif isinstance(node.lhs, NodeArrayAccessExpression):
+            member_access_call_node = NodeCall(
+                NodeMemberExpression(
+                    node.lhs.lhs,
+                    LexerToken('__set__', TokenType.Identifier),
+                    node.lhs.token
+                ),
+                NodeArgumentList(
+                    [node.lhs.access_expr, node.value],
+
+                    node.lhs.token
+                )
+            )
+
+            return self.visit(member_access_call_node)
+
         else:
             self.error(node, ErrorType.TypeError, 'cannot assign {}'.format(node.lhs))
 
             return None
-        
-        return value
     
     def visit_Call(self, node):
         target = self.visit(node.lhs)
@@ -337,7 +350,6 @@ class Interpreter():
                     
                     NodeArgumentList(
                         [
-                            node.lhs,
                             NodeArrayExpression(
                                 node.argument_list.arguments,
                                 node.token
@@ -346,7 +358,6 @@ class Interpreter():
                         node.token
                     )
                 )
-
                 return self.visit(member_access_call_node)
 
         self.error(node, ErrorType.TypeError, 'invalid call: {} is not callable'.format(target))

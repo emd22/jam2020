@@ -14,4 +14,8 @@ let Num = Type.extend({
   func to_float(self) {
     return Float.new(self._value);
   }
+
+  func __call__(self, args) {
+    return self._value*(args[0]);
+  }
 });

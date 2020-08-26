@@ -29,4 +29,14 @@ let Str = Array.extend({
   func to_str(self) {
     return self._value;
   }
+
+  func to_int(self) {
+    let smap = "0123456789";
+    let value = 0;
+
+    for i in self._value {
+      value = value*10+smap.find(i);
+    }
+    return value;
+  }
 });

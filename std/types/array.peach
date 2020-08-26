@@ -51,6 +51,10 @@ let Array = Type.extend({
 
       return str_result;
     }
+    func __set__(self, index, value) {
+      __intern_array_set__(self._value, index, value);
+      return self;
+    }
   }
 
   func __construct__(self, value) {
@@ -58,24 +62,7 @@ let Array = Type.extend({
   }
 
   func contains(self, value) {
-    let index = self.len();
-    let has_value = false;
-
-    while index != 0 {
-      index -= 1;
-      let a_val = self[index];
-
-      if a_val == value {
-        has_value = true;
-      }
-
-      # TODO add break
-      if has_value {
-        index = 0;
-      }
-    }
-
-    return has_value;
+    return self.find(value) != -1;
   }
 
   func len(self) {
@@ -87,4 +74,23 @@ let Array = Type.extend({
     return __intern_array_append__(self._value, value);
   }
 
+  func update(self, index, value) {
+    return self.clone().modify(index, value);
+  }
+
+  func clone(self) {
+    return __intern_array_clone__(self._value);
+  }
+
+  func find(self, value) {
+    let length = self.len();
+    let index = 0;
+    while index != length {
+       if self._value[index] == value {
+         return index;
+       }
+       index += 1;
+    }
+    return -1;
+  }
 });
