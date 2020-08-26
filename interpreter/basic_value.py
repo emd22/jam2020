@@ -44,7 +44,6 @@ class BasicValue:
             return global_scope.find_variable_value('Null')
         else:
             raise Exception('could not get type for {}'.format(self))
-            #return global_scope.find_variable_value('Any')
 
     def clone(self):
         return BasicValue(self.value)

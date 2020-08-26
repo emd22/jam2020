@@ -5,10 +5,6 @@ __intern_object_patch__(Object, {
     return __intern_object_patch__(self, _patch);
   }
   func __eql__(self, other) {
-    if other.type() != self.type() {
-      return 0;
-    }
-
     return __intern_default_compare__(self, other);
   }
 });
@@ -32,6 +28,7 @@ import "std/types/str.peach";
 import "std/types/range.peach";
 
 # Type aliases
+let object = Object;
 let int = Int;
 let str = Str;
 let num = Num;

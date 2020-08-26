@@ -13,6 +13,10 @@ let Int = Num.extend({
     }
 
     func __eql__(self, other) {
+      if other.type() != self.type() {
+        return 0;
+      }
+
       return __intern_default_compare__(self._value, other._value);
     }
 
