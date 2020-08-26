@@ -33,8 +33,8 @@ class AstPrinter:
             self.print_func('(', indent_level)
 
             for argument in node.arguments:
-                self.print_ast(argument)
-                self.print_func(', ', indent_level)
+                self.print_ast(argument, indent_level + 1)
+                self.print_func(', ', indent_level + 1)
 
             self.print_func(')', indent_level)
         elif node.type == NodeType.FunctionExpression:

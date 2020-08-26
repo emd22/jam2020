@@ -1,4 +1,3 @@
-import "examples/ttt.peach";
-
-let ex_ttt = ttt.new();
-ex_ttt.play();
+# let x = (u + 'u'); # breaks
+let f = x -> x * 2;
+print(f(5));

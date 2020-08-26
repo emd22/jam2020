@@ -154,7 +154,8 @@ def builtin_array_append(arguments):
 
     if len(arguments.arguments) > 1:
         for arg in arguments.arguments[1:]:
-            value = value + arg.extract_value()
+            value.append(arg.extract_value())
+
     return BasicValue(value)
 
 def builtin_str_append(arguments):

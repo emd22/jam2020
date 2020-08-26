@@ -469,8 +469,8 @@ class Repl:
 
         (line_ast, error_list) = self.parse_line(line)
 
-        # for node in line_ast:
-        #     AstPrinter().print_ast(node)
+        for node in line_ast:
+            AstPrinter().print_ast(node)
 
         if len(error_list.errors) > 0:
             error_list.print_errors()

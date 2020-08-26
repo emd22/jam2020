@@ -46,6 +46,8 @@ class TokenType(Enum):
     Compare = '=='
     NotCompare = '!='
     Spaceship = '<=>'
+
+    Arrow = '->'
     
     PlusEquals = '+='
     MinusEquals = '-='
@@ -139,6 +141,8 @@ class Lexer():
     
     def push_token(self):
         token = LexerToken(self.token_data)
+        if self.token_data == '':
+            raise Exception('tokendata blank')
         token.location = self.source_location.col_row
         self.tokens.append(token)
         self.token_data = ""
@@ -155,7 +159,7 @@ class Lexer():
         multichar_splitables = [
             '==', '!=', '<=', '>=',
             '+=', '-=', '*=', '/=',
-            '==', '!='
+            '==', '!=', '->'
         ]
         
         self.skip_whitespace()

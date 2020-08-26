@@ -266,6 +266,7 @@ class Parser():
         else:
             arguments = []
             has_vargs = False
+            first_arg = True
 
             while True:
                 if has_vargs:
@@ -309,11 +310,17 @@ class Parser():
                 if self.peek_token(0, expected_type=TokenType.Comma):
                     # eat comma and continue on with argument list
                     self.eat(TokenType.Comma)
+
+                    first_arg = False
+                elif not first_arg and not self.peek_token(0, expected_type=TokenType.RParen) and not self.peek_token(1, expected_type=TokenType.LBrace):
+                    # not first arg and no comma, rollback?
+                    break
                 else:
                     break
+
+                
                     
             argument_list = NodeArgumentList(arguments, self.current_token)
-            #print("arguments = {}".format(arguments))
         
         if argument_list is None:
             self.error('invalid argument list')
@@ -326,11 +333,14 @@ class Parser():
 
     def parse_statement(self):
         token = self.current_token
+
+        if token.type == TokenType.NoneToken:
+            raise Exception('none')
         
         # empty statement, eat semicolon and try again
         if token.type == TokenType.Semicolon:
             self.eat(TokenType.Semicolon)
-            return self.parse_statement()
+            return NodeNone(token)
             
         if token.type == TokenType.Keyword:
             node = self.parse_keyword()
@@ -355,21 +365,19 @@ class Parser():
         
         if self.current_token.type != TokenType.Semicolon:
             self.error('Missing semicolon (found {})'.format(self.current_token.type.name))
-        # eat semicolon at end of statement
-        self.eat(TokenType.Semicolon)
+        else:
+            # eat semicolon at end of statement
+            self.eat(TokenType.Semicolon)
             
         return node
     
     def get_statements(self):
-        if self.current_token.type == TokenType.RBrace or self.current_token.type == TokenType.NoneToken:
-            return []
-
-        statements = [self.parse_statement()]
+        statements = []
         
         # read until no statements left
-        while self.current_token != None:
+        while self.current_token != LexerToken.NONE:
             # We hit last statement in block, break
-            if self.current_token.type in (TokenType.RBrace, TokenType.NoneToken):
+            if self.current_token.type == TokenType.RBrace:
                 break
                 
             statement = self.parse_statement()
@@ -505,6 +513,34 @@ class Parser():
             argument_list = self.parse_parenthesis()
         block = self.parse_block_statement()
         return NodeFunctionExpression(argument_list, block)
+
+    def parse_arrow_function(self, node):
+        token = self.current_token
+    
+        arguments = []
+
+        if isinstance(node, NodeVariable):
+            arguments.append(NodeDeclare(None, node.token, NodeNone(token)))
+
+        if self.eat(TokenType.Arrow) is None:
+            return None
+
+        expr = self.parse_expression()
+
+        return_node = NodeFunctionReturn(expr, token)
+
+        block = NodeBlock(token)
+        block.children = [return_node]
+
+        fun_expr = NodeFunctionExpression(
+            NodeArgumentList(
+                arguments,
+                token
+            ),
+            block
+        )
+
+        return fun_expr
     
     def parse_func_declaration(self):
         # func NAME(...) { ... }
@@ -625,6 +661,9 @@ class Parser():
         elif token.type == TokenType.Identifier:
             node = self.parse_variable()
 
+            if self.peek_token(0, expected_type=TokenType.Arrow):
+                node = self.parse_arrow_function(node)
+
 
         while node != None and self.current_token.type in (TokenType.Dot, TokenType.LParen, TokenType.LBracket):
             if self.peek_token(0, expected_type=TokenType.Dot):
@@ -662,6 +701,7 @@ class Parser():
             TokenType.BitwiseOr, TokenType.BitwiseAnd, TokenType.BitwiseXor,
             TokenType.Compare, TokenType.NotCompare,
             TokenType.Spaceship,
+            TokenType.Arrow,
             TokenType.LessThan, TokenType.GreaterThan,
             TokenType.LessThanEqual, TokenType.GreaterThanEqual
         ) + multiop_types

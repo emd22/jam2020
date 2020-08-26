@@ -93,4 +93,20 @@ let Array = Type.extend({
     }
     return -1;
   }
+
+  func map(self, cb) {
+    let result = [];
+    let remaining = self.len();
+    let len = self.len();
+
+    while remaining != 0 {
+      let index = len - remaining;
+
+      result.append(cb(self[index]));
+
+      remaining -= 1;
+    }
+
+    return result;
+  }
 });

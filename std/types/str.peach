@@ -3,6 +3,31 @@ let Str = Array.extend({
 
   instance = {
     _value = ''
+
+    func __mul__(self, value) {
+        let str = "";
+        while value {
+          str = self.append(str);
+          value -= 1;
+        }
+        return str;
+    }
+  
+    func __add__(self, value) {
+        return self.append(value);
+    }
+
+    func __eql__(self, other) {
+      if other.type() != self.type() {
+        return 0;
+      }
+
+      return __intern_default_compare__(self._value, other._value);
+    }
+
+    func to_str(self) {
+      return self._value;
+    }
   }
 
   func __construct__(self, value) {
@@ -11,23 +36,6 @@ let Str = Array.extend({
   
   func append(self, value) {
     return __intern_str_append__(self._value, value.to_str());
-  }
-  
-  func __add__(self, value) {
-      return self.append(value);
-  }
-
-  func __mul__(self, value) {
-      let str = "";
-      while value {
-        str = self.append(str);
-        value -= 1;
-      }
-      return str;
-  }
-
-  func to_str(self) {
-    return self._value;
   }
 
   func to_int(self) {
@@ -38,5 +46,9 @@ let Str = Array.extend({
       value = value*10+smap.find(i);
     }
     return value;
+  }
+
+  func to_str(self) {
+    return self.name;
   }
 });
