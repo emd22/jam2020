@@ -54,7 +54,7 @@ class Repl:
   add the two given numbers together.
 
   ```
-  let calculate: func = (first, second) {
+  func calculate(first: int, second: int) {
     return first + second;
   };
   ```
@@ -62,6 +62,16 @@ class Repl:
   Try creating the calculate function and calling it
     -- watch the output change depending on what numbers you
        pass in as `first` and `second`!
+
+  Functions can also be used as expressions. This allows
+  us to reassign functions and swap out object methods at
+  runtime. For example, to swap out the calculate method:
+
+  ```
+  calculate = func (first: int, second: int) {
+    return first * second;
+  }
+  ```
 
         """),
 
@@ -106,7 +116,8 @@ class Repl:
     instance: {
       name: str;
     },
-    say_hello: func = (self) {
+
+    func say_hello(self) {
       print("hello from: ");
       print(self.name);
     }
@@ -215,13 +226,13 @@ class Repl:
   Jeffrey
   Sam
   Buddy
+  ```
 
 
   To access a specific item in an array by index, use the
   access operator (square brackets)
 
   `print(names[1]); # prints 'Sam'`
-  ```
 
   Arrays have multiple methods, including ways of checking whether
   an object is contained by the array, appending new items to
@@ -469,8 +480,8 @@ class Repl:
 
         (line_ast, error_list) = self.parse_line(line)
 
-        for node in line_ast:
-            AstPrinter().print_ast(node)
+        # for node in line_ast:
+        #     AstPrinter().print_ast(node)
 
         if len(error_list.errors) > 0:
             error_list.print_errors()

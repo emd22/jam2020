@@ -1,6 +1,6 @@
 import "std/io/console.peach";
 import "std/io/file.peach";
 
-let print = (_value_) {
+let print = func (_value_) {
     return __intern_print__(_value_);
 }

@@ -1,6 +1,6 @@
 Func.patch({
   instance = {
-    _method: Func = (self) {}
+    _method: Func = func (self) {}
   }
 
   func __construct__(self, method) {

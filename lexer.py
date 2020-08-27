@@ -157,9 +157,11 @@ class Lexer():
     def lex(self):
         splitables = "(){}[];:+-*/=.,!|&~<>^%"
         multichar_splitables = [
+            '<=>',
             '==', '!=', '<=', '>=',
             '+=', '-=', '*=', '/=',
             '==', '!=', '->'
+            
         ]
         
         self.skip_whitespace()

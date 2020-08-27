@@ -4,18 +4,18 @@ let File: type = Type.extend({
     filename: str
   }
 
-  func __construct__(self, filename, data) {
+  func __construct__(self, filename: str, data: str) {
     self.filename = filename;
     self.data = data;
   }
 
-  func open(_, filename) {
+  func open(_, filename: str) {
     let data = __intern_file_read__(filename);
 
     return File.new(filename, data);
   }
 
-  func write(_, filename, value) {
+  func write(_, filename: str, value: str) {
     __intern_file_write__(filename, value);
 
     return File.new(filename, value);

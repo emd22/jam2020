@@ -7,17 +7,21 @@ let ttt = Type.extend({
     
     instance = {
         moves = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        func to_str(self) {
+            return "TicToeToe moves: " + self.moves.to_str();
+        }
     }
-    __construct__ = (self){
-    }
-    
-    play = (self){}
-    board_gen = (self){}
-    
-    board_draw_top = (self){
+    func __construct__(self){
     }
     
-    get = (self, loc) {
+    play = func (self){}
+    board_gen = func (self){}
+    
+    func board_draw_top(self){
+    }
+    
+    func get(self, loc) {
         let strn = loc+1;
         let ch:str = strn.to_str();
         let move = self.moves[loc].to_int();
@@ -34,7 +38,7 @@ let ttt = Type.extend({
         self.moves = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     }
     
-    ai_find_next_spot = (self) {
+    func ai_find_next_spot(self) {
         import "std/time.peach";
         import "std/math/random.peach";
         
@@ -42,7 +46,7 @@ let ttt = Type.extend({
         let index = 0;
         for move in self.moves {
             if move == 0 {
-                available_spaces += [index];
+                available_spaces += index;
             }
             index += 1;
         }
@@ -53,16 +57,16 @@ let ttt = Type.extend({
             return 0;
         }
         
-        let rand = Random.range(Time.now(), available_spaces.len()-1, 0);
+        let rand = Random.range(Time.now().to_int(), available_spaces.len()-1, 0);
         self.moves[available_spaces[rand]] = self.O_SPOT;
         
     }
     
-    ai_move = (self) {
+    func ai_move(self) {
         return self.ai_find_next_spot();
     }
     
-    check_index = (self, player, center_index, offset, check_offset) {
+    func check_index(self, player, center_index, offset, check_offset) {
         let index = 0;
         
         while index != 2 {
@@ -113,7 +117,7 @@ let ttt = Type.extend({
         }
     }
     
-    check_winner = (self, player) {
+    func check_winner(self, player) {
         let colcheck = self.check_index(player, 3, 1, 3);
         let rowcheck = self.check_index(player, 1, 3, 1);
         let diagcheck = self.check_diagonal(player);
@@ -135,7 +139,7 @@ let ttt = Type.extend({
         }
         return false;
     }
-    board_draw_row = (self, lc) {
+    func board_draw_row(self, lc) {
         let v0 = self.get(lc);
         let v1 = self.get(lc + 1);
         let v2 = self.get(lc + 2);
@@ -144,7 +148,7 @@ let ttt = Type.extend({
         print("+---+---+---+");
     }
     
-    board_draw = (self) {
+    func board_draw(self) {
         let index = 0;
         print("+---+---+---+");
         while index != 9 {
@@ -154,7 +158,7 @@ let ttt = Type.extend({
     }
 });
 
-ttt.play = (self) {
+ttt.play = func (self) {
     let command = "";
     
     print("=== TICTACTOE ===");

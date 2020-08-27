@@ -1,3 +1,4 @@
-# let x = (u + 'u'); # breaks
-let f = x -> x * 2;
-print(f(5));
+# import "examples/ttt.peach";
+# ttt.new().play();
+
+print(1 <=> 2);

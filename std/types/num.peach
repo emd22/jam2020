@@ -18,4 +18,8 @@ let Num = Type.extend({
   func __call__(self, args) {
     return self.__mul__(*args);
   }
+
+  func __get__(self) {
+    return self._value;
+  }
 });

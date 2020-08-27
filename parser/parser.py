@@ -234,10 +234,7 @@ class Parser():
         if require_operator:
             self.eat()
     
-        if self.current_token.type == TokenType.LParen:
-            value = self.parse_parenthesis()
-        else:
-            value = self.parse_expression()
+        value = self.parse_expression()
 
         if value is None:
             self.error('Invalid assignment')
@@ -246,23 +243,16 @@ class Parser():
         node = NodeAssign(node, value)
         
         return node
-    
-    def parse_parenthesis(self):
+
+    def parse_argument_list(self):
         # eat open parenthesis
-        self.eat(TokenType.LParen)
+        if self.eat(TokenType.LParen) is None:
+            return None
 
         argument_list = None
 
-        if not self.current_token.type in (TokenType.RParen, TokenType.Identifier, TokenType.Multiply):
-            expr = self.parse_expression()
-            self.expect_token(TokenType.RParen)
-            return expr
-
-        # function declaration with no arguments, skip all argument checks and create empty arg list
-        elif self.peek_token(0, expected_type=TokenType.RParen):
+        if self.peek_token(0, expected_type=TokenType.RParen):
             argument_list = NodeArgumentList([], self.current_token)
-            
-        # function definition with arguments
         else:
             arguments = []
             has_vargs = False
@@ -329,7 +319,17 @@ class Parser():
         # eat closing parenthesis
         self.eat(TokenType.RParen)
             
-        return self.parse_function_expression(argument_list)
+        return argument_list
+
+    
+    def parse_parenthesis(self):
+        # eat open parenthesis
+        self.eat(TokenType.LParen)
+
+        expr = self.parse_expression()
+        self.eat(TokenType.RParen)
+
+        return expr
 
     def parse_statement(self):
         token = self.current_token
@@ -508,10 +508,21 @@ class Parser():
         
         return NodeCall(node, args)
 
-    def parse_function_expression(self, argument_list=None):
+    def parse_function_expression(self):
+        token = self.current_token
+        if self.eat(TokenType.Keyword) is None:
+            return None
+
+        argument_list = self.parse_argument_list()
+
         if argument_list is None:
-            argument_list = self.parse_parenthesis()
+            return None
+
         block = self.parse_block_statement()
+
+        if block is None:
+            return None
+
         return NodeFunctionExpression(argument_list, block)
 
     def parse_arrow_function(self, node):
@@ -552,10 +563,20 @@ class Parser():
         name = self.current_token
         if self.eat(TokenType.Identifier) is None:
             return None
+
+        argument_list = self.parse_argument_list()
+        if argument_list is None:
+            return None
+
+        block = self.parse_block_statement()
+        if block is None:
+            return None
+
+        fun_expr = NodeFunctionExpression(argument_list, block)
         
         # parse assignment, parenthesis, etc.
-        val_node = self.parse_assignment_statement(NodeVariable(name), require_operator=False)
-        type_node = NodeVarType(type)
+        val_node = NodeAssign(NodeVariable(name), fun_expr)
+        type_node = NodeVariable(LexerToken('Func', TokenType.Identifier))
         node = NodeDeclare(type_node, name, val_node)
         
         return node
@@ -631,7 +652,7 @@ class Parser():
         token = self.current_token
 
         node = None
-        
+
         # handle +, -
         if token.type in (TokenType.Plus, TokenType.Minus):
             self.eat(token.type)
@@ -663,9 +684,19 @@ class Parser():
 
             if self.peek_token(0, expected_type=TokenType.Arrow):
                 node = self.parse_arrow_function(node)
+        elif token.type == TokenType.Keyword:
+            if Keywords(token.value) == Keywords.Func:
+                node = self.parse_function_expression()
+            else:
+                self.error('Invalid usage of keyword {} in expression'.format(token.value))
+                return None
 
+        if node is None:
+            self.error('Unexpected token: {}'.format(self.current_token))
+            self.eat()
+            return None
 
-        while node != None and self.current_token.type in (TokenType.Dot, TokenType.LParen, TokenType.LBracket):
+        while self.current_token.type in (TokenType.Dot, TokenType.LParen, TokenType.LBracket):
             if self.peek_token(0, expected_type=TokenType.Dot):
                 node = self.parse_member_expression(node)
             elif self.peek_token(0, expected_type=TokenType.LBracket):

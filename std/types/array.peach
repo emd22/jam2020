@@ -4,7 +4,7 @@ let Array = Type.extend({
   instance = {
     _value = []
 
-    func __at__(self, index) {
+    func __at__(self, index: int) {
       let value = __intern_array_at__(self._value, index);
       return value;
     }
@@ -52,6 +52,7 @@ let Array = Type.extend({
       return str_result;
     }
     func __set__(self, index, value) {
+      print(index);
       __intern_array_set__(self._value, index, value);
       return self;
     }

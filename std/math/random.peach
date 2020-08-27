@@ -1,12 +1,12 @@
 let Random = {
-    func random(self, seed) {
+    func random(self, seed: int) {
         let rand;
         let v0:int = 12345+(seed*1103515245);
         rand = v0.to_int() & 2147483647;
         return rand;
     }
     
-    func range(self, seed, high, low) {
+    func range(self, seed: int, high: int, low: int) {
         let rand = self.random(seed);
         return rand % (high-low+1)+low;
     }

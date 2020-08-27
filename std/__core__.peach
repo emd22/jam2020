@@ -1,10 +1,10 @@
 import "std/def.peach";
 import "std/io.peach";
 
-let varinfo = (_vname_) {
+let varinfo = func (_vname_) {
    return  __intern_varinfo__(_vname_);
 }
 
-let exit = (_rcode_) {
+let exit = func (_rcode_) {
     return __intern_exit__(_rcode_);
 }
