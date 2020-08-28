@@ -158,7 +158,7 @@ def builtin_array_at(arguments):
     obj = arguments.arguments[0].extract_value()
     index = arguments.arguments[1].extract_value()
 
-    if not index in obj:
+    if index > len(obj):
         # TODO make throw internal exception
         return BasicValue(None)
 
