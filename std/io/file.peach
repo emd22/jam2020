@@ -25,3 +25,7 @@ let File: type = Type.extend({
     return self.data;
   }
 });
+
+io.patch({
+    file = File
+});

@@ -1,10 +1,41 @@
 
 let Console: type = Type.extend({
-  func write(_, line) {
-    __intern_print__(line);
-  }
+    DEFAULT = 0
+    RED    = 1
+    YELLOW = 2
+    BLUE   = 3
+    BOLD   = 4
 
-  func read(_) {
-    return __intern_console_input__();
-  }
+    instance = {
+    }
+    
+    func write(_, line) {
+        __intern_console_write__(line);
+    }
+    
+    func color(_, num) {
+        __intern_print_color__(num);
+    }
+    
+    func write_color(self, color, msg) {
+        self.color(color);
+        self.write(msg);
+        self.color(self.DEFAULT);
+    }
+
+    func read(_) {
+        return __intern_console_input__();
+    }
+});
+
+
+io.patch({
+    console = Console.new()
+    
+    write = Console.write
+    read = Console.read
+
+    func write_color(self, color, msg) {
+        return self.console.write_color(color, msg);
+    }
 });

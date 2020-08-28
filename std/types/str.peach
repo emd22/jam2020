@@ -1,54 +1,100 @@
 let Str = Array.extend({
-  name = 'Str'
+    name = 'Str'
 
-  instance = {
-    _value = ''
+    instance = {
+        _value = ''
 
-    func __mul__(self, value) {
-        let str = "";
-        while value {
-          str = self.append(str);
-          value -= 1;
+        func __mul__(self, value) {
+            let str = "";
+            while value {
+              str = self.append(str);
+              value -= 1;
+            }
+            return str;
         }
-        return str;
-    }
-  
-    func __add__(self, value) {
-        return self.append(value);
+
+        func __add__(self, value) {
+            return self.append(value);
+        }
+
+        func __eql__(self, other) {
+            if other.type() != self.type() {
+                return 0;
+            }
+
+            return __intern_default_compare__(self._value, other._value);
+        }
+
+        func to_str(self) {
+          return self._value;
+        }
     }
 
-    func __eql__(self, other) {
-      if other.type() != self.type() {
-        return 0;
-      }
+    func __construct__(self, value) {
+        self._value = value;
+    }
 
-      return __intern_default_compare__(self._value, other._value);
+    func append(self, value) {
+        return __intern_str_append__(self._value, value.to_str());
+    }
+
+    func to_int(self) {
+        let smap = "0123456789";
+        let value = 0;
+
+        for i in self._value {
+            value = value*10+smap.find(i);
+        }
+        return value;
     }
 
     func to_str(self) {
-      return self._value;
+        return self.name;
     }
-  }
-
-  func __construct__(self, value) {
-    self._value = value;
-  }
-  
-  func append(self, value) {
-    return __intern_str_append__(self._value, value.to_str());
-  }
-
-  func to_int(self) {
-    let smap = "0123456789";
-    let value = 0;
-
-    for i in self._value {
-      value = value*10+smap.find(i);
+    
+    func _format(self, args) {
+        let newstr = "";
+        let length = self.len();
+        let index = 0;
+        let argidx = 0;
+        while index != length {
+            if self[index] == '%' {
+                newstr += (args[argidx]);
+                argidx += 1;
+            }
+            else {
+                newstr += self[index];
+            }
+            index += 1;
+        }
+        return newstr;
     }
-    return value;
-  }
-
-  func to_str(self) {
-    return self.name;
-  }
+    
+    func format() {}
 });
+
+
+Str.format = Func.extend({
+    instance = {
+        func __call__(self, args) {
+            let str = args[0];
+
+            let newstr = "";
+            let length = str.len();
+            let index = 0;
+            let argidx = 1;
+            while index != length {
+                if str[index] == '%' {
+                    newstr += (args[argidx]);
+                    argidx += 1;
+                }
+                else {
+                    newstr += str[index];
+                }
+                index += 1;
+            }
+            return newstr;
+        }
+    }
+}).new();
+

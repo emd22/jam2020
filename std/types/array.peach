@@ -51,8 +51,19 @@ let Array = Type.extend({
 
       return str_result;
     }
+    
+    func from(self, index) {
+        let len = self.len();
+        let newarr = [];
+        # TODO: < not !=
+        while index != len {
+            newarr += self[index];
+            index += 1;
+        }
+        return newarr;
+    }
+
     func __set__(self, index, value) {
-      print(index);
       __intern_array_set__(self._value, index, value);
       return self;
     }

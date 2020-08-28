@@ -173,9 +173,8 @@ class NodeFunctionReturn(AstNode):
 class NodeArrayExpression(AstNode):
     def __init__(self, members, token):
         # members are var decls
-        self.type = NodeType.ArrayExpression
+        AstNode.__init__(self, NodeType.ArrayExpression, token)
         self.members = members
-        self.token = token
 
 class NodeObjectExpression(AstNode):
     def __init__(self, members):

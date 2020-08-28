@@ -1,6 +1,18 @@
-import "std/io/console.peach";
-import "std/io/file.peach";
 
-let print = func (_value_) {
-    return __intern_print__(_value_);
-}
+
+let io = Type.extend({});
+
+import "std/io/file.peach";
+import "std/io/console.peach";
+
+
+let print = Func.extend({
+    instance = {
+        func __call__(self, _args) {
+            let args = _args.from(1);
+            return __intern_print__(*args);
+        }
+    }
+}).new();
+
+

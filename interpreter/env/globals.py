@@ -45,6 +45,8 @@ class Globals:
             ('Func', VariableType.Type, self.func_type),
             ('__intern_object_patch__', VariableType.Function, BuiltinFunction("__intern_object_patch__", None, builtin_object_patch)),
             ('__intern_print__', VariableType.Function, BuiltinFunction("__intern_print__", None, builtin_printn)),
+            ('__intern_console_write__', VariableType.Function, BuiltinFunction("__intern_console_write__", None, builtin_console_write)),
+            ('__intern_print_color__', VariableType.Function, BuiltinFunction("__intern_print_color__", None, builtin_print_color)),
             ('__intern_type_compare__', VariableType.Function, BuiltinFunction("__intern_type_compare__", None, builtin_type_compare)),
             ('__intern_default_compare__', VariableType.Function, BuiltinFunction("__intern_default_compare__", None, builtin_default_compare)),
             ('__intern_int_negate__', VariableType.Function, BuiltinFunction("__intern_int_negate__", None, builtin_int_negate)),

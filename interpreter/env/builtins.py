@@ -6,6 +6,7 @@ from interpreter.env.builtin.arith import *
 from interpreter.env.builtin.time import *
 from parser.node import NodeFunctionExpression, NodeCall, NodeArgumentList, NodeMemberExpression, NodeNone
 from error import ErrorType
+from util import LogColour
 
 def obj_to_string(interpreter, node, obj):
     obj_str = str(obj)
@@ -33,8 +34,8 @@ def obj_to_string(interpreter, node, obj):
 
     return obj_str
 
-def _print_object(interpreter, node, obj):
-    print(obj_to_string(interpreter, node, obj))
+def _print_object(interpreter, node, obj, end='\n'):
+    print(obj_to_string(interpreter, node, obj), end=end)
     
 def builtin_varinfo(arguments):
     interpreter = arguments.interpreter
@@ -57,6 +58,15 @@ def builtin_varinfo(arguments):
 
     return BasicValue(varinfo_str)
 
+def builtin_console_write(arguments):
+    interpreter = arguments.interpreter
+    node = arguments.node
+
+    for arg in arguments.arguments:
+        _print_object(interpreter, node, arg, end='')
+
+    return BasicValue(len(arguments.arguments))
+
 def builtin_printn(arguments):
     interpreter = arguments.interpreter
     node = arguments.node
@@ -65,6 +75,21 @@ def builtin_printn(arguments):
         _print_object(interpreter, node, arg)
 
     return BasicValue(len(arguments.arguments))
+
+def builtin_print_color(arguments):
+    color = arguments.arguments[0].extract_value()
+    if color == 0:
+        print(f"{LogColour.Default}", end="")
+    elif color == 1:
+        print(f"{LogColour.Error}", end="")
+    elif color == 2:
+        print(f"{LogColour.Warning}", end="")
+    elif color == 3:
+        print(f"{LogColour.Info}", end="")
+    elif color == 4:
+        print(f"{LogColour.Bold}", end="")
+    return BasicValue(0)
+    
 
 def builtin_exit(arguments):
     interpreter = arguments.interpreter

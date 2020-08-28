@@ -59,7 +59,6 @@ let ttt = Type.extend({
         
         let rand = Random.range(Time.now().to_int(), available_spaces.len()-1, 0);
         self.moves[available_spaces[rand]] = self.O_SPOT;
-        
     }
     
     func ai_move(self) {
@@ -122,6 +121,8 @@ let ttt = Type.extend({
         let rowcheck = self.check_index(player, 1, 3, 1);
         let diagcheck = self.check_diagonal(player);
         
+        print(colcheck+rowcheck+diagcheck);
+        
         if colcheck {
             self.print_winner(player);
             self.clear_board();
@@ -178,9 +179,9 @@ ttt.play = func (self) {
             self.moves[int_cmd] = self.X_SPOT;            
             self.check_winner(self.X_SPOT);
             self.ai_move();
-            if !self.check_winner(self.O_SPOT) {
-                self.board_draw();
-            }
+            self.check_winner(self.O_SPOT);
+            self.board_draw();
+
         }
         else {
             print("Space already taken!");

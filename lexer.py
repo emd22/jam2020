@@ -161,14 +161,33 @@ class Lexer():
             '==', '!=', '<=', '>=',
             '+=', '-=', '*=', '/=',
             '==', '!=', '->'
-            
         ]
+    
+        escape_chars = {
+            'n': '\n',
+            'b': '\b',
+            't': '\t',
+            'v': '\v',
+            'a': '\a',
+            'r': '\r',
+            '\\': '\\'
+        }
         
         self.skip_whitespace()
         
         string_type = None
         
         while self.peek_char(0) != '':    
+            if string_type and self.peek_char(0) == '\\':
+                # skip '/'
+                self.read_char()
+                escape_char = self.read_char()
+                if escape_char in escape_chars:
+                    self.token_data += escape_chars[escape_char]
+                else:
+                    print("Error: Unknown escape character '{}'".format(escape_char))
+                continue
+
             # multiline comments
             if self.peek_char(0) == '#':
                 self.read_char()
@@ -192,7 +211,7 @@ class Lexer():
                 # skip any whitespace after comment
                 self.skip_whitespace()
                 continue
-            
+                
             # encountered whitespace and not in string, push token
             elif string_type == None and self.skip_whitespace():
                 self.push_token()

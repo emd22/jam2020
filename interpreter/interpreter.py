@@ -150,7 +150,6 @@ class Interpreter():
                 node.token
             )
         )
-
         return self.visit(member_access_call_node)
         
     def visit_Type(self, node):
@@ -284,6 +283,23 @@ class Interpreter():
             self.error(node, ErrorType.TypeError, 'cannot assign {}'.format(node.lhs))
 
             return None
+            
+    def collect_args(self, node):
+        collected_args = []
+        
+        for arg in node.argument_list.arguments:
+                arg_visited = self.visit(arg)
+                
+                #if arg.type == NodeType.SplatArgument:
+                #    print("encountered splat: {}".format(arg_visited))
+
+                if type(arg_visited) == list:
+                    for arg in arg_visited:
+                        collected_args.append(arg)
+                else:
+                    collected_args.append(arg_visited)
+
+        return collected_args
     
     def visit_Call(self, node):
         target = self.visit(node.lhs)
@@ -291,30 +307,31 @@ class Interpreter():
         # TODO make it an error if you declare the type function should return and no value provided
 
         if target is not None:
-            this_value = None
+            this_arg = None
             is_member_call = False
 
             # for `a.b()`, pass in `a` as the this value.
             if isinstance(node.lhs, NodeMemberExpression):
                 is_member_call = True
-                this_value = self.visit(node.lhs.lhs)
-
-            collected_args = []
-
-            for arg in node.argument_list.arguments:
-                arg_visited = self.visit(arg)
-
-                if type(arg_visited) == list:
-                    [collected_args.append(arg) for arg in arg_visited]
-                else:
-                    collected_args.append(arg_visited)
+                this_arg = node.lhs.lhs
 
             if isinstance(target, BuiltinFunction):
+                collected_args = self.collect_args(node)
+                
+                this_value = None
+                
+                if this_arg is not None:
+                    this_value = self.visit(this_arg)
+                
                 return self.call_builtin_function(target, this_value, collected_args, node)
             # user-defined function
             elif isinstance(target, NodeFunctionExpression):
+                collected_args = self.collect_args(node)
                 if is_member_call: # a.b('test') -> pass 'a' in as first argument
-                    collected_args.insert(0, this_value)
+                    if this_arg is not None:
+                        this_value = self.visit(this_arg)
+                        if this_value is not None:
+                            collected_args = [this_value, *collected_args]
 
                 expected_arg_count = len(target.argument_list.arguments)
                 given_arg_count = len(collected_args)
@@ -334,7 +351,7 @@ class Interpreter():
                         decltype = self.visit(type_node)
 
                         self.assignment_typecheck(target_arg, decltype, call_arg)
-                
+
                 # push arguments to stack
                 for arg in collected_args:
                     self.stack.push(arg)
@@ -351,18 +368,20 @@ class Interpreter():
 
                 return result
             else: # objects......
-
+                if this_arg is None:
+                    this_arg = NodeNone(node.token)
+                    
+                splatted_args = [this_arg, *node.argument_list.arguments]
                 member_access_call_node = NodeCall(
                     NodeMemberExpression(
                         node.lhs,
                         LexerToken('__call__', TokenType.Identifier),
                         node.token
                     ),
-                    
                     NodeArgumentList(
                         [
                             NodeArrayExpression(
-                                node.argument_list.arguments,
+                                [this_arg]+node.argument_list.arguments,
                                 node.token
                             )
                         ],
@@ -375,7 +394,6 @@ class Interpreter():
 
     def walk_variable(self, node):
         var = self.current_scope.find_variable_info(node.value)
-
         if var is None:
             self.error(node, ErrorType.DoesNotExist, "Referencing undefined variable '{}'".format(node.value))
             return None
@@ -487,6 +505,7 @@ class Interpreter():
         # loop over each item in array and push to stack
         for item in extracted_value:
             args.append(BasicValue(item).extract_basicvalue())
+
 
         return args
 
