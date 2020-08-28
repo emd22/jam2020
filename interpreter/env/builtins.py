@@ -40,16 +40,10 @@ def _print_object(interpreter, node, obj, end='\n'):
 def builtin_varinfo(arguments):
     interpreter = arguments.interpreter
     var = interpreter.current_scope.find_variable_info(arguments.arguments[0].value)
-    # TODO: replace with none value?
+
     if var == None:
         return BasicValue("")
 
-    #varinfo_str = \
-    #f"""Variable '{arguments.arguments[0]}'
-    #decltype: {var.decltype}
-    #value: {var.value_wrapper}
-    #runtime type: {var.value_wrapper.lookup_type(interpreter.global_scope)}
-    #"""
     varinfo_str = f"Variable '{arguments.arguments[0]}'\n\t" \
         f"decltype: {var.decltype}\n\t" \
         f"value: {var.value_wrapper}\n\t" \
@@ -164,8 +158,9 @@ def builtin_array_at(arguments):
     obj = arguments.arguments[0].extract_value()
     index = arguments.arguments[1].extract_value()
 
-    # TODO: exception for out of range,
-    # check index is int, etc.
+    if not index in obj:
+        # TODO make throw internal exception
+        return BasicValue(None)
 
     return BasicValue(obj[index])
     
@@ -268,7 +263,6 @@ def builtin_object_patch(arguments):
         interpreter.error(this_object, ErrorType.TypeError, 'Cannot patch object with non-BasicObject value: {}'.format(patch))
         return None
 
-    # TODO: types of objects
     for (member_name, member_value) in patch.members.items():
         target.assign_member(member_name, member_value)
 
@@ -340,9 +334,12 @@ def builtin_file_read(arguments):
 
     file_path = arguments.arguments[0]
 
-    # TODO some kind of exception checking system
-    f = open(file_path.extract_value(), 'r')
-    s = f.read()
+    # TODO better exception handling - throw internal exception
+    try:
+        f = open(file_path.extract_value(), 'r')
+        s = f.read()
+    except:
+        s = ""
 
     return BasicValue(s)
 

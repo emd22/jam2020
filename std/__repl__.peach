@@ -1,3 +1,16 @@
 # Handy Repl functions and variables
 
+func tictactoe() {
+  import "examples/ttt.peach";
 
+  ttt.new().play();
+}
+
+let sep_str = '\n' + (' ' * 12) + ('-' * 30) + '\n';
+
+io.write(sep_str);
+io.write_color(Console.RED, ' *** ');
+io.write_color(Console.BOLD, "Run `tictactoe();` to start a game of TicTacToe");
+io.write_color(Console.RED, ' *** ');
+io.write(sep_str);
+io.write('\n');

@@ -100,10 +100,6 @@ class Interpreter():
         return self.visit(member_access_call_node)
             
     def visit_BinOp(self, node):
-        # left = self.visit(node.left)
-        # right = self.visit(node.right)
-        # TODO operator overloading by calling method on obj
-        # Int method __add__ could just be a builtin method intern_int_add
         funstr = '__noop__'
         
         if node.token.type == TokenType.Plus:
@@ -257,9 +253,6 @@ class Interpreter():
 
             target_type = target.parent
 
-            # TODO: type contract checking?
-            # objects that have a type tagged on require undergoing validation of the property type
-            # before assigning will work successfully?
             value = self.visit(node.value)
             target.assign_member(member.name, value)
             return value
@@ -303,8 +296,7 @@ class Interpreter():
     
     def visit_Call(self, node):
         target = self.visit(node.lhs)
-        return_value = 0 # TODO make Null-ish type -- "Unset" type ?
-        # TODO make it an error if you declare the type function should return and no value provided
+        return_value = 0
 
         if target is not None:
             this_arg = None
@@ -436,7 +428,6 @@ class Interpreter():
         return int_result != 0
 
     def visit_IfStatement(self, node):
-        # todo this should be changed to a general purpose 'is true' check
         truthy_result = self.check_object_truthy(node.expr)
 
         if truthy_result:
@@ -516,7 +507,6 @@ class Interpreter():
             value = self.stack.pop()
             # declare variable
             self.visit_Declare(argument)
-            # TODO: clean up
             # set variable to passed in value
             if isinstance(value, AstNode):
                 value = self.visit(value)
@@ -589,7 +579,6 @@ class Interpreter():
         # close scope for members
         self.close_scope()
 
-        # TODO make parent be the global `Object` type.
         return BasicObject(parent=None, members=members)
 
     def basic_value_to_object(self, node, target):

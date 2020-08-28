@@ -431,8 +431,32 @@ class Repl:
     }
 
     def __init__(self):
+        self._walkthrough_messages = self.load_walkthrough_messages()
+
+        self.welcome_message = """
+        ----- R E P L C E P T I O N -----
+
+        An interactive console that
+        allows you to write quick
+        statements and learn more about
+        how the language works.
+
+                    ------
+
+        Let's get started!
+        To learn more about the language,
+        type one of the following:
+
+        {}
+            """.format('\n  '.join(map(lambda key: "{}--  {}".format(key.ljust(16), self._walkthrough_messages[key][0]), self._walkthrough_messages)))
+
+
         self.interpreter = Interpreter(SourceLocation(Repl.REPL_FILENAME))
+        
+        print(self.welcome_message)
+                
         self.repl_import_defaults()
+
         signal.signal(signal.SIGINT, self.at_exit)
         
     def at_exit(self, signal, frame):
@@ -440,25 +464,49 @@ class Repl:
         exit(0)
         
     def repl_import_defaults(self):
-        # tmp_lexer = Lexer(0, SourceLocation(Repl.REPL_FILENAME))
-        # tmp_parser = Parser(tmp_lexer)
+
         # generate import nodes
         repl_import_nodes = [
             Parser.import_file(Parser, 'std/__core__.peach'),
             Parser.import_file(Parser, 'std/__repl__.peach')
         ]
 
-        # if len(tmp_parser.error_list.errors) > 0:
-        #     tmp_parser.error_list.print_errors()
-        # else:
         # eval asts
         self.eval_line_ast(repl_import_nodes)
         
     def loop(self):
-        print(REPL_WELCOME_MESSAGE)
-        
         while True:
             self.accept_input()
+
+    def load_walkthrough_content(self, filename):
+        file_content = open('./doc/{}'.format(filename)).readlines()
+
+        title = file_content[0:1][0].strip().replace('#', '')
+        content = ''.join(file_content[1:]).strip()
+
+        return (title, content)
+
+    def load_walkthrough_messages(self):
+        from os import walk, path
+        import re
+
+        f = []
+        for (dirpath, dirnames, filenames) in walk('./doc'):
+            f.extend(filenames)
+            break
+
+        walkthrough_messages = {}
+
+        for filename in sorted(f):
+            try:
+                x = re.search("\d\d_([A-Za-z]*)\.md", filename)
+                command_name = x[1]
+
+                walkthrough_messages[command_name] = self.load_walkthrough_content(filename)
+            except:
+                print("Failed to load documentation file {}".format(filename))
+
+        return walkthrough_messages
 
     def accept_input(self):
         line = ""
@@ -466,8 +514,8 @@ class Repl:
         line = input('>>> ')
 
         trimmed = line.strip()
-        if trimmed in Repl.WALKTHROUGH_MESSAGES:
-            print(Repl.WALKTHROUGH_MESSAGES[trimmed][1])
+        if trimmed in self._walkthrough_messages:
+            print(self._walkthrough_messages[trimmed][1])
 
             return
 
@@ -533,22 +581,3 @@ class Repl:
                 bracket_counter -= 1
 
         return (brace_counter, bracket_counter, paren_counter)
-
-REPL_WELCOME_MESSAGE = """
------ R E P L C E P T I O N -----
-
-  An interactive console that
-  allows you to write quick
-  statements and learn more about
-  how the language works.
-
-            ------
-
-  Let's get started!
-  To learn more about the language,
-  type one of the following:
-
-  {}
-
----------------------------------
-    """.format('\n  '.join(map(lambda key: "{}--  {}".format(key.ljust(16), Repl.WALKTHROUGH_MESSAGES[key][0]), Repl.WALKTHROUGH_MESSAGES)))

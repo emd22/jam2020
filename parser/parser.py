@@ -612,7 +612,6 @@ class Parser():
         else:
             val_node = NodeNone(name)
 
-        # TODO: multiple variable declaration(e.g let var0,var1)
         vnodes = NodeDeclare(type_node, name, val_node)
         
         return vnodes
