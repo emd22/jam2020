@@ -26,19 +26,18 @@ def main():
         print('Script \'{}\' could not be found'.format(filename))
         
     data = fp.read()
-    
+
     lexer = Lexer(data, SourceLocation(filename))
     lexer.lex()
-    
-    #for token in lexer.tokens:
-    #    print(token)
 
     parser = Parser(lexer)
     
+    # all files include the __core__ file which contains internal types and methods
     global_import_nodes = [
         parser.import_file('std/__core__.peach')
     ]
     
+    # import nodes should be located at top of tree
     ast = global_import_nodes+parser.parse()
 
     # for node in ast:
