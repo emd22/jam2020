@@ -86,7 +86,7 @@ let ttt = Type.extend({
     func check_diag_corner(self, player, top, bottom) {
         if self.moves[top] == player {
             if self.moves[bottom] == player {
-                if self.moves[5] == player {
+                if self.moves[4] == player {
                     return player;
                 }
             }
