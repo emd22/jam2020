@@ -9,27 +9,27 @@ Every operator in the language (like '+', '-', '*', '!=', etc...) is
 evaluated at runtime by calling a corresponding method.
 
 Some examples of what method names operators are paired with are:
-`+` - `__add__`
-`-` - `__sub__`
-`*` - `__mul__`
-`/` - `__div__`
-`%` - `__mod__`
-`==` - `__eql__`
-`!=` - `__noteql__`
-`!` - `__not__`
-`<=>` - `__compare__` (spaceship operator: return -1 if less than, 0 if equal, 1 if greater than)
-`<` - `__lt__` (defaults to `(self <=> other) == -1;`)
-`<=` - `__lte__` (defaults to `(self <=> other) != 1;`)
-`>` - `__gt__` (defaults to `(self <=> other) == 1;`)
-`>=` - `__gte__` (defaults to `(self <=> other) != -1;`)
-`&` - `__bitand__`
-`|` - `__bitor__`
-`^` - `__bitxor__`
-`&&` - `__and__`
-`||` - `__or__`
-`()` (function call) - `__call__`
-`if ...` (boolean conversion) - `__bool__`
-`for x in ...` (iteration) - `__iterate__`
+* `+` - `__add__`
+* `-` - `__sub__`
+* `*` - `__mul__`
+* `/` - `__div__`
+* `%` - `__mod__`
+* `==` - `__eql__`
+* `!=` - `__noteql__`
+* `!` - `__not__`
+* `<=>` - `__compare__` (spaceship operator: return -1 if less than, 0 if equal, 1 if greater than)
+* `<` - `__lt__` (defaults to `(self <=> other) == -1;`)
+* `<=` - `__lte__` (defaults to `(self <=> other) != 1;`)
+* `>` - `__gt__` (defaults to `(self <=> other) == 1;`)
+* `>=` - `__gte__` (defaults to `(self <=> other) != -1;`)
+* `&` - `__bitand__`
+* `|` - `__bitor__`
+* `^` - `__bitxor__`
+* `&&` - `__and__`
+* `||` - `__or__`
+* `()` (function call) - `__call__`
+* `if ...` (boolean conversion) - `__bool__`
+* `for x in ...` (iteration) - `__iterate__`
 
 If you add these methods to your objects, you can actually use common
 operators on them just like you would with numbers or other built-in
