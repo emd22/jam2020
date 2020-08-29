@@ -13,7 +13,7 @@ mapping each item in an array to a new item by means
 of transforming it via a function.
 
 Arrays can be iterated over one-by-one by using the
-`for` loop -- more info on that in the `loops` section.
+`for` loop -- more info on that in the `interators` section.
 
 Here's an example of how to create an array and assign
 it to a variable.

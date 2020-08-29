@@ -1,6 +1,6 @@
 ### Available operators + Operator overloading
 
-In the `loops` section, we briefly spoke about how you can create
+In the `iterators` section, we briefly spoke about how you can create
 your own iteratable objects by means of adding a method named
 `__iterate__` to your objects.
 
