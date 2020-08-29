@@ -2,7 +2,10 @@ let Time = {
     func now(self) {
         return __intern_time_now__();
     }
-    #func sleep(self, seconds) {
-    #    return __intern_time_sleep__(seconds);
-    #}
+    func sleep(self, seconds) {
+        if seconds <= 0 {
+            return 0;
+        }
+        return __intern_time_sleep__(seconds);
+    }
 };

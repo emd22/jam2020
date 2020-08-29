@@ -50,8 +50,9 @@ let ttt = Type.extend({
             }
             index += 1;
         }
-        if available_spaces == [] {
-            print("Tied!");
+        if available_spaces.len() == 0 {
+            self.board_draw();
+            print("\n=== TIED! ===\n");
             self.clear_board();
             self.ai_find_next_spot();
             return 0;
@@ -59,6 +60,21 @@ let ttt = Type.extend({
         
         let rand = random.range(Time.now().to_int(), available_spaces.len()-1, 0);
         self.moves[available_spaces[rand]] = self.O_SPOT;
+
+        available_spaces = [];
+        for move in self.moves {
+            if move == 0 {
+                available_spaces += index;
+            }
+            index += 1;
+        }
+        if available_spaces.len() == 0 {
+            self.board_draw();
+            print("\n=== TIED! ===\n");
+            self.clear_board();
+            self.ai_find_next_spot();
+            return 0;
+        }
     }
     
     func ai_move(self) {
@@ -109,14 +125,12 @@ let ttt = Type.extend({
     
     func print_winner(self, player) {
         if player == self.O_SPOT {
-            print("");
-            print("=== YOU LOSE! ==="); 
-            print("");
+            self.board_draw();
+            print("\n=== YOU LOSE! ===\n"); 
         }
         elif player == self.X_SPOT {
-            print("");
-            print("=== YOU WIN! ===");
-            print("");
+            self.board_draw();
+            print("\n=== YOU WIN! ===\n");
         }
     }
     
@@ -124,7 +138,7 @@ let ttt = Type.extend({
         # start at left side in middle of board, checking above and below, and move by 1 spot.
         let colcheck = self.check_index(player, 3, 1, 3);
         # start at top in middle of board, checking left and right and moving down by board width
-        let rowcheck = self.check_index(player, 1, 2, 1);
+        let rowcheck = self.check_index(player, 1, 3, 1);
 
         let diagcheck = self.check_diagonal(player);
         

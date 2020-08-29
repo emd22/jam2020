@@ -43,37 +43,58 @@ let Str = Array.extend({
     }
 
     func to_int(self) {
+        let len = self.len();
+        
+        if len <= 0 {
+            return 0;
+        }
+
         let smap = "0123456789";
         let value = 0;
 
-        for i in self._value {
-            value = value*10+smap.find(i);
+        let negative = 0;
+
+        let midx = 0;
+        let index = 0;
+        
+        # apply any unary negative
+        while self[index] == '-' {
+            negative = !negative;
+            index += 1;
+        }
+        
+        while index != len {
+
+            midx = smap.find(self[index]);
+            # .find returns -1 if value does not exist in array
+            if midx == -1 {
+                print("Error: Non-integer character in string");
+                return 0;
+            }
+            # find index in string
+            value = value * 10 + midx;
+            index += 1;
+        }
+        if negative {
+            return -value;
         }
         return value;
+    }
+
+    func reverse(self) {
+        let newstr = "";
+        let index = self.len();
+        while index {
+            newstr = newstr.append(self._value[index-1]);
+            index -= 1;
+        }
+        print("RETURN ME "+newstr);
+        return newstr;
     }
 
     func to_str(self) {
         return self.name;
     }
-    
-    func _format(self, args) {
-        let newstr = "";
-        let length = self.len();
-        let index = 0;
-        let argidx = 0;
-        while index != length {
-            if self[index] == '%' {
-                newstr += (args[argidx]);
-                argidx += 1;
-            }
-            else {
-                newstr += self[index];
-            }
-            index += 1;
-        }
-        return newstr;
-    }
-    
     func format() {}
 });
 

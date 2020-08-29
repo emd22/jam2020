@@ -10,4 +10,26 @@ let math = {
   func clamp(_, value: num, min_value: num, max_value: num) {
     return math.min(math.max(value, min_value), max_value);
   }
+  func sqrtf(_, x: float) {
+    let i = 0.0;
+    let j = 0.0;
+
+    while ((i*i) <= x) {
+        i += 0.1;
+    }
+    let x1: float = i;
+    let x2: float = 0.0;
+    while j < 10 {
+        x2 = x;
+        x2 /= x1;
+        x2 += x1;
+        x2 /= 2;
+        x1 = x2;
+        j += 1;
+    }
+    return x2;
+  }
+  func sqrt(self, x: int) {
+    return math.sqrtf(x.to_float());
+  }
 };

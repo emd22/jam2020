@@ -23,6 +23,9 @@ let Int = Num.extend({
     func to_str(self) {
       return __intern_num_to_str__(self._value);
     }
+    func to_float(self) {
+      return 1.0*self._value;
+    }
   }
 
   func __construct__(self, value) {

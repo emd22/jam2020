@@ -2,6 +2,9 @@ let File: type = Type.extend({
   instance = {
     data: str
     filename: str
+    func to_str(self) {
+      return self.data;
+    }
   }
 
   func __construct__(self, filename: str, data: str) {
@@ -19,10 +22,6 @@ let File: type = Type.extend({
     __intern_file_write__(filename, value);
 
     return File.new(filename, value);
-  }
-
-  func to_str(self) {
-    return self.data;
   }
 });
 

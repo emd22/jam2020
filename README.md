@@ -1,11 +1,12 @@
-# PEACH - Prototypical language with knack for extensibility
+## PEACH - Prototypical language with knack for extensibility and meta programming
 
-In PEACH, all types are objects, and vice versa. Everything is an object, and that includes functions.
+In PEACH, all types are objects, and vice versa. Everything is an object, and that includes functions. Objects descend from a parent object and inherit functions and variables from the parent. For example, to create a type, we extend from a parent `Object` (in this case `Type`), and define any methods
 
-*** EDIT ME***
-You can swap out methods on objects and patch them at runtime. Every operator calls a method which is easily overloadable, allowing heaps of extensibility. 
-* talk about huge parts of language being written in itself
-* write about how we are planning a rewrite in C/C++ and both have experience writing languages in each
+The core library in PEACH is written in itself, even allowing for methods to be attached with the `Object.patch()` method at runtime. Types in PEACH are built of `Object`s and have overloadable functions for operations such as addition, subtraction, multiplication, division, modulus, and compare. Types including String, Int, Float, and Bool are all defined completely in PEACH, including all operations that can be done on them. For instance, the call operator can be overloaded, with an example being that when a Number is called `5(10)` it multiplies the values together, allowing for a math-like syntax in programming.
+
+PEACH also has many methods that have functional language characteristics for example Array mapping and lambdas, and new concept ideas such as [Prototypical Inheritance](https://en.wikipedia.org/wiki/Prototype-based_programming). 
+
+Later we plan to rewrite PEACH in C/C++ for better speed, efficiency. Both of us have more experience in C/C++. We plan to keep PEACH code and the standard library similar to how it is today.
 
 [vars](./doc/00_vars.md) - How to declare and use variables
 

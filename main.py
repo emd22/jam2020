@@ -1,65 +1,24 @@
 #!/bin/python3
 
-from lexer import Lexer, TokenType, LexerToken
-from parser.parser import Parser 
-from parser.node import NodeImport
-from parser.source_location import SourceLocation
-from interpreter.interpreter import Interpreter
-from error import InterpreterError
-
-from repl.repl import Repl
-from ast_printer import AstPrinter
+from peach import Peach
+from parser.parser import Parser
+from examples.embed import example_embed
 
 import sys
 
 def main():
+    peach = Peach()
+
     if len(sys.argv) <= 1:
-        repl = Repl()
-        repl.loop()
+        peach.repl()
         return
-    
+
     filename = sys.argv[1]
-    
-    try:
-        fp = open(filename, 'r')
-    except FileNotFoundError:
-        print('Script \'{}\' could not be found'.format(filename))
-        
-    data = fp.read()
-
-    lexer = Lexer(data, SourceLocation(filename))
-    tokens = lexer.lex()
-
-    parser = Parser(tokens, lexer.source_location)
-    
-    # all files include the __core__ file which contains internal types and methods
-    global_import_nodes = [
-        parser.import_file('std/__core__.peach')
-    ]
-    
-    # import nodes should be located at top of tree
-    ast = global_import_nodes+parser.parse()
-
-    # for node in ast:
-    #    AstPrinter().print_ast(node)
-
-    error_list = parser.error_list
-
-    if len(error_list.errors) > 0:
-        error_list.print_errors()
-        return
-
-    # init interpreter and parse tokens
-    interpreter = Interpreter(parser.source_location)
-    
-    print("=== Output ===")
-
-    try:
-        for node in ast:
-            interpreter.visit(node)
-    except InterpreterError:
-        # errors printed
-        interpreter.error_list.clear_errors()
+    peach.eval_file(filename)
+    value = peach.call_function('math.sqrt', [20])
+    print('sqrt value: {}'.format(value))
+    #peach.call_function('math.sqrt', [5.0])
+    example_embed(peach)
 
 if __name__ == '__main__':
     main()

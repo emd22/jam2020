@@ -298,6 +298,48 @@ class Interpreter():
                     collected_args.append(arg_visited)
 
         return collected_args
+
+    def wrap_arg_in_node(self, name, arg):
+        if type(arg) == str:
+            return NodeString(LexerToken('"{}"'.format(arg)))
+        elif type(arg) in (float, int):
+            return NodeNumber(LexerToken(str(arg)))
+        elif type(arg) == list:
+            return NodeArrayExpression(
+                map(lambda x: self.wrap_arg_in_node(name, x), arg),
+                LexerToken(name, TokenType.Identifier)
+            )
+        else:
+            raise Exception("Invalid argument {} type({}) not supported".format(arg, type(arg)))
+
+    def call_function(self, name, args):
+        from peach import Peach
+
+        retval = 0
+        node_args = []
+        for arg in args:
+            node_args.append(self.wrap_arg_in_node(name, arg))
+
+        peach = Peach()
+        peach.eval(data="{};".format(name), interpret=False, default_imports=[])
+        lhs = peach.ast[0]
+        
+        if isinstance(lhs, NodeMemberExpression):
+            t, m = self.walk_member_expression(lhs)
+            target = m.value
+            this_arg = t
+        else:
+            this_arg = NodeNone(LexerToken(name))
+            target = self.visit(lhs)
+
+        call_node = NodeCall(
+            target,
+            NodeArgumentList(
+                [this_arg]+node_args,
+                LexerToken(name)
+            )
+        )
+        return self.visit_Call(call_node)
     
     def visit_Call(self, node):
         this_arg = None
@@ -314,7 +356,6 @@ class Interpreter():
             is_member_call = True
         else:
             target = self.visit(node.lhs)
-
         return_value = 0
 
         if target is not None:

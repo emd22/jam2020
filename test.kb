@@ -1,9 +1,0 @@
-macro print_times(s, times) {
-  for i in Range.new(0, times) {
-    mixin {
-      print('%'.format(s));
-    }
-  }
-}
-
-print_times("hello", 5)();
