@@ -11,7 +11,7 @@ If you look at the `__iterate__` method in `std/types/array.peach` you'll see ho
 ```
 # std/types/array.peach
 
-func __iterate__(self, cb) {
+func __iterate__(self, cb: Func) {
   let remaining = self.len();
   let len = self.len();
 
@@ -24,4 +24,9 @@ func __iterate__(self, cb) {
   }
 }
 ```
+
+The `cb` parameter is a callback function which `for` internally uses to hand off execution to the block that was provided for the `for` loop.
+
+You can think of this as a generator of sorts if you're familiar with that from other languages.
+
 

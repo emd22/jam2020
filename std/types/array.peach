@@ -59,7 +59,7 @@ let Array = Iterable.extend({
       return res_array;
     }
 
-    func __iterate__(self, cb) {
+    func __iterate__(self, cb: Func) {
       let remaining = self.len();
       let len = self.len();
 
