@@ -14,14 +14,14 @@ Some examples of what method names operators are paired with are:
 `*` - `__mul__`
 `/` - `__div__`
 `%` - `__mod__`
-`<=>` - `__compare__`
 `==` - `__eql__`
 `!=` - `__noteql__`
 `!` - `__not__`
-`<` - `__lt__` (defaults to `self.__compare__(other) == -1;`)
-`<=` - `__lte__` (defaults to `self.__compare__(other) != 1;`)
-`>` - `__gt__` (defaults to `self.__compare__(other) == 1;`)
-`>=` - `__gte__` (defaults to `self.__compare__(other) != -1;`)
+`<=>` - `__compare__` (spaceship operator: return -1 if less than, 0 if equal, 1 if greater than)
+`<` - `__lt__` (defaults to `(self <=> other) == -1;`)
+`<=` - `__lte__` (defaults to `(self <=> other) != 1;`)
+`>` - `__gt__` (defaults to `(self <=> other) == 1;`)
+`>=` - `__gte__` (defaults to `(self <=> other) != -1;`)
 `&` - `__bitand__`
 `|` - `__bitor__`
 `^` - `__bitxor__`
