@@ -26,7 +26,7 @@ let Array = Type.extend({
         index = len - remaining;
         item = value[index];
 
-        if res_array.find(item) != -1 {
+        if res_array.find(item) == -1 {
           res_array.append(item);
         }
 
