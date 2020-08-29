@@ -10,8 +10,10 @@ You can swap out methods on objects and patch them at runtime. Every operator ca
 [vars](./doc/00_vars.md) - How to declare and use variables
 [functions](./doc/10_functions.md) - Writing and calling functions
 [strings](./doc/15_strings.md) - Strings operations and interpolation
+[operators](./doc/16_operators.md) - Available operators + Operator overloading
 [types](./doc/20_types.md) - Custom types
 [proto](./doc/30_proto.md) - Extending types using prototypical inheritance
+[macros](./doc/35_macros.md) - Macros
 [arrays](./doc/40_arrays.md) - Array operations
 [iterators](./doc/50_iterators.md) - Array operations
 [random](./doc/55_random.md) - Random number generation
