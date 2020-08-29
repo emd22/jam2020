@@ -57,7 +57,7 @@ let ttt = Type.extend({
             return 0;
         }
         
-        let rand = Random.range(Time.now().to_int(), available_spaces.len()-1, 0);
+        let rand = random.range(Time.now().to_int(), available_spaces.len()-1, 0);
         self.moves[available_spaces[rand]] = self.O_SPOT;
     }
     

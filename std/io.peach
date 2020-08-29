@@ -1,6 +1,6 @@
 
 
-let io = Type.extend({});
+let io = Type.extend({ });
 
 import "std/io/file.peach";
 import "std/io/console.peach";

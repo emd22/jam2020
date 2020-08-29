@@ -18,12 +18,13 @@ of text which points to the path of the file
 we wish to use.
 
 Say you want to write some text to the console.
-You can use our standard `io` package, provided
+You can use our standard `random` package, provided
 with the language, by writing this line of code:
 
-`import "std/io.kb";`
+`import "std/math/random.peach";`
 
-Easy, right? Now you can use the `print` function!
+Easy, right? Now you can generate random numbers using the
+`random` object. Try this:
 
 Try it for yourself:
-`print("hello world");`
+`print(random.random(999));`

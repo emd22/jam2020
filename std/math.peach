@@ -1,0 +1,9 @@
+let math = {
+  func max(_, a, b) {
+    return __intern_math_max__(a, b);
+  }
+
+  func min(_, a, b) {
+    return __intern_math_min__(a, b);
+  }
+};

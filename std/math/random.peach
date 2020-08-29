@@ -12,3 +12,4 @@ let Random = {
     }
 };
 
+let random = Random;

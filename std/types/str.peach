@@ -34,6 +34,10 @@ let Str = Array.extend({
         self._value = value;
     }
 
+    func clone(self) {
+        return Str.new(self._value);
+    }
+
     func append(self, value) {
         return __intern_str_append__(self._value, value.to_str());
     }

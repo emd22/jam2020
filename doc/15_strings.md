@@ -13,3 +13,6 @@ notice several useful methods such as:
     Example:
       `"My name is % and I am % years old".format('Bob', '15');`
       
+You'll also notice that the `Str` type is extended from
+`Array`. This is because a string is essentially an array, but for
+characters. Basing the `Str` type from `Array` allows us to use any `Array` methods such as `len`, `__at__` (the `[]` operator), `find`, `map`, `contains` and more.

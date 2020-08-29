@@ -6,11 +6,13 @@ func tictactoe() {
   ttt.new().play();
 }
 
-let sep_str = '\n' + (' ' * 12) + ('-' * 30) + '\n';
+let sep_str = '\n' + (' ' * 22) + ('-' * 30) + '\n';
 
 io.write(sep_str);
 io.write_color(Console.RED, ' *** ');
-io.write_color(Console.BOLD, "Run `tictactoe();` to start a game of TicTacToe");
+io.write_color(Console.BOLD, "Run `tictactoe();` to start a game of TicTacToe (built 100% in PEACH!)");
 io.write_color(Console.RED, ' *** ');
+io.write('\n');
+io.write((' ' * 8) + 'Code in examples/ttt.peach. More examples in that folder as well!');
 io.write(sep_str);
 io.write('\n');

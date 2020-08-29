@@ -14,11 +14,49 @@ let Array = Type.extend({
     }
 
     func __bitor__(self, value) {
-      # TODO union
+      let res_array = self.clone();
+
+      let remaining = value.len();
+      let len = value.len();
+
+      let index;
+      let item;
+
+      while remaining != 0 {
+        index = len - remaining;
+        item = value[index];
+
+        if res_array.find(item) != -1 {
+          res_array.append(item);
+        }
+
+        remaining -= 1;
+      }
+
+      return res_array;
     }
 
     func __bitand__(self, value) {
-      # TODO intersection
+      let res_array = [];
+
+      let remaining = self.len();
+      let len = self.len();
+
+      let index;
+      let item;
+
+      while remaining != 0 {
+        index = len - remaining;
+        item = self[index];
+
+        if value.find(item) != -1 {
+          res_array.append(item);
+        }
+
+        remaining -= 1;
+      }
+
+      return res_array;
     }
 
     func __iterate__(self, cb) {
