@@ -21,6 +21,8 @@ class NodeType(Enum):
     SplatArgument = auto()
     FunctionReturn     = auto()
     FunctionExpression = auto()
+    Macro = auto()
+    Mixin = auto()
     ArrayExpression   = auto()
     ObjectExpression = auto()
     MemberExpression = auto()
@@ -169,6 +171,16 @@ class NodeFunctionReturn(AstNode):
     def __init__(self, value_node, token):
         AstNode.__init__(self, NodeType.FunctionReturn, token)
         self.value_node = value_node
+
+class NodeMacro(AstNode):
+    def __init__(self, expr, token):
+        AstNode.__init__(self, NodeType.Macro, token)
+        self.expr = expr
+
+class NodeMixin(AstNode):
+    def __init__(self, tokens, token):
+        AstNode.__init__(self, NodeType.Mixin, token)
+        self.tokens = tokens
 
 class NodeArrayExpression(AstNode):
     def __init__(self, members, token):

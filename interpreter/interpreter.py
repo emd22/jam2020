@@ -60,6 +60,9 @@ class Interpreter():
         raise InterpreterError('Interpreter error')
         
     def visit(self, node):
+        if isinstance(node, BasicValue):
+            return node
+
         try:
             caller_name = "visit_{}".format(str(node.type.name))
             caller = getattr(self, caller_name)
@@ -113,7 +116,10 @@ class Interpreter():
             funstr = '__div__'
         elif node.token.type == TokenType.Modulus:
             funstr = '__mod__'
-            
+        elif node.token.type == TokenType.And:
+            funstr = '__and__'
+        elif node.token.type == TokenType.Or:
+            funstr = '__or__'
         elif node.token.type == TokenType.BitwiseOr:
             funstr = '__bitor__'
         elif node.token.type == TokenType.BitwiseAnd:
@@ -279,7 +285,6 @@ class Interpreter():
             
     def collect_args(self, node):
         collected_args = []
-        
         for arg in node.argument_list.arguments:
                 arg_visited = self.visit(arg)
                 
@@ -295,17 +300,24 @@ class Interpreter():
         return collected_args
     
     def visit_Call(self, node):
-        target = self.visit(node.lhs)
+        this_arg = None
+        is_member_call = False
+
+        target = None
+
+        # for `a.b()`, pass in `a` as the this value.
+        if isinstance(node.lhs, NodeMemberExpression):
+            t, m = self.walk_member_expression(node.lhs)
+            target = m.value
+            this_arg = t
+
+            is_member_call = True
+        else:
+            target = self.visit(node.lhs)
+
         return_value = 0
 
         if target is not None:
-            this_arg = None
-            is_member_call = False
-
-            # for `a.b()`, pass in `a` as the this value.
-            if isinstance(node.lhs, NodeMemberExpression):
-                is_member_call = True
-                this_arg = node.lhs.lhs
 
             if isinstance(target, BuiltinFunction):
                 collected_args = self.collect_args(node)
@@ -313,7 +325,7 @@ class Interpreter():
                 this_value = None
                 
                 if this_arg is not None:
-                    this_value = self.visit(this_arg)
+                    this_value = this_arg
                 
                 return self.call_builtin_function(target, this_value, collected_args, node)
             # user-defined function
@@ -321,7 +333,7 @@ class Interpreter():
                 collected_args = self.collect_args(node)
                 if is_member_call: # a.b('test') -> pass 'a' in as first argument
                     if this_arg is not None:
-                        this_value = self.visit(this_arg)
+                        this_value = this_arg
                         if this_value is not None:
                             collected_args = [this_value, *collected_args]
 
@@ -362,11 +374,10 @@ class Interpreter():
             else: # objects......
                 if this_arg is None:
                     this_arg = NodeNone(node.token)
-                    
-                splatted_args = [this_arg, *node.argument_list.arguments]
+
                 member_access_call_node = NodeCall(
                     NodeMemberExpression(
-                        node.lhs,
+                        target,
                         LexerToken('__call__', TokenType.Identifier),
                         node.token
                     ),
@@ -515,6 +526,27 @@ class Interpreter():
 
     def visit_FunctionExpression(self, node):
         return node
+    
+    def visit_Macro(self, node):
+        return self.visit(node.expr)
+
+    def visit_Mixin(self, node):
+        from parser.parser import Parser
+
+        parser = Parser(node.tokens, self.source_location)
+        
+        ast = parser.parse()
+
+        if len(parser.error_list.errors) > 0:
+            self.error(node, ErrorType.MacroExpansionError, 'Macro expansion failed:\n{}'.format('\t'.join(map(lambda x: str(x), parser.error_list.errors))))
+            return None
+
+        last_value = None
+
+        for node in ast:
+            last_value = self.visit(node)
+
+        return BasicValue(last_value).extract_basicvalue()
 
     def call_builtin_function(self, fun, this_object, arguments, node):
 

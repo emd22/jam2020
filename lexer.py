@@ -12,6 +12,8 @@ class Keywords(Enum):
     While = 'while'
     For = 'for'
     In = 'in'
+    Macro = 'macro'
+    Mixin = 'mixin'
 
 class TokenType(Enum):
     NoneToken = auto()
@@ -37,6 +39,9 @@ class TokenType(Enum):
     LessThanEqual = '<='
     GreaterThan = '>'
     GreaterThanEqual = '>='
+
+    And = '&&'
+    Or = '||'
     
     BitwiseOr = '|'
     BitwiseAnd = '&'
@@ -160,7 +165,8 @@ class Lexer():
             '<=>',
             '==', '!=', '<=', '>=',
             '+=', '-=', '*=', '/=',
-            '==', '!=', '->'
+            '==', '!=', '->',
+            '&&', '||'
         ]
     
         escape_chars = {
@@ -282,3 +288,5 @@ class Lexer():
         # still some data left in token_data, push to end
         if self.token_data != '':
             self.push_token()
+
+        return self.tokens

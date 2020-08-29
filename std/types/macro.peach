@@ -1,0 +1,37 @@
+let Macro = Type.extend({
+  name = 'Macro'
+
+  instance = {
+    _src_data: Str = ''
+
+    _method: Func = func (self) {}
+  }
+
+  # append source
+  func append(self, s: Str) {
+    self._src_data += s;
+  }
+
+  func __construct__(self, method: Func) {
+    self._method = method;
+    self._src_data = '';
+  }
+
+  func expand(self) {
+    return __intern_macro_expand__(self._src_data);
+  }
+
+  func __call__(self, args) {
+    self._method(*(args.from(1)));
+
+    return {
+      data = self._src_data
+      func expand(self) {
+        return __intern_macro_expand__(self.data);
+      }
+      func __call__(self, args) {
+        return self.expand();
+      }
+    };
+  }
+});

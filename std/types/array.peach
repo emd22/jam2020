@@ -1,4 +1,4 @@
-let Array = Type.extend({
+let Array = Iterable.extend({
   name = 'Array'
 
   instance = {
@@ -158,5 +158,18 @@ let Array = Type.extend({
     }
 
     return result;
+  }
+
+  # iterable methods
+  func step(self) {
+    return 1;
+  }
+
+  func start(self) {
+    return 0;
+  }
+
+  func end(self) {
+    return self.len();
   }
 });

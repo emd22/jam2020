@@ -407,3 +407,31 @@ def builtin_math_min(arguments):
     min_value = min(values)
 
     return BasicValue(min_value)
+
+def builtin_macro_expand(arguments):
+    from lexer import Lexer
+    from parser.parser import Parser
+
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
+    src_data = arguments.arguments[0].extract_value()
+
+    if not isinstance(src_data, str):
+        interpreter.error(arguments.node, ErrorType.TypeError, 'Expected a string for macro expansion')
+        return None
+
+    lexer = Lexer(src_data, interpreter.source_location)
+    tokens = lexer.lex()
+
+    parser = Parser(tokens, lexer.source_location)
+    
+    ast = parser.parse()
+
+    if len(parser.error_list.errors) > 0:
+        interpreter.error(arguments.node, ErrorType.MacroExpansionError, 'Macro expansion failed:\n{}'.format('\t'.join(map(lambda x: str(x), parser.error_list.errors))))
+        return None
+
+    for node in ast:
+        interpreter.visit(node)
+
+    return BasicValue(None)

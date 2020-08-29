@@ -3,6 +3,22 @@ Object.patch({
     return 1;
   }
 
+  func __and__(self, other) {
+    if !self {
+      return self;
+    }
+
+    return other;
+  }
+
+  func __or__(self, other) {
+    if self {
+      return self;
+    }
+
+    return other;
+  }
+
   func __noteql__(self, other) {
     return !self.__eql__(other);
   }

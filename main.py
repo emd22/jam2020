@@ -28,9 +28,9 @@ def main():
     data = fp.read()
 
     lexer = Lexer(data, SourceLocation(filename))
-    lexer.lex()
+    tokens = lexer.lex()
 
-    parser = Parser(lexer)
+    parser = Parser(tokens, lexer.source_location)
     
     # all files include the __core__ file which contains internal types and methods
     global_import_nodes = [

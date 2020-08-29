@@ -1,17 +1,9 @@
-import "examples/ttt.peach";
+macro print_times(s, times) {
+  for i in Range.new(0, times) {
+    mixin {
+      print('%'.format(s));
+    }
+  }
+}
 
-#let format = Func.extend({
-#    instance = {
-#        func __call__(self, args) {
-#            return args[0]._format(args);
-#        }
-#    }
-#}).new();
-
-#let x = [10, 20, 30];
-#print(*x);
-
-#io.write_color(Console.RED, 5(10));
-
-ttt.new().play();
-
+print_times("hello", 5)();

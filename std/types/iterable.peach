@@ -1,0 +1,18 @@
+let Iterable = Type.extend({
+  name = 'Iterable'
+
+  func each(__it, fn: Func) {
+    let index = __it.start();
+    let end = __it.end();
+    let step = __it.step();
+    let res = null;
+
+    while index != end {
+      res = fn(index);
+
+      index += step;
+    }
+
+    return res;
+  }
+});

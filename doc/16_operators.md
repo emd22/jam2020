@@ -25,8 +25,11 @@ Some examples of what method names operators are paired with are:
 `&` - `__bitand__`
 `|` - `__bitor__`
 `^` - `__bitxor__`
+`&&` - `__and__`
+`||` - `__or__`
 `()` (function call) - `__call__`
 `if ...` (boolean conversion) - `__bool__`
+`for x in ...` (iteration) - `__iterate__`
 
 If you add these methods to your objects, you can actually use common
 operators on them just like you would with numbers or other built-in

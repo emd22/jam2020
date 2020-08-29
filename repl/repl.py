@@ -135,9 +135,9 @@ class Repl:
 
     def parse_line(self, line):
         lexer = Lexer(line, SourceLocation(Repl.REPL_FILENAME))
-        lexer.lex()
+        tokens = lexer.lex()
 
-        parser = Parser(lexer)
+        parser = Parser(tokens, lexer.source_location)
         
         return (parser.parse(), parser.error_list)
 

@@ -6,13 +6,13 @@ from parser.node import *
 # peter parser
 
 class Parser():
-    def __init__(self, lexer):
-        self.lexer = lexer
+    def __init__(self, tokens, source_location):
+        self.tokens = tokens
         self.token_index = 0
         self._current_token = self.next_token()
         self.error_list = ErrorList()
         
-        self.source_location = lexer.source_location
+        self.source_location = source_location
 
         self.keyword_methods = {
             'let': self.parse_variable_declaration,
@@ -21,7 +21,9 @@ class Parser():
             'import': self.parse_import,
             'return': self.parse_return,
             'while': self.parse_while,
-            'for': self.parse_for
+            'for': self.parse_for,
+            'macro': self.parse_macro,
+            'mixin': self.parse_mixin
         }
 
     @property
@@ -48,11 +50,11 @@ class Parser():
     
     def next_token(self):
         # check if next index is past list boundaries
-        if self.token_index+1 > len(self.lexer.tokens):
+        if self.token_index+1 > len(self.tokens):
             return None
             
         # return selected token, increment index
-        self._current_token = self.lexer.tokens[self.token_index]
+        self._current_token = self.tokens[self.token_index]
         self.token_index += 1
         
         return self.current_token
@@ -60,10 +62,10 @@ class Parser():
     # return token at token.index + offset
     def peek_token(self, offset=1, expected_type=None):
         # check bounds
-        if self.token_index+offset-1 > len(self.lexer.tokens):
+        if self.token_index+offset-1 > len(self.tokens):
             return None
             
-        token = self.lexer.tokens[self.token_index+offset-1]
+        token = self.tokens[self.token_index+offset-1]
         
         # check type if expected_type != None
         if expected_type != None and token.type != expected_type:
@@ -145,9 +147,9 @@ class Parser():
         source_location =  SourceLocation(filename)
 
         lexer = Lexer(data, source_location)
-        lexer.lex()
+        tokens = lexer.lex()
         
-        parser = Parser(lexer)
+        parser = Parser(tokens, source_location)
         
         # an import node acts similar to a block and holds all variables and functions
         # in a tree. A parser is passed for getting various information in the interpreter
@@ -209,7 +211,91 @@ class Parser():
             return None
 
         return NodeFor(var_token, expression, block, token)
+
+    def parse_macro(self):
+        token = self.current_token
+        self.eat(TokenType.Keyword)
+
+        # eat macro name
+        name = self.current_token
+        if self.eat(TokenType.Identifier) is None:
+            return None
+
+        argument_list = None
+
+        # eat optional arguments
+        if self.peek_token(0, TokenType.LParen):
+            argument_list = self.parse_argument_list()
+
+            if argument_list is None:
+                return None
+
+        # parse block
+        block = self.parse_block_statement()
+        if block is None:
+            return None
+
+        # add self argument
+        macro_self_argument = NodeDeclare(None, LexerToken("__macro_self", TokenType.Identifier), NodeNone(token))
+
+        if argument_list is None:
+            argument_list = NodeArgumentList(
+                [macro_self_argument],
+                token
+            )
+        else:
+            argument_list.arguments = [macro_self_argument, *argument_list.arguments]
+
+        fun_expr = NodeFunctionExpression(argument_list, block)
+        #macro_expr = NodeMacro(fun_expr, token)
+
+        macro_var = NodeVariable(LexerToken('Macro', TokenType.Identifier))
+
+        member_access_call_node = NodeCall(
+            NodeMemberExpression(
+                macro_var,
+                LexerToken('new', TokenType.Identifier),
+                macro_var.token
+            ),
+            NodeArgumentList(
+                [fun_expr],
+                macro_var.token
+            )
+        )
         
+        # parse assignment, parenthesis, etc.
+        val_node = NodeAssign(NodeVariable(name), NodeMacro(member_access_call_node, token))
+        type_node = NodeVariable(LexerToken('Macro', TokenType.Identifier))
+        node = NodeDeclare(type_node, name, val_node)
+        
+        return node
+
+    def parse_mixin(self):
+        # TODO error if not in macro
+        # eat keyword
+        token = self.current_token
+        self.eat(TokenType.Keyword)
+
+        # eat tokens in block
+        if self.eat(TokenType.LBrace) is None:
+            return None
+
+        tokens = []
+
+        brace_level = 1
+
+        while brace_level > 0 and self.current_token != LexerToken.NONE:
+            if self.current_token.type == TokenType.LBrace:
+                brace_level += 1
+            elif self.current_token.type == TokenType.RBrace:
+                brace_level -= 1
+
+            tokens.append(self.current_token)
+
+            self.eat()
+
+        return NodeMixin(tokens, token)
+
     def parse_import(self):
         self.eat(TokenType.Keyword)
         
@@ -351,10 +437,10 @@ class Parser():
             # check if node is function block, exempt from semicolon
             if node.type == NodeType.Declare and (node.value is not None and node.value.type == NodeType.Assign):
                 rhs = node.value.value
-                if rhs.type == NodeType.FunctionExpression:
+                if rhs.type in (NodeType.FunctionExpression, NodeType.Macro):
                     return node
             
-            if node.type in (NodeType.IfStatement, NodeType.While, NodeType.For):
+            if node.type in (NodeType.IfStatement, NodeType.While, NodeType.For, NodeType.Mixin):
                 return node
         else:
             node = self.parse_expression()
@@ -729,6 +815,7 @@ class Parser():
             TokenType.Equals,
             TokenType.Plus, TokenType.Minus, TokenType.Modulus,
             TokenType.BitwiseOr, TokenType.BitwiseAnd, TokenType.BitwiseXor,
+            TokenType.And, TokenType.Or,
             TokenType.Compare, TokenType.NotCompare,
             TokenType.Spaceship,
             TokenType.Arrow,
@@ -752,7 +839,7 @@ class Parser():
                 operation = LexerToken(token.value.strip('='))
                 
                 # make value (lhs [operator] rhs)
-                value_node = NodeBinOp(left=NodeVariable(assign_node.lhs), token=operation, right=assign_node.value)
+                value_node = NodeBinOp(left=node, token=operation, right=assign_node.value)
                 
                 # final node should be (lhs [=] lhs [operator] rhs)
                 assign_node.value = value_node

@@ -23,9 +23,11 @@ import "std/types/int.peach";
 import "std/types/bool.peach";
 import "std/types/object.peach";
 import "std/types/func.peach";
+import "std/types/iterable.peach";
 import "std/types/array.peach";
 import "std/types/str.peach";
 import "std/types/range.peach";
+import "std/types/macro.peach";
 
 # Type aliases
 let object = Object;

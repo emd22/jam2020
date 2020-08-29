@@ -10,6 +10,7 @@ class ErrorType(Enum):
     TypeError = auto()
     MultipleDefinition = auto()
     ArgumentError = auto()
+    MacroExpansionError = auto()
 
 class Error():
     def __init__(self, type, location, message, filename):

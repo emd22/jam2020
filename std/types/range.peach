@@ -1,41 +1,54 @@
-let Range = Type.extend({
+let Range = Iterable.extend({
   instance = {
-    start
-    end
-    step
+    _start
+    _end
+    _step
 
     func __iterate__(__range, cb) {
-      let index = __range.start;
+      let index = __range._start;
       let res = null;
 
-      while index != __range.end {
+      while index != __range._end {
         res = cb(index);
 
-        index += __range.step;
+        index += __range._step;
       }
 
       return res;
     }
 
     func to_str(self) {
-      return "Range(" + self.start + ", " + self.end + ", " + self.step + ")";
+      return "Range(" + self._start + ", " + self._end + ", " + self._step + ")";
     }
   }
 
   func __construct__(self, start, end, step) {
-    self.start = start;
-    self.end = end;
-    self.step = step;
+    self._start = start;
+    self._end = end;
+    self._step = step;
 
     if end == null {
-      self.start = 0;
-      self.end = 1;
+      self._start = 0;
+      self._end = 1;
     }
 
     if step == null {
-      self.step = 1;
+      self._step = 1;
     }
 
     return self;
+  }
+
+  # iterable methods
+  func step(self) {
+    return self._step;
+  }
+
+  func start(self) {
+    return self._start;
+  }
+
+  func end(self) {
+    return self._end;
   }
 });

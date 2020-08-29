@@ -1,4 +1,4 @@
-from parser.node import NodeFunctionExpression
+from parser.node import NodeFunctionExpression, NodeMacro
 from interpreter.function import BuiltinFunction
 
 class BasicValue:
@@ -30,6 +30,8 @@ class BasicValue:
             return self.value.lookup_type(global_scope)
         elif isinstance(self.value, NodeFunctionExpression) or isinstance(self.value, BuiltinFunction):
             return global_scope.find_variable_value('Func')
+        elif isinstance(self.value, NodeMacro):
+            return global_scope.find_variable_value('Macro')
         elif type(self.value) is str:
             return global_scope.find_variable_value('Str')
         elif type(self.value) is int:

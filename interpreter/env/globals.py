@@ -87,6 +87,8 @@ class Globals:
             
             ('__intern_time_sleep__', VariableType.Function, BuiltinFunction("__intern_time_sleep__", None, builtin_time_sleep)),
             ('__intern_time_now__',   VariableType.Function, BuiltinFunction("__intern_time_now__", None, builtin_time_now)),
+
+            ('__intern_macro_expand__', VariableType.Function, BuiltinFunction("__intern_macro_expand__", None, builtin_macro_expand))
         ]
 
     def vartype_to_typeobject(self, vartype):
