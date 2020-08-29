@@ -44,6 +44,8 @@ class Globals:
             ('Object', VariableType.Type, self.basic_object),
             ('Func', VariableType.Type, self.func_type),
             ('__intern_object_patch__', VariableType.Function, BuiltinFunction("__intern_object_patch__", None, builtin_object_patch)),
+            ('__intern_math_max__', VariableType.Function, BuiltinFunction("__intern_math_max__", None, builtin_math_max)),
+            ('__intern_math_min__', VariableType.Function, BuiltinFunction("__intern_math_min__", None, builtin_math_min)),
             ('__intern_print__', VariableType.Function, BuiltinFunction("__intern_print__", None, builtin_printn)),
             ('__intern_console_write__', VariableType.Function, BuiltinFunction("__intern_console_write__", None, builtin_console_write)),
             ('__intern_print_color__', VariableType.Function, BuiltinFunction("__intern_print_color__", None, builtin_print_color)),

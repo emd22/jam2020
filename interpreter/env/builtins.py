@@ -377,3 +377,33 @@ def builtin_func_call(arguments):
         basic_value_resp = interpreter.stack.pop()
 
     return basic_value_resp
+
+def builtin_math_max(arguments):
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
+    node = arguments.node
+
+    values = []
+
+    for arg in arguments.arguments:
+        v = arg.extract_value()
+        values.append(v)
+
+    max_value = max(values)
+
+    return BasicValue(max_value)
+
+def builtin_math_min(arguments):
+    interpreter = arguments.interpreter
+    this_object = arguments.this_object
+    node = arguments.node
+
+    values = []
+
+    for arg in arguments.arguments:
+        v = arg.extract_value()
+        values.append(v)
+
+    min_value = min(values)
+
+    return BasicValue(min_value)

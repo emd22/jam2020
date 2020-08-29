@@ -1,3 +1,5 @@
+import "std/math.peach";
+
 let Num = Type.extend({
   name = 'Num'
 
@@ -5,6 +7,12 @@ let Num = Type.extend({
       self._value = value;
 
       return self;
+  }
+
+  func __compare__(self, other) {
+    let diff = self - other;
+
+    return math.clamp(diff, -1, 1).to_int();
   }
 
   func to_int(self) {

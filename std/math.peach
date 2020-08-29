@@ -1,9 +1,13 @@
 let math = {
-  func max(_, a, b) {
+  func max(_, a: num, b: num) {
     return __intern_math_max__(a, b);
   }
 
-  func min(_, a, b) {
+  func min(_, a: num, b: num) {
     return __intern_math_min__(a, b);
+  }
+
+  func clamp(_, value: num, min_value: num, max_value: num) {
+    return math.min(math.max(value, min_value), max_value);
   }
 };
