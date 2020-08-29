@@ -4,35 +4,24 @@ If you looked at the `arrays` walkthrough,
 you learned how you can use `for` loops to walk
 over the contents of an array.
 
-While the `for` loop is powerful, in some instances
-other types of loops may be called for. 
+While the `for` loop is powerful, in some instances you may want to allow your own custom types and objects to be used in a `for` loop.
 
-The `while` loop allows us to execute a block _until_
-a condition we give it has been reached. Here's an example.
+If you look at the `__iterate__` method in `std/types/array.peach` you'll see how the `Array` type handles for loops.
 
 ```
-let value = 10;
-while value != 5 {
-    print(value);
-    value -= 1;
+# std/types/array.peach
+
+func __iterate__(self, cb) {
+  let remaining = self.len();
+  let len = self.len();
+
+  while remaining != 0 {
+    let index = len - remaining;
+
+    cb(self[index]);
+
+    remaining -= 1;
+  }
 }
 ```
 
-Prints:
-```
-10
-9
-8
-7
-6
-```
-
-Easy peasy!
-
-Did you know you can create your own iteratable objects, much
-like how array works in the `for` loop?
-
-Simply add a method to your object called `__iterate__`, taking
-a single argument (along with the `self` argument). This argument
-represents a callback that you will feed the current value of your
-iterator into. Take a look in `std/types/array` to see for yourself!
