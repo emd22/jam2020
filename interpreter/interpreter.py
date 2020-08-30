@@ -323,23 +323,24 @@ class Interpreter():
         peach = Peach()
         peach.eval(data="{};".format(name), interpret=False, default_imports=[])
         lhs = peach.ast[0]
+        name_token = LexerToken(name, TokenType.Identifier)
         
+
         if isinstance(lhs, NodeMemberExpression):
-            t, m = self.walk_member_expression(lhs)
-            target = m.value
-            this_arg = t
+            parent, member = self.walk_member_expression(lhs)
+            target = member.value
+            node_args = [parent]+node_args
         else:
-            this_arg = NodeNone(LexerToken(name))
-            target = self.visit(lhs)
+            target = lhs
 
         call_node = NodeCall(
             target,
             NodeArgumentList(
-                [this_arg]+node_args,
-                LexerToken(name)
+                node_args,
+                name_token
             )
         )
-        return self.visit_Call(call_node)
+        return self.visit_Call(call_node).extract_value()
     
     def visit_Call(self, node):
         this_arg = None

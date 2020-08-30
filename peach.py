@@ -10,9 +10,6 @@ from error import InterpreterError
 from repl.repl import Repl
 from ast_printer import AstPrinter
 
-import sys
-
-
 class Peach():
     def __init__(self):
         pass
