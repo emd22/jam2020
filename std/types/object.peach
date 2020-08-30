@@ -3,6 +3,18 @@ Object.patch({
     return 1;
   }
 
+  func __bitor__(self, other) {
+    let result = Object.extend(self);
+
+    for mem in other.members() {
+      if !result.members().contains(mem) {
+        result[mem] = other[mem];
+      }
+    }
+
+    return result;
+  }
+
   func __and__(self, other) {
     if !self {
       return self;

@@ -25,6 +25,9 @@ class Globals:
                 'name': BasicValue('Object'),
                 'new': BuiltinFunction('Object.new', None, builtin_object_new),
                 'type': BuiltinFunction('Object.type', None, builtin_object_type),
+                'members': BuiltinFunction('Object.members', None, builtin_object_members),
+                '__at__': BuiltinFunction('Object.__at__', None, builtin_object_at),
+                '__set__': BuiltinFunction('Object.__set__', None, builtin_object_set),
                 'to_str': BuiltinFunction('Object.to_str', None, builtin_object_to_str)
             }
         )

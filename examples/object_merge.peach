@@ -1,0 +1,27 @@
+let Person = Type.extend({
+  instance = {
+    name: str
+  }
+
+  func __construct__(self, name: str) {
+    self.name = name;
+  }
+});
+
+let Employee = Object.extend({
+  instance = {
+    employee_id: int
+  }
+
+  func __construct__(self, employee_id: int) {
+    self.employee_id = employee_id;
+  }
+});
+
+let person: Person = Person.new('Larry');
+let employee: Employee = Employee.new(12345);
+
+print(person);
+print(employee);
+
+print((person | employee).members());

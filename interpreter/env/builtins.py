@@ -243,6 +243,48 @@ def builtin_object_type(arguments):
 
     return this_object.lookup_type(interpreter.global_scope)
 
+def builtin_object_members(arguments):
+    interpreter = arguments.interpreter
+    arg = BasicValue(arguments.this_object).extract_basicvalue()
+    obj = interpreter.basic_value_to_object(arguments.node, arg)
+
+    members = []
+
+    for mem_key, mem_val in obj.members.items():
+        members.append(BasicValue(mem_key))
+
+    return BasicValue(members)
+
+def builtin_object_at(arguments):
+    interpreter = arguments.interpreter
+    arg = BasicValue(arguments.this_object).extract_basicvalue()
+    obj = interpreter.basic_value_to_object(arguments.node, arg)
+    key = BasicValue(arguments.arguments[0]).extract_value()
+    
+    if not isinstance(key, str):
+        interpreter.error(arguments.node, ErrorType.TypeError, 'Cannot call Object.__at__: argument must be a str {}'.format(key))
+        return None
+
+    if not key in obj.members:
+        return BasicValue(None)
+
+    return BasicValue(obj.members[key]).extract_basicvalue()
+
+def builtin_object_set(arguments):
+    interpreter = arguments.interpreter
+    arg = BasicValue(arguments.this_object).extract_basicvalue()
+    obj = interpreter.basic_value_to_object(arguments.node, arg)
+    key = BasicValue(arguments.arguments[0]).extract_value()
+    val = BasicValue(arguments.arguments[1]).extract_basicvalue()
+    
+    if not isinstance(key, str):
+        interpreter.error(arguments.node, ErrorType.TypeError, 'Cannot call Object.__set__: argument 0 must be a str {}'.format(key))
+        return None
+
+    obj.assign_member(key, val)
+
+    return obj
+
 def builtin_object_to_str(arguments):
     interpreter = arguments.interpreter
     this_object = arguments.this_object
