@@ -1,0 +1,57 @@
+let width = 40.0;
+let height = 20.0;
+
+let zoom = 0.7;
+
+let movex = -0.5;
+let movey = 0.0;
+
+let max_iters = 15;
+
+let shades = ['.', '$', '%'];
+let newre = 0.0;
+let oldre = 0.0;
+let newim = 0.0;
+let oldim = 0.0;
+
+func mandlebrot(x, y) {
+    let z = 0.0;
+    newre = 0.0;
+    newim = 0.0;
+
+    let pr = 1.5*(x - width/2.0)/(0.5*zoom*width)+movex;
+    let pi = (y - height/2.0)/(0.5*zoom*height)+movey;
+
+    let n = 0;
+    let checkn = 0.0;
+
+    while n < max_iters {
+        oldre = newre;
+        oldim = newim;
+        newre = oldre*oldre-oldim*oldim+pr;
+        newim = 2.0*oldre*oldim+pi;
+
+        checkn = newre*newre+newim*newim;
+        if (checkn > 4.0) {
+            io.write(shades[(n % 3)]);
+            return 0;
+        }
+        n += 1;
+    }
+    io.write(' ');
+}
+
+func calc_line() {
+    let x = 0.0;
+    let y = 0.0;
+    while y < height {
+        while x < width {
+            mandlebrot(x, y);
+            x += 1.0;
+        }
+        io.write('\n');
+        x = 0.0;
+        y += 1.0;
+    }
+}
+calc_line();
